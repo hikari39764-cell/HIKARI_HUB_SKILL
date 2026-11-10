@@ -3,6 +3,5 @@
   "area": "コード",
   "body": "`HIKARI/Project/RuntimeRegistration.h`。作ったコンポーネントとシステムは、Feature の `Register` で登録しないと存在しない。\n\n```cpp\nconstexpr std::string_view kKnockbackType = \"MyGame.Knockback\";\nconstexpr std::string_view kKnockbackSystem = \"MyGame.KnockbackSystem\";\n\nbool Register(HIKARI::RuntimeFeatureContext& context) override {\n    return context.RegisterSystem<Game>({.systemId = \"MyGame.Game\", .displayName = \"Game\"}) &&\n           context.RegisterComponent<KnockbackComponent>({.typeName = kKnockbackType, .displayName = \"Knockback\"}) &&\n           context.RegisterSystem<KnockbackSystem>({.systemId = kKnockbackSystem, .displayName = \"Knockback\"}) &&\n           context.BindComponentSystem({.componentType = kKnockbackType, .systemId = kKnockbackSystem});\n}\n```\n\n- `typeName` と `systemId` は**変えない識別子**（大文字小文字を区別）。シーンに保存される。`<作品名>.<名前>` の形にする。\n- `BindComponentSystem`：そのコンポーネントがシーンにあれば、結び付けたシステムが自動で動く。コンポーネントに付くルールはこれを使う。\n- `GetDefaultSystems()`：いつも動かす全体のシステムの一覧（テンプレートでは `Game`）。\n- `Register` には登録以外の処理を書かない（エンジンが一覧を作るために試しに呼ぶ）。\n- 上の例は形を示すもの。include とコンパイルは自分で確かめる。",
   "order": 40,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

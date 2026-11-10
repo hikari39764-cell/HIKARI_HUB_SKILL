@@ -3,6 +3,5 @@
   "area": "落とし穴",
   "body": "- `SpawnObject` などの結果は `GameProjectWorldResult`。クエリやシステムの途中では `Queued` が返ることがあり、これも成功。**`Accepted()` で確かめる**（`Succeeded()` だけ見ると取りこぼす）。新しいオブジェクトは区切りまで存在しないことがある。失敗は `world.GetCommandFailureCount()` / `ReadCommandFailure(...)` で読める。\n- `GetSceneFlow().RequestScene(...)` の `true` は「受け付けた」だけ。読み込みはあとで終わり、失敗することもある。結果が要るなら `RequestSceneTracked(...)` と `ReadRequestResult(...)` を使う。\n- プレハブの生成も非同期。`RequestInstantiate` のあと `ReadRequestResult` で結果を読む。\n- イベント（`ReadEvent`）をフレームをまたいで読むときは、番号で重複を除く。\n- Play 中の変更はエディタのシーンに書き戻されない。",
   "order": 30,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

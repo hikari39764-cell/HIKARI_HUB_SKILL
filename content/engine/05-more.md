@@ -1,5 +1,5 @@
 <!-- area: 資料 -->
-<!-- id: eng-headers; must: true; order: 10; sdk: 4.17 -->
+<!-- id: eng-headers; must: true; order: 10 -->
 ## ヘッダの読み方（困ったらここから）
 
 `<HIKARI>/Sdk/include/HIKARI/Project/` にある。名前の付け方：
@@ -22,7 +22,7 @@
 3. ゲーム側は回避策で進める（回避策がなければ「決めること」に出す）。非公開ヘッダは使わない。
 4. 直った版が書かれたら、回避策を消すカードを作る。
 
-<!-- id: eng-data; must: false; order: 30; sdk: 4.17 -->
+<!-- id: eng-data; must: false; order: 30 -->
 ## 作品のテキストデータ（Data/）
 
 - レベル設定や表のような作品のテキストは、プロジェクト直下の `Data/` に UTF-8 で置ける。

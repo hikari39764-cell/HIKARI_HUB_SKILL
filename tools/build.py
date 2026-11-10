@@ -52,8 +52,6 @@ def sections(folder: str, group_key: str) -> list[dict]:
             for key in ("core", "must"):
                 if key in flags:
                     doc[key] = flags[key] == "true"
-            if "sdk" in flags:
-                doc["sdk"] = flags["sdk"]
             out.append({"id": doc_id, "data": doc})
     ids = [d["id"] for d in out]
     if len(ids) != len(set(ids)):
@@ -171,7 +169,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
     stamp = lambda by, at, agent=None: {"by": by, "at": at, "updated_at": at, "updated_by": by} | ({"by_agent": agent} if agent else {})
     seed |= {
         "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "main",
-                             "sdk": "4.18.0", "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2,
+                             "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2,
                              "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt"], "hub_url": "https://claude.ai/artifact/EXAMPLE", "skill_source": "example/hikari-hub"},
         "settings/plan": {"ready": ["c-000002", "c-000003"], "assign": {"c-000003": "kato"},
                           "milestones": [{"id": "ms-000001", "date": "2026-11-19", "title": "試遊会 第2回"}, {"id": "ms-000002", "date": "2026-12-03", "title": "中間提出"}]},
@@ -215,8 +213,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "locks/l-000001": {"target": "Assets/Scenes/Stage2.scene", "until": "18:00", "state": "編集中", **stamp("ko", "2026-11-10T09:05:00+09:00")},
         "proposals/p-000001": {"title": "PR にはプレイ動画を付ける", "category": "Git 規約", "body": "見た目や手触りが変わる PR には 10 秒ほどの動画を付ける。",
                                "reason": "スクリーンショットでは揺れの強さが伝わらなかった。", "state": "提案", **stamp("ko", "2026-11-10T09:40:00+09:00")},
-        "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "sdk": "4.17.0",
-                                     "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
+        "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
     }
     return seed
 

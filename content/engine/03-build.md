@@ -1,5 +1,5 @@
 <!-- area: ビルド -->
-<!-- id: eng-build; must: true; order: 10; sdk: 4.17 -->
+<!-- id: eng-build; must: true; order: 10 -->
 ## ビルドして確かめる
 
 エンジンを入れた場所の `Sdk` にあるスクリプトで、**ゲームだけ**をビルドする（エンジンはビルドしない）。

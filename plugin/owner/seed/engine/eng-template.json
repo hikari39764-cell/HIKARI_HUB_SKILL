@@ -3,6 +3,5 @@
   "area": "はじめに",
   "body": "`Source/Runtime/*GameProjectModule.cpp` に次の 4 つが入っている。普段さわるのは上の 2 つ。\n\n| 部品 | 基底 | 役割 |\n|---|---|---|\n| `GameSession` | `HIKARI::IGameProjectSession` | 1 回の Play のあいだ、シーンをまたいで残す状態 |\n| `Game` | `HIKARI::IGameSystem` | 毎フレーム呼ばれるゲームの処理 |\n| `GameplayFeature` | `HIKARI::IRuntimeFeature` | コンポーネントとシステムの登録（`Register`）と既定のシステム一覧 |\n| `GameProjectModule` | `HIKARI::RUNTIME::IGameProjectModule` | Feature の登録（`RegisterRuntimeFeatures`）とセッションの生成（`CreateGameSession`） |\n\n- 最後に `HIKARI::RUNTIME::CreateGameProjectModule()` が 1 つだけ定義されている。**2 つ目を書かない。**\n- テンプレートの `Game::Update` は `world.GetGameSession()` を `dynamic_cast<GameSession*>` で取り、`nullptr`（＝Play 中でない）なら何もしない。この形を崩さない。",
   "order": 30,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

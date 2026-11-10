@@ -6,16 +6,11 @@
 
 ## この知識の使い方（最初に読む）　［必読］
 
-エンジン知識には 2 種類ある。
+ここに書いてあるのは、HIKARI でゲームを作るときの**考え方と進め方**。API の名前・引数・一覧は書き切っていない。
 
-- **考え方**（版の印がないもの）：役割分担、ライフサイクルの落とし穴、確かめ方など。SDK の版が変わっても使える。
-- **版ごとの控え**（「SDK 4.17 の時点」のように版の印があるもの）：API の名前・一覧・コード例。その版のヘッダから書き写したもので、SDK が更新されると古くなる。**道しるべとして読み、正確な内容は必ずヘッダで確かめる。**
-
-守ること：
-
-- **正しいのは常に、いま入っている SDK のヘッダ**（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）。使う API は、呼ぶ前にそのヘッダのコメントを読む。コメントに寿命・スレッド・失敗時の扱いが書いてある。
-- **版を確かめる**：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> CONFIG REQUIRED)`、入っている SDK の `HIKARI/Project/GameProjectSdk.h`（`HIKARI::SDK::kVersionMajor / kVersionMinor / kVersionPatch`）、ハブのプロジェクト設定の「HIKARI SDK のバージョン」。食い違っていたら人に伝える。控えの版がプロジェクトの版と違うときは、その控えを当てにしない。
-- **食い違いを見つけたら直す仕組みに乗せる**：ハブの知識がヘッダと違っていたら、ヘッダに従って作業し、ハブの「エンジンへの要望」に種類「知識の訂正」で出す（どの項目が、ヘッダのどこと、どう違うか）。
+- **API は自分で探して確かめる。** いま入っている SDK のヘッダ（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）が正しい。使う前に、そのヘッダのコメントを読む（寿命・スレッド・失敗時の扱いが書いてある）。
+- SDK の版も自分で確かめる：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> …)` と、SDK の `HIKARI/Project/GameProjectSdk.h`。
+- ここのコード例は形を示すもの。名前や引数がヘッダと違っていたら、ヘッダに従う。そして、ハブの「エンジンへの要望」に種類「知識の訂正」で出す（どの項目が、どう違うか）。
 - SDK の `docs/` にある古い手引きは内容が古いことがある。食い違ったらヘッダに従う。
 - 公開ヘッダにない機能は「まだない」。非公開ヘッダで回避せず、ハブの「エンジンへの要望」に出す。
 
@@ -172,43 +167,14 @@ world.ForEachComponent<KnockbackComponent>(
 - **名前や Tag で探す公開 API はない。** 「同じ名前なら自動でつながる」仕組みもない。参照はフィールドで持つ。
 - `ObjectView`：`GetName`、`GetSceneObjectId`、`GetLocalTransform` / `GetWorldTransform`、`SetLocalTransform` / `SetWorldTransform`、`GetParent`。内蔵コンポーネントの操作は `GetLight`、`GetDecal`、`GetModel`、`GetWorldSprite`、`GetWorldText`、`GetSpriteAnimation`、`GetSpriteMaterial`、`GetMaterialFx`（対象がなければ各操作が Unsupported を返す）。
 
-## やりたいこと → 使うもの　［必読］
+## エンジンの機能の使い方（探し方）　［必読］
 
-サービスは `WorldView` から取る。`WorldView.h` は型を前方宣言しているだけなので、**使うサービスのヘッダを include する**。
-
-| やりたいこと | 取り方 | ヘッダ |
-|---|---|---|
-| 入力（アクション、ポインタ、振動） | `world.GetInput()` | `ActionViews.h` |
-| キャラの移動、物理クエリ | `world.GetMotion()`、`world.GetPhysicsQueries()` | `ActionViews.h` |
-| モデルのアニメーション | `world.GetAnimation()` | `ActionViews.h` |
-| ゲームカメラ、揺れ、時間の遅さ | `world.GetCamera()`、`world.GetTimeDilation()` | `ActionViews.h` |
-| エフェクトを出す・動かす・止める | `world.GetVfx()` | `VfxView.h` |
-| 音 | `world.GetAudio()` | `AudioView.h` |
-| HUD（画像・文字・背景ぼかし） | `world.GetUi()` | `UiView.h` |
-| カメラ演出（シーケンス） | `world.GetSequence()` | `SequenceView.h` |
-| プレハブを出す | `world.GetPrefabs()` | `PrefabView.h` |
-| シーン切替、会話、セーブ、Play 中か | `world.GetSceneFlow()`、`GetDialogue()`、`GetSaveGame()`、`GetRuntimeSession()` | `GameFlowViews.h` |
-| 経路探索 | `world.GetNavigation()` | `NavigationView.h` |
-| 地形、地面への光線 | `world.GetTerrain()`、`world.RaycastGround(...)` | `TerrainView.h`、`GroundSource.h` |
-| 時刻・天気、局所の霧、流体の煙 | `GetEnvironment()`、`GetLocalFog()`、`GetFluid()` | `EnvironmentView.h`、`LocalFogView.h`、`FluidView.h` |
-| 作品のテキストデータを読む | `world.GetProjectData().ReadText(...)` | `ProjectDataView.h` |
-| 画質・ウィンドウ設定 | `world.GetDisplaySettings()` | `DisplaySettingsView.h` |
-| 共有の変数・イベント | `world.ReadVariable` / `WriteVariable` / `EmitEvent` / `ReadEvent` | `WorldView.h` |
-| オブジェクトを作る・消す・親子にする | `world.SpawnObject` / `DestroyObject` / `SetParent` | `WorldView.h`、`WorldTypes.h` |
-
+- 入力・音・エフェクト・カメラ・UI・シーン切替・セーブなどのエンジンの機能は、コールバックで渡される `WorldView` から「サービス」を取って使う（例 `world.GetInput()`）。
+- **何があるかは `WorldView.h` を読む。** サービスごとに `〜View.h`（操作）と `〜Types.h`（構造体と enum）がある。`WorldView.h` は型を前方宣言しているだけなので、使うサービスのヘッダを include する。
 - 戻り値を必ず確かめる。View の `IsValid()` は「使える状態か」であって、個々の操作の成功ではない。
-- 入力の例：
-
-```cpp
-HIKARI::GameProjectInputActionState interact{};
-if (world.GetInput().GetAction("Gameplay.Interact", interact) && interact.pressed) {
-    // 押された瞬間
-}
-```
-
-- HUD は `SubmitSprite` / `SubmitText` / `SubmitBackdrop` を**毎フレーム**呼んで描く。シーンに物を足すわけではない。
-- 実行中に出すものはエディタでプレハブにしておき、`GetPrefabs().RequestInstantiate(...)` → `ReadRequestResult(...)` で結果を読み、終わったら `ReleaseRequest(...)`。
-- 内蔵の Model・Camera・Collider などをコードで一から組み立てる前提にしない。プレハブで用意する。
+- HUD の描画のように「毎フレーム頼む」ものと、エフェクトや音のように「1 回頼んでハンドルを持つ」ものがある。どちらかはヘッダのコメントで確かめる。
+- 実行中に出すものはエディタでプレハブにしておき、コードからは生成を頼む（非同期。結果を読んでから使う）。内蔵のモデルやカメラをコードで一から組み立てる前提にしない。
+- 探しても見つからない機能は「まだない」。ハブの「エンジンへの要望」に出す。
 
 # ビルド
 

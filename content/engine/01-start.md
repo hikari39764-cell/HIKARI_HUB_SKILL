@@ -2,16 +2,11 @@
 <!-- id: eng-how-to-read; must: true; order: 5 -->
 ## この知識の使い方（最初に読む）
 
-エンジン知識には 2 種類ある。
+ここに書いてあるのは、HIKARI でゲームを作るときの**考え方と進め方**。API の名前・引数・一覧は書き切っていない。
 
-- **考え方**（版の印がないもの）：役割分担、ライフサイクルの落とし穴、確かめ方など。SDK の版が変わっても使える。
-- **版ごとの控え**（「SDK 4.17 の時点」のように版の印があるもの）：API の名前・一覧・コード例。その版のヘッダから書き写したもので、SDK が更新されると古くなる。**道しるべとして読み、正確な内容は必ずヘッダで確かめる。**
-
-守ること：
-
-- **正しいのは常に、いま入っている SDK のヘッダ**（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）。使う API は、呼ぶ前にそのヘッダのコメントを読む。コメントに寿命・スレッド・失敗時の扱いが書いてある。
-- **版を確かめる**：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> CONFIG REQUIRED)`、入っている SDK の `HIKARI/Project/GameProjectSdk.h`（`HIKARI::SDK::kVersionMajor / kVersionMinor / kVersionPatch`）、ハブのプロジェクト設定の「HIKARI SDK のバージョン」。食い違っていたら人に伝える。控えの版がプロジェクトの版と違うときは、その控えを当てにしない。
-- **食い違いを見つけたら直す仕組みに乗せる**：ハブの知識がヘッダと違っていたら、ヘッダに従って作業し、ハブの「エンジンへの要望」に種類「知識の訂正」で出す（どの項目が、ヘッダのどこと、どう違うか）。
+- **API は自分で探して確かめる。** いま入っている SDK のヘッダ（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）が正しい。使う前に、そのヘッダのコメントを読む（寿命・スレッド・失敗時の扱いが書いてある）。
+- SDK の版も自分で確かめる：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> …)` と、SDK の `HIKARI/Project/GameProjectSdk.h`。
+- ここのコード例は形を示すもの。名前や引数がヘッダと違っていたら、ヘッダに従う。そして、ハブの「エンジンへの要望」に種類「知識の訂正」で出す（どの項目が、どう違うか）。
 - SDK の `docs/` にある古い手引きは内容が古いことがある。食い違ったらヘッダに従う。
 - 公開ヘッダにない機能は「まだない」。非公開ヘッダで回避せず、ハブの「エンジンへの要望」に出す。
 
@@ -44,7 +39,7 @@ MyGame/
 - `CMakeUserPresets.json` はエディタが PC ごとに書く。コミットしない。
 - テンプレートの `.gitattributes` は `Assets/` の `.bin` `.dds` `.png` を Git LFS にしている。
 
-<!-- id: eng-template; must: true; order: 30; sdk: 4.17 -->
+<!-- id: eng-template; must: true; order: 30 -->
 ## 新規プロジェクトのコードの形（4 つの部品）
 
 `Source/Runtime/*GameProjectModule.cpp` に次の 4 つが入っている。普段さわるのは上の 2 つ。

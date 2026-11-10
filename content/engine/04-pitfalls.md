@@ -17,7 +17,7 @@
 - ハンドルは保存できない。セーブにはシーンの GUID とシーンオブジェクト id（`ObjectView::GetSceneObjectId()`）を書き、読み込んだあとで解決し直す。
 - `world.GetGameSession()` のポインタは、その Play のあいだだけ有効。
 
-<!-- id: eng-accepted; must: true; order: 30; sdk: 4.17 -->
+<!-- id: eng-accepted; must: true; order: 30 -->
 ## 「受け付けた」は「終わった」ではない
 
 - `SpawnObject` などの結果は `GameProjectWorldResult`。クエリやシステムの途中では `Queued` が返ることがあり、これも成功。**`Accepted()` で確かめる**（`Succeeded()` だけ見ると取りこぼす）。新しいオブジェクトは区切りまで存在しないことがある。失敗は `world.GetCommandFailureCount()` / `ReadCommandFailure(...)` で読める。

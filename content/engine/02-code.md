@@ -14,7 +14,7 @@
 - 中のクラスが全部エンジンの型を継承する必要はない。`RoundRules` や `Inventory` は普通のクラスでよい。
 - 同じ状態を複数の場所で持たない。持ち主を 1 つに決める。
 
-<!-- id: eng-system; must: true; order: 20; sdk: 4.17 -->
+<!-- id: eng-system; must: true; order: 20 -->
 ## システム（IGameSystem）
 
 `HIKARI/Project/GameSystem.h`。必要なものだけ override する。
@@ -42,7 +42,7 @@ public:
 };
 ```
 
-<!-- id: eng-component; must: true; order: 30; sdk: 4.17 -->
+<!-- id: eng-component; must: true; order: 30 -->
 ## コンポーネントと、エディタで調整できる値
 
 `HIKARI/Project/GameComponent.h`、`PropertyFields.h`。値は `DescribeProperties` に **1 項目 1 行で 1 回だけ** 書く。同じ宣言が、シーンからの読み込み・保存・インスペクタ表示の 3 つに使われる。
@@ -70,7 +70,7 @@ public:
 - コールバックに渡る `GameComponentContext` から `GetObject()`、`GetWorld()`、変数の読み書き、`EmitEvent` が使える。コールバックの外に持ち出さない。
 - コンポーネントに `World*` やエンジン内部のポインタを持たせない。フレームをまたいでオブジェクトを指すなら `GameProjectObjectHandle`（`ObjectView::GetHandle()`）を持つ。
 
-<!-- id: eng-register; must: true; order: 40; sdk: 4.17 -->
+<!-- id: eng-register; must: true; order: 40 -->
 ## 登録（Feature の Register）
 
 `HIKARI/Project/RuntimeRegistration.h`。作ったコンポーネントとシステムは、Feature の `Register` で登録しないと存在しない。
@@ -93,7 +93,7 @@ bool Register(HIKARI::RuntimeFeatureContext& context) override {
 - `Register` には登録以外の処理を書かない（エンジンが一覧を作るために試しに呼ぶ）。
 - 上の例は形を示すもの。include とコンパイルは自分で確かめる。
 
-<!-- id: eng-query; must: true; order: 50; sdk: 4.17 -->
+<!-- id: eng-query; must: true; order: 50 -->
 ## オブジェクトを探す・まとめて処理する
 
 `HIKARI/Project/WorldView.h`、`HIKARI/Runtime/ComponentTypeId.h`。
@@ -114,41 +114,12 @@ world.ForEachComponent<KnockbackComponent>(
 - **名前や Tag で探す公開 API はない。** 「同じ名前なら自動でつながる」仕組みもない。参照はフィールドで持つ。
 - `ObjectView`：`GetName`、`GetSceneObjectId`、`GetLocalTransform` / `GetWorldTransform`、`SetLocalTransform` / `SetWorldTransform`、`GetParent`。内蔵コンポーネントの操作は `GetLight`、`GetDecal`、`GetModel`、`GetWorldSprite`、`GetWorldText`、`GetSpriteAnimation`、`GetSpriteMaterial`、`GetMaterialFx`（対象がなければ各操作が Unsupported を返す）。
 
-<!-- id: eng-services; must: true; order: 60; sdk: 4.17 -->
-## やりたいこと → 使うもの
+<!-- id: eng-services; must: true; order: 60 -->
+## エンジンの機能の使い方（探し方）
 
-サービスは `WorldView` から取る。`WorldView.h` は型を前方宣言しているだけなので、**使うサービスのヘッダを include する**。
-
-| やりたいこと | 取り方 | ヘッダ |
-|---|---|---|
-| 入力（アクション、ポインタ、振動） | `world.GetInput()` | `ActionViews.h` |
-| キャラの移動、物理クエリ | `world.GetMotion()`、`world.GetPhysicsQueries()` | `ActionViews.h` |
-| モデルのアニメーション | `world.GetAnimation()` | `ActionViews.h` |
-| ゲームカメラ、揺れ、時間の遅さ | `world.GetCamera()`、`world.GetTimeDilation()` | `ActionViews.h` |
-| エフェクトを出す・動かす・止める | `world.GetVfx()` | `VfxView.h` |
-| 音 | `world.GetAudio()` | `AudioView.h` |
-| HUD（画像・文字・背景ぼかし） | `world.GetUi()` | `UiView.h` |
-| カメラ演出（シーケンス） | `world.GetSequence()` | `SequenceView.h` |
-| プレハブを出す | `world.GetPrefabs()` | `PrefabView.h` |
-| シーン切替、会話、セーブ、Play 中か | `world.GetSceneFlow()`、`GetDialogue()`、`GetSaveGame()`、`GetRuntimeSession()` | `GameFlowViews.h` |
-| 経路探索 | `world.GetNavigation()` | `NavigationView.h` |
-| 地形、地面への光線 | `world.GetTerrain()`、`world.RaycastGround(...)` | `TerrainView.h`、`GroundSource.h` |
-| 時刻・天気、局所の霧、流体の煙 | `GetEnvironment()`、`GetLocalFog()`、`GetFluid()` | `EnvironmentView.h`、`LocalFogView.h`、`FluidView.h` |
-| 作品のテキストデータを読む | `world.GetProjectData().ReadText(...)` | `ProjectDataView.h` |
-| 画質・ウィンドウ設定 | `world.GetDisplaySettings()` | `DisplaySettingsView.h` |
-| 共有の変数・イベント | `world.ReadVariable` / `WriteVariable` / `EmitEvent` / `ReadEvent` | `WorldView.h` |
-| オブジェクトを作る・消す・親子にする | `world.SpawnObject` / `DestroyObject` / `SetParent` | `WorldView.h`、`WorldTypes.h` |
-
+- 入力・音・エフェクト・カメラ・UI・シーン切替・セーブなどのエンジンの機能は、コールバックで渡される `WorldView` から「サービス」を取って使う（例 `world.GetInput()`）。
+- **何があるかは `WorldView.h` を読む。** サービスごとに `〜View.h`（操作）と `〜Types.h`（構造体と enum）がある。`WorldView.h` は型を前方宣言しているだけなので、使うサービスのヘッダを include する。
 - 戻り値を必ず確かめる。View の `IsValid()` は「使える状態か」であって、個々の操作の成功ではない。
-- 入力の例：
-
-```cpp
-HIKARI::GameProjectInputActionState interact{};
-if (world.GetInput().GetAction("Gameplay.Interact", interact) && interact.pressed) {
-    // 押された瞬間
-}
-```
-
-- HUD は `SubmitSprite` / `SubmitText` / `SubmitBackdrop` を**毎フレーム**呼んで描く。シーンに物を足すわけではない。
-- 実行中に出すものはエディタでプレハブにしておき、`GetPrefabs().RequestInstantiate(...)` → `ReadRequestResult(...)` で結果を読み、終わったら `ReleaseRequest(...)`。
-- 内蔵の Model・Camera・Collider などをコードで一から組み立てる前提にしない。プレハブで用意する。
+- HUD の描画のように「毎フレーム頼む」ものと、エフェクトや音のように「1 回頼んでハンドルを持つ」ものがある。どちらかはヘッダのコメントで確かめる。
+- 実行中に出すものはエディタでプレハブにしておき、コードからは生成を頼む（非同期。結果を読んでから使う）。内蔵のモデルやカメラをコードで一から組み立てる前提にしない。
+- 探しても見つからない機能は「まだない」。ハブの「エンジンへの要望」に出す。
