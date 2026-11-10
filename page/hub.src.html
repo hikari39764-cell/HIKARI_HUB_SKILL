@@ -173,7 +173,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
 
-const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, handle: "", owner: false, write: null }, db: null, assets: null, live: null, late: false, q: "", all: {} };
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, handle: "", owner: false, write: null }, db: null, assets: null, live: null, late: false, q: "", all: { reports: true } };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
 
@@ -197,6 +197,7 @@ const T = {
   lock: ["編集中を宣言", "宣告编辑中"], release: ["解除", "解除"], daily: ["日報を書く", "写日报"], reportsOf: ["このカードの報告", "这张卡的汇报"], state: ["状態", "状态"], by: ["書いた人", "谁写的"], updated: ["更新", "更新"],
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
   uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
+  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："], unplanned: ["予定外", "计划外"],
   viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
@@ -294,9 +295,16 @@ function stPill(coll, d) {
   const label = S.lang === "zh" ? (name === "予定" ? t("ready") : (def && def.zh) || name) : name;
   return `<span class="st ${stClass(coll, d)}">${esc(label)}${d.state === "確認待ち" && d.waiting ? "・" + esc(d.waiting) : ""}</span>`;
 }
-const tags = (d) => [d.kind, d.severity, d.frequency, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+const tags = (d) => [d.unplanned && t("unplanned"), d.kind, d.severity, d.frequency, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+// 終了した作業の報告で、必ず書く項目が抜けているもの（空の配列は「なし」として書いてあると見なす）。
+function gaps(coll, d) {
+  const req = COLL[coll].required_when_done;
+  if (!req || d.state !== "終了" || d.kind === "日報") return [];
+  return req.filter((k) => d[k] == null || (k === "conclusion" && !String(d[k]).trim()));
+}
+const gapPill = (coll, d) => { const n = gaps(coll, d).length; return n ? `<span class="st bad">${t("gap")} ${n}</span>` : ""; };
 function row(coll, d, sub) {
-  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span></a>`;
+  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span></a>`;
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
 const btn = (act, label, data = {}, cls = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
@@ -541,6 +549,7 @@ function viewDetail(coll, id) {
   return `<p><a href="#${back}" class="muted">← ${t("back")}</a></p>
     <div class="head"><h1>${esc(titleOf(d))}</h1><div class="acts">${special.join("")}</div></div>
     <div class="acts">${stPill(coll, d)} <span class="muted">${byText(d)} · ${esc(fmt(d.at))}${d.updated_by ? ` · ${t("updated")} ${esc(d.updated_by)} ${esc(fmt(d.updated_at))}` : ""}</span> <span class="mono muted">${esc(id)}</span></div>
+    ${gaps(coll, d).length ? `<div class="note">${t("gapNote")}${gaps(coll, d).map((k) => esc(L(c.fields.find((f) => f.key === k)))).join("、")}</div>` : ""}
     <section class="card"><dl class="kv">${rows.join("") || `<dd class="empty">—</dd>`}</dl></section>
     ${acts.length ? `<div class="acts"><span class="muted">${t("state")}</span>${acts.join("")}</div>` : ""}
     ${related.length ? `<section class="card"><h2>${t("reportsOf")}</h2>${related.join("")}</section>` : ""}`;
@@ -572,7 +581,7 @@ function viewMembers() {
   return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
-      <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
+      <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : f.type === "bool" ? (pr[f.key] ? "✓" : "—") : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
       <section class="card"><h2>${t("join")}</h2><div class="md"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div></section>
       <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${c}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
     </div>`;

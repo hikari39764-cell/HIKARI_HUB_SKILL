@@ -171,7 +171,8 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
     stamp = lambda by, at, agent=None: {"by": by, "at": at, "updated_at": at, "updated_by": by} | ({"by_agent": agent} if agent else {})
     seed |= {
         "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "main",
-                             "sdk": "4.17.0", "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2},
+                             "sdk": "4.17.0", "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2,
+                             "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt", ".claude/"]},
         "settings/plan": {"ready": ["c-000002", "c-000003"], "assign": {"c-000003": "kato"},
                           "milestones": [{"id": "ms-000001", "date": "2026-11-19", "title": "試遊会 第2回"}, {"id": "ms-000002", "date": "2026-12-03", "title": "中間提出"}]},
         "members/u_owner" if not owner else "members/u_me": {"handle": "hikari", "role": "ディレクター・プログラマー"},
@@ -184,7 +185,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "cards/c-000003": {"title": "壁際で被弾すると床に埋まるのを直す", "kind": "修正", "areas": ["プレイヤー"], "state": "あとで", "bug": "b-000001", **stamp("hikari", "2026-11-09T11:00:00+09:00")},
         "cards/c-000004": {"title": "被弾時の画面揺れを弱める", "kind": "調整", "areas": ["演出"], "state": "確認待ち", "waiting": "レビュー", "assignee": "kato", "pr": "11",
                            "milestone": "ms-000001", **stamp("hikari", "2026-11-08T15:00:00+09:00")},
-        "cards/c-000005": {"title": "ボスの第2形態", "kind": "機能", "areas": ["敵"], "state": "あとで", **stamp("ko", "2026-11-10T09:00:00+09:00")},
+        "cards/c-000005": {"title": "ボスの第2形態", "kind": "機能", "areas": ["敵"], "state": "あとで", "unplanned": True, **stamp("ko", "2026-11-10T09:00:00+09:00")},
         "cards/c-000006": {"title": "タイトル BGM の差し替え", "kind": "素材", "state": "完了", "assignee": "hikari", "milestone": "ms-000001", **stamp("hikari", "2026-11-07T15:00:00+09:00")},
         "reports/r-000001": {"kind": "作業", "card": "c-000001", "title": "敵のノックバック", "state": "作業中", "model": "claude-fable-5-2", "started_at": "2026-11-10T10:20:00+09:00",
                              "progress": [{"at": "2026-11-10T11:02:00+09:00", "note": "距離をフィールドにした。次は空中で当たったときの動き"}],
@@ -192,6 +193,8 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "reports/r-000002": {"kind": "作業", "card": "c-000004", "title": "被弾時の画面揺れを弱める", "state": "終了", "conclusion": "揺れの強さと時間をカメラ効果アセットの値にした。",
                              "changes": ["Assets/Camera/HitShake.hcamfx"], "evidence": ["テスト用シーンで 10 回被弾して確認"], "unverified": ["ボス戦"], "remaining": [],
                              "learned": ["k-000001"], "mistakes": [], "questions": [], "cost_hours": 0.8, "pr": "11", **stamp("kato", "2026-11-09T16:40:00+09:00", "claude-code")},
+        "reports/r-000003": {"kind": "作業", "card": "c-000006", "title": "タイトル BGM の差し替え", "state": "終了", "conclusion": "差し替えた。",
+                             "changes": ["Assets/Audio/title.ogg"], **stamp("ko", "2026-11-07T15:00:00+09:00", "claude-code")},
         "bugs/b-000001": {"title": "壁際で被弾すると床に埋まる", "where": "ステージ1 の右端", "steps": ["壁に背を向けて立つ", "敵の突進を受ける"], "expected": "壁の手前で止まる",
                           "actual": "床の下に落ちる", "frequency": "毎回", "severity": "止まる", "areas": ["プレイヤー"], "state": "対応中", "card": "c-000003",
                           **stamp("ko", "2026-11-09T10:50:00+09:00")},

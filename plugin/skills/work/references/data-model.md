@@ -37,6 +37,8 @@
 | `areas` | 領域の一覧 |  |
 | `budget_hours` | カードの既定予算（時間） |  |
 | `max_sessions` | 1 人が同時に進められる作業 |  |
+| `require_card` | カードを取るまでファイルを変更させない | オフにすると、カードなし・元ブランチでの変更もフックが止めなくなる（保護パスと範囲外の確認は残る） |
+| `protected_paths` | 保護するパス | ここにあるファイルをエージェントが変えるときは、人の確認が要る。フォルダは末尾に /、ワイルドカードは *（例 ProjectSettings/、CMakeLists.txt、*.hikari） |
 
 ### `settings/plan`
 
@@ -67,6 +69,7 @@ ready: 予定に入っているカード id の配列（上から順に取る）
 | `pr` | text | PR | URL か番号 |
 | `bug` | ref | 元の不具合 |  |
 | `started_at` | time | 着手 |  |
+| `unplanned` | bool | 予定外 | オーナーの「予定」に無いカードを取った・その場で作ったときに true |
 
 ## `reports` — 報告
 

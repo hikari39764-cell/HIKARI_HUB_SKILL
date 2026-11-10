@@ -46,6 +46,20 @@ rm -rf .hikari-hub/cache
 
 取る直前に `get` で読み直して `version` と `state` を確かめる。`state` が `あとで` でなければ取らない。
 
+## いま作業中のカードを手元に書く（`.hikari-hub/active.json`）
+
+カードを取って、ブランチを切って、報告を作ったあとに書く。見張りのフックがこれを読む。
+
+```json
+{"card": "c-3fa9c1", "title": "敵のノックバック", "report": "r-91c2aa",
+ "branch": "feat/c-3fa9c1-enemy-knockback",
+ "paths": ["Source/Runtime/Enemy/", "Assets/Prefabs/Enemy.prefab"],
+ "started_at": "2026-11-10T13:05:00+09:00"}
+```
+
+- `paths` はカードの `paths` と同じ。フォルダは末尾に `/`。空ならフックは範囲を確かめない。
+- 終わったら消す。カードを取らずにこのファイルだけ書くことはしない。
+
 ## 作業の報告を作る・進捗を足す・終える
 
 作る（`if_version` なし）：
