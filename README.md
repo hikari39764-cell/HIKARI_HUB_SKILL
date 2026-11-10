@@ -23,10 +23,10 @@ HIKARI エンジンでゲームを作るチームのための作業台。作品�
 2. 自分の Claude Code に、このスキルを入れてもらう。エージェントにこう頼む：
 
    ```
-   このスキルを入れてください：https://github.com/<このリポジトリの owner/name>
+   このスキルを入れてください：https://github.com/hikari39764-cell/HIKARI_HUB_SKILL
    ```
 
-   エージェントが `claude plugin marketplace add <owner/name>` と `claude plugin install hub@hikari-hub` を実行する（確認が出たら許可する）。終わったら Claude Code を開き直す。自分で入れるなら、Claude Code で `/plugin marketplace add <owner/name>` と `/plugin install hub@hikari-hub`。
+   エージェントが `claude plugin marketplace add hikari39764-cell/HIKARI_HUB_SKILL` と `claude plugin install hub@hikari-hub` を実行する（確認が出たら許可する）。終わったら Claude Code を開き直す。自分で入れるなら、Claude Code で `/plugin marketplace add hikari39764-cell/HIKARI_HUB_SKILL` と `/plugin install hub@hikari-hub`。
 
 あとは普段どおりエージェントに頼むだけ。ハブのプロジェクトになっているリポジトリで会話を始めると、エージェントは自動でハブの手順に入る（どのリポジトリがどの作品かは、スキルの中の `projects.json` が `origin` の `owner/name` で見分ける）。
 
