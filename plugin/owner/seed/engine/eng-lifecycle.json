@@ -3,6 +3,5 @@
   "area": "落とし穴",
   "body": "- `OnWorldAttached` / コンポーネントの `OnAttach` は、エディタでの読み込み、オブジェクトの追加、World の作り直しでも呼ばれる。ここにゲームの副作用（スコアの初期化、敵の出現）を書かない。\n- システムとコンポーネントの `Update` は**編集中にも**呼ばれることがある。ゲームのルールは Play 中だけ動かす：\n  - `world.GetGameSession()` が `nullptr` でない（Play の外では `nullptr`）\n  - または `world.GetRuntimeSession().IsPlayActive()`\n- ゲーム開始・シーンの出入りの処理は `IGameProjectSession` に書く。順番は：`OnGameStarted` → 最初のシーンの `OnSceneEntered` → （切替のたびに `OnSceneExiting` → World の入れ替え → `OnSceneEntered`）→ `OnGameStopped`（引数なし。最後の World が外れたあと）。\n- システムとコンポーネントのメンバーは、その World と一緒に消える。シーンをまたぐ状態をそこに置かない。",
   "order": 10,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

@@ -3,6 +3,5 @@
   "area": "落とし穴",
   "body": "- エンジンの非公開ヘッダ（`HIKARI/Scene`、`HIKARI/Render3D`、`HIKARI/Gfx`、エディタの内部）を include する。\n- エンジンのソースを直す。\n- `CreateGameProjectModule()` を 2 つ定義する。\n- `DescribeProperties` の保存キー、`typeName`、`systemId` をあとから変える。\n- コードと内蔵のキャラクターコントローラーで、同じキャラの Transform を同時に動かす（移動は `GetMotion()` に意図を渡す）。\n- `SpawnObjectsWithComponents` に内蔵コンポーネントを入れようとする（作れるのは自作コンポーネントだけ）。\n- シーンやアセットのファイルを手で書き換える。\n- 速さ・時間・距離・色などの調整値をコードに直書きする。",
   "order": 40,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

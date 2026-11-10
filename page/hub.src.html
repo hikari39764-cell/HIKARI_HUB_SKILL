@@ -197,6 +197,7 @@ const T = {
   lock: ["編集中を宣言", "宣告编辑中"], release: ["解除", "解除"], daily: ["日報を書く", "写日报"], reportsOf: ["このカードの報告", "这张卡的汇报"], state: ["状態", "状态"], by: ["書いた人", "谁写的"], updated: ["更新", "更新"],
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
   uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
+  sdkNote: ["SDK {n} の時点の控え", "SDK {n} 时的备忘"], sdkStale: ["古いかもしれない", "可能过时"], askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
   gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："], joinCmd: ["参加のコマンド", "加入命令"],
   viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
 };
@@ -560,7 +561,7 @@ function viewGrouped(coll, groups, groupKey, flag) {
   const extra = [...new Set(all.map((d) => d[groupKey]).filter((g) => g && !groups.includes(g)))];
   const sections = [...groups, ...extra].map((g) => {
     const items = all.filter((d) => d[groupKey] === g);
-    return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
+    return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${d.sdk ? `<span class="tag">${t("sdkNote", esc(d.sdk))}</span>` : ""}${d.sdk && project().sdk && !String(project().sdk).startsWith(String(d.sdk)) ? ` <span class="st bad">${t("sdkStale")}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
   });
   return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
     <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t("none")}</p>`}`;
@@ -571,6 +572,19 @@ function viewRules() {
     <section class="card"><h2>${t("proposals")} ${btn("toggle-all", S.all.proposals ? t("openOnly") : t("all"), { coll: "proposals" }, "ghost mini")}</h2>${list(props)}</section>`;
 }
 
+// メンバーが自分のエージェントにそのまま貼る文：スキルを入れて、このリポジトリを参加させる。
+function askText() {
+  const pr = project(), src = pr.skill_source || "<スキルの入手先>", url = pr.hub_url || "<このページの URL>";
+  return [
+    "HIKARI 制作ハブのスキルを入れて、このリポジトリをハブに参加させてください。",
+    `1. シェルで実行：claude plugin marketplace add ${src}`,
+    "2. シェルで実行：claude plugin install hub@hikari-hub",
+    `3. このリポジトリの直下に .hikari-hub/link.json を作る。中身：{"name": "${pr.name || ""}", "url": "${url}"}`,
+    "4. .git/info/exclude に .hikari-hub/ の行が無ければ足す（.gitignore は触らない。コミットもしない）",
+    "5. 終わったら、Claude Code を開き直すように私に伝える（開き直すとスキルが有効になる）",
+    "claude コマンドが見つからないときは、手順 1 と 2 を私が /plugin で実行するので、そのコマンドを教えてください。",
+  ].join("\n");
+}
 function viewMembers() {
   const pr = project(), fields = SCHEMA.settings.project.fields;
   const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
@@ -583,6 +597,7 @@ function viewMembers() {
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
       <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : f.type === "bool" ? (pr[f.key] ? "✓" : "—") : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
       <section class="card"><h2>${t("join")}</h2><div class="md"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div></section>
+      <section class="card"><h2>${t("askAgent")} ${btn("copy-ask", t("copy"), {}, "ghost mini")}</h2><div class="md"><pre><code id="ask-text">${esc(askText())}</code></pre></div></section>
       <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${esc(c)}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
     </div>`;
 }
@@ -637,6 +652,10 @@ const ACT = {
   close() { $("#dlg").close(); },
   "del-ask"(_, el) { if (el.dataset.sure) { openForm.del().then((ok) => ok && $("#dlg").close()); } else { el.dataset.sure = "1"; el.textContent = t("delSure"); el.className = "btn danger mini"; } },
   "toggle-all"({ coll }) { S.all[coll] = !S.all[coll]; schedule(); },
+  async "copy-ask"() {
+    const el = $("#ask-text");
+    try { await navigator.clipboard.writeText(el.textContent); toast(t("copied")); } catch { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  },
   new({ coll }) { createDoc(coll); },
   edit({ coll, id }) { editDoc(coll, id); },
   async state({ coll, id, to }) {

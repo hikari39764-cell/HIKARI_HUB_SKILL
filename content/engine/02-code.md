@@ -1,5 +1,5 @@
 <!-- area: コード -->
-<!-- id: eng-where-to-write; must: true; order: 10; sdk: 4.17 -->
+<!-- id: eng-where-to-write; must: true; order: 10 -->
 ## どこに何を書くか
 
 | やりたいこと | 書く場所 |

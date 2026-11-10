@@ -40,6 +40,10 @@ description: HIKARI エンジンのゲームプロジェクトでチーム作業
    - `rules` のうち `core: true` のもの全部と、これから触る領域に関係するもの。
    - `engine` のうち `must: true` のもの（この会話で初めてのとき）。ハブに無ければ `references/engine.md`。
    - `settings/project`（元ブランチ、SDK の版、領域、保護するパス）。
+6. **SDK の版を確かめる**（コードを触る作業のとき）：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> …)` と、ハブの `settings/project` の `sdk` を比べる。SDK の場所が分かれば `Sdk/include/HIKARI/Project/GameProjectSdk.h` の版も見る。
+   - 食い違っていたら人に伝える（SDK が更新されたのにハブの設定が古い、など）。
+   - `engine` の記録のうち `sdk` が書いてあるものは**その版の時点の控え**。プロジェクトの版と違う控えは当てにせず、ヘッダを読む。`sdk` が空のものは版に依らない考え方。
+   - ハブの知識がヘッダと食い違っていたら、ヘッダに従い、`engine_requests` に `kind: 知識の訂正` で出す（どの項目が、ヘッダのどこと、どう違うか）。オーナーがページで直す。
 
 ## 1. 今日の状況（`/hub:today`）
 

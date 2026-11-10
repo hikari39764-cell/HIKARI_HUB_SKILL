@@ -3,6 +3,5 @@
   "area": "ビルド",
   "body": "- エディタがプロジェクトを開く・ビルドするたびに、`CMakeLists.txt` の横に `CMakeUserPresets.json`（その PC 用）を書く。VS Code（CMake Tools）や Visual Studio で `hikari-ide` プリセットを選ぶと SDK のヘッダが補完される。\n- IDE のビルドは確認用。エディタが読むモジュールは `Build-HikariProject.ps1`（またはエディタ）のビルド。\n- CMake Tools が「No cache object found」と言ったら `Library/Build/CMake/ide` を消して設定し直す。",
   "order": 40,
-  "must": false,
-  "sdk": "4.17"
+  "must": false
 }

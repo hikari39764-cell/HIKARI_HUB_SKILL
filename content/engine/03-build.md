@@ -16,7 +16,7 @@ $sdk = '<HIKARI のインストール先>\Sdk'
 - **警告ゼロでビルドが通ること**が、コードを変えたカードの最低条件。通していないなら報告の「未確認」に書く。
 - `<HIKARI のインストール先>` が分からないときは人に聞く（PC ごとに違う。リポジトリに書かない）。
 
-<!-- id: eng-reload; must: true; order: 20; sdk: 4.17 -->
+<!-- id: eng-reload; must: true; order: 20 -->
 ## 変更が反映される条件
 
 - 実行中の DLL はソースを変えても変わらない。**Play を止めてから**ビルドし、プロジェクトを開き直す。状態を保ったままのホットリロードはない。
@@ -28,7 +28,7 @@ $sdk = '<HIKARI のインストール先>\Sdk'
   4. エンジンのログの `[SceneSystem] active schedule` に名前が出ているか
 - 入力が効かないとき：DLL が新しいか、Play 中か、ゲーム画面をクリックしたか、入力設定にそのアクションがあるか、UI の入力コンテキストが Gameplay を止めていないか。
 
-<!-- id: eng-verify; must: true; order: 30; sdk: 4.17 -->
+<!-- id: eng-verify; must: true; order: 30 -->
 ## エージェントが確かめられること・人に頼むこと
 
 - 確かめられる：ビルドが警告ゼロで通ること、ロジックの単体の確認（計算、状態遷移）。
@@ -36,7 +36,7 @@ $sdk = '<HIKARI のインストール先>\Sdk'
 - 見た目や手触りを確かめていないカードは「確認待ち（検収）」にして、報告の「未確認」に何を見てほしいかを書く。
 - エンジンは知らないコマンドライン引数を無視して普通にエディタを開く。資料にない引数を推測で使わない。
 
-<!-- id: eng-ide; must: false; order: 40; sdk: 4.17 -->
+<!-- id: eng-ide; must: false; order: 40 -->
 ## IDE で書く
 
 - エディタがプロジェクトを開く・ビルドするたびに、`CMakeLists.txt` の横に `CMakeUserPresets.json`（その PC 用）を書く。VS Code（CMake Tools）や Visual Studio で `hikari-ide` プリセットを選ぶと SDK のヘッダが補完される。

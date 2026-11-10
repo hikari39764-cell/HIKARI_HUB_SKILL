@@ -11,7 +11,7 @@ argument-hint: "<作品名> [GitHub の owner/repo]"
 2. **ページを用意する**：`.hikari-hub/page/` を作り、`${CLAUDE_PLUGIN_ROOT}/owner/hub.html` を `.hikari-hub/page/hub.html` にコピーして、中の `__PROJECT_NAME__` を全部作品名に置き換える（シェルのコマンドで行う）。`.git/info/exclude` に `.hikari-hub/` の行が無ければ足す。
 3. **公開する**：`Artifact` ツールで `.hikari-hub/page/hub.html` を publish する。`capabilities` には `${CLAUDE_PLUGIN_ROOT}/owner/capabilities.json` の中身をそのまま渡す。`icon` は `team`。返ってきた URL を控える。
 4. **初期データを入れる**（`ArtifactData` の batch、50 件までずつ）：
-   - `settings/project`：`name`、`repo`、`hub_url`（ページの URL）、`base_branch`、`sdk`、`areas`、`budget_hours: 3`、`max_sessions: 2`、`require_card: true`、`protected_paths: ["ProjectSettings/", "CMakeLists.txt", "Project.hikari", ".github/", ".clang-format", ".gitattributes"]`
+   - `settings/project`：`name`、`repo`、`hub_url`（ページの URL）、`skill_source`（メンバーがスキルを入れるときの指定。GitHub の `owner/name` か URL。人に聞く）、`base_branch`、`sdk`、`areas`、`budget_hours: 3`、`max_sessions: 2`、`require_card: true`、`protected_paths: ["ProjectSettings/", "CMakeLists.txt", "Project.hikari", ".github/", ".clang-format", ".gitattributes"]`
    - `settings/plan`：`{"ready": [], "assign": {}, "milestones": []}`
    - `rules`：`${CLAUDE_PLUGIN_ROOT}/owner/seed/rules/*.json` を、ファイル名（拡張子なし）を id にして `file_path` で入れる
    - `engine`：`${CLAUDE_PLUGIN_ROOT}/owner/seed/engine/*.json` を同じように入れる

@@ -3,6 +3,5 @@
   "area": "コード",
   "body": "| やりたいこと | 書く場所 |\n|---|---|\n| ゲーム全体の進行（ラウンド、勝敗、スコア） | `IGameSystem`（テンプレートの `Game`）＋普通の C++ クラス |\n| オブジェクトごとの値をエディタで調整したい | `IGameComponent` に値を持たせ、`DescribeProperties` で宣言 |\n| 同じ種類のオブジェクトをまとめて動かす | コンポーネントはデータだけ、`IGameSystem` が `ForEachComponent` で処理 |\n| 1 個のオブジェクトだけの小さな動き | `IGameComponent::Update(GameComponentContext&, float)` |\n| シーンをまたいで残す状態（所持品、進行度） | `IGameProjectSession`（テンプレートの `GameSession`） |\n| 次の起動でも残すデータ | 自分で決めた形式を `SaveGameView`（`GameFlowViews.h`）で読み書き |\n\n- 中のクラスが全部エンジンの型を継承する必要はない。`RoundRules` や `Inventory` は普通のクラスでよい。\n- 同じ状態を複数の場所で持たない。持ち主を 1 つに決める。",
   "order": 10,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

@@ -3,6 +3,5 @@
   "area": "落とし穴",
   "body": "- `WorldView` から取ったサービスの View、クエリ中のコンポーネントへの参照、借りた文字列（`std::string_view`）は、**そのコールバックの中だけ**で使う。シーンが変わったら取り直す。\n- オブジェクトを覚えておくなら `GameProjectObjectHandle`。使う前に `world.FindObject(handle).IsValid()` を確かめる。\n- ハンドルは保存できない。セーブにはシーンの GUID とシーンオブジェクト id（`ObjectView::GetSceneObjectId()`）を書き、読み込んだあとで解決し直す。\n- `world.GetGameSession()` のポインタは、その Play のあいだだけ有効。",
   "order": 20,
-  "must": true,
-  "sdk": "4.17"
+  "must": true
 }

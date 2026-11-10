@@ -14,7 +14,7 @@
 
 探し方：やりたいことの言葉で `grep` する（例 `grep -rn "Vibration" <HIKARI>/Sdk/include/HIKARI/Project`）。見つからなければ「まだない」と考えて、ハブの「エンジンへの要望」に出す。
 
-<!-- id: eng-request; must: true; order: 20; sdk: 4.17 -->
+<!-- id: eng-request; must: true; order: 20 -->
 ## エンジンに足りないものを見つけたら
 
 1. 公開ヘッダを探して、本当にないことを確かめる。

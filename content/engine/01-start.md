@@ -1,14 +1,21 @@
 <!-- area: はじめに -->
-<!-- id: eng-how-to-read; must: true; order: 5; sdk: 4.17 -->
+<!-- id: eng-how-to-read; must: true; order: 5 -->
 ## この知識の使い方（最初に読む）
 
-- ここに書いてあるのは、HIKARI SDK 4.17 の公開ヘッダと新規プロジェクトのテンプレートから確かめた内容。
-- **正しいのは常に SDK のヘッダ**（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）。使う API は、呼ぶ前にそのヘッダのコメントを読む。コメントに寿命・スレッド・失敗時の扱いが書いてある。
+エンジン知識には 2 種類ある。
+
+- **考え方**（版の印がないもの）：役割分担、ライフサイクルの落とし穴、確かめ方など。SDK の版が変わっても使える。
+- **版ごとの控え**（「SDK 4.17 の時点」のように版の印があるもの）：API の名前・一覧・コード例。その版のヘッダから書き写したもので、SDK が更新されると古くなる。**道しるべとして読み、正確な内容は必ずヘッダで確かめる。**
+
+守ること：
+
+- **正しいのは常に、いま入っている SDK のヘッダ**（`<HIKARI>/Sdk/include/HIKARI/Project/*.h`）。使う API は、呼ぶ前にそのヘッダのコメントを読む。コメントに寿命・スレッド・失敗時の扱いが書いてある。
+- **版を確かめる**：プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> CONFIG REQUIRED)`、入っている SDK の `HIKARI/Project/GameProjectSdk.h`（`HIKARI::SDK::kVersionMajor / kVersionMinor / kVersionPatch`）、ハブのプロジェクト設定の「HIKARI SDK のバージョン」。食い違っていたら人に伝える。控えの版がプロジェクトの版と違うときは、その控えを当てにしない。
+- **食い違いを見つけたら直す仕組みに乗せる**：ハブの知識がヘッダと違っていたら、ヘッダに従って作業し、ハブの「エンジンへの要望」に種類「知識の訂正」で出す（どの項目が、ヘッダのどこと、どう違うか）。
 - SDK の `docs/` にある古い手引きは内容が古いことがある。食い違ったらヘッダに従う。
-- いまの版は `HIKARI/Project/GameProjectSdk.h` の `HIKARI::SDK::kVersionMajor / kVersionMinor / kVersionPatch`。プロジェクトの `CMakeLists.txt` の `find_package(HIKARI <版> CONFIG REQUIRED)` と合っているか見る。
 - 公開ヘッダにない機能は「まだない」。非公開ヘッダで回避せず、ハブの「エンジンへの要望」に出す。
 
-<!-- id: eng-overview; must: true; order: 10; sdk: 4.17 -->
+<!-- id: eng-overview; must: true; order: 10 -->
 ## 全体像：誰が何を持つか
 
 - ゲームは独立した C++ プロジェクト。`HIKARI_GameProject.dll` にビルドされ、エンジン（エディタ／実行時）が読み込む。
@@ -18,7 +25,7 @@
 - コードは「いつ・どんな規則で」を決め、「どう見えるか・どれくらいか」はコンポーネントのフィールドかアセットに出してエディタで調整する。
 - エンジンのソースは直さない。`WinMain` も書かない。include するのは `HIKARI/Project/*` と `HIKARI/Runtime/ComponentTypeId.h` だけ。
 
-<!-- id: eng-layout; must: true; order: 20; sdk: 4.17 -->
+<!-- id: eng-layout; must: true; order: 20 -->
 ## プロジェクトの構成
 
 ```text

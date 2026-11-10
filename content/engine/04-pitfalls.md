@@ -1,5 +1,5 @@
 <!-- area: 落とし穴 -->
-<!-- id: eng-lifecycle; must: true; order: 10; sdk: 4.17 -->
+<!-- id: eng-lifecycle; must: true; order: 10 -->
 ## ライフサイクル：Attach はゲーム開始ではない
 
 - `OnWorldAttached` / コンポーネントの `OnAttach` は、エディタでの読み込み、オブジェクトの追加、World の作り直しでも呼ばれる。ここにゲームの副作用（スコアの初期化、敵の出現）を書かない。
@@ -9,7 +9,7 @@
 - ゲーム開始・シーンの出入りの処理は `IGameProjectSession` に書く。順番は：`OnGameStarted` → 最初のシーンの `OnSceneEntered` → （切替のたびに `OnSceneExiting` → World の入れ替え → `OnSceneEntered`）→ `OnGameStopped`（引数なし。最後の World が外れたあと）。
 - システムとコンポーネントのメンバーは、その World と一緒に消える。シーンをまたぐ状態をそこに置かない。
 
-<!-- id: eng-lifetime; must: true; order: 20; sdk: 4.17 -->
+<!-- id: eng-lifetime; must: true; order: 20 -->
 ## 持ち出してはいけないもの
 
 - `WorldView` から取ったサービスの View、クエリ中のコンポーネントへの参照、借りた文字列（`std::string_view`）は、**そのコールバックの中だけ**で使う。シーンが変わったら取り直す。
@@ -26,7 +26,7 @@
 - イベント（`ReadEvent`）をフレームをまたいで読むときは、番号で重複を除く。
 - Play 中の変更はエディタのシーンに書き戻されない。
 
-<!-- id: eng-donts; must: true; order: 40; sdk: 4.17 -->
+<!-- id: eng-donts; must: true; order: 40 -->
 ## やってはいけないこと
 
 - エンジンの非公開ヘッダ（`HIKARI/Scene`、`HIKARI/Render3D`、`HIKARI/Gfx`、エディタの内部）を include する。
