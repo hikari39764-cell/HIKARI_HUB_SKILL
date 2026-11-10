@@ -198,8 +198,7 @@ const T = {
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
   uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
   askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
-  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："], joinCmd: ["参加のコマンド", "加入命令"],
-  viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
+  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："],  viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
 const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
@@ -572,26 +571,22 @@ function viewRules() {
     <section class="card"><h2>${t("proposals")} ${btn("toggle-all", S.all.proposals ? t("openOnly") : t("all"), { coll: "proposals" }, "ghost mini")}</h2>${list(props)}</section>`;
 }
 
-// メンバーが自分のエージェントにそのまま貼る文：スキルを入れて、このリポジトリを参加させる。
+// メンバーが自分のエージェントにそのまま貼る文：スキルを入れるだけ。どの作品のリポジトリかはスキルが見分ける。
 function askText() {
-  const pr = project(), src = pr.skill_source || "<スキルの入手先>", url = pr.hub_url || "<このページの URL>";
+  const src = project().skill_source || "<スキルのリポジトリ>";
   return [
-    "HIKARI 制作ハブのスキルを入れて、このリポジトリをハブに参加させてください。",
-    `1. シェルで実行：claude plugin marketplace add ${src}`,
-    "2. シェルで実行：claude plugin install hub@hikari-hub",
-    `3. このリポジトリの直下に .hikari-hub/link.json を作る。中身：{"name": "${pr.name || ""}", "url": "${url}"}`,
-    "4. .git/info/exclude に .hikari-hub/ の行が無ければ足す（.gitignore は触らない。コミットもしない）",
-    "5. 終わったら、Claude Code を開き直すように私に伝える（開き直すとスキルが有効になる）",
-    "claude コマンドが見つからないときは、手順 1 と 2 を私が /plugin で実行するので、そのコマンドを教えてください。",
+    `このスキルを入れてください：https://github.com/${src}`,
+    `シェルで claude plugin marketplace add ${src} と claude plugin install hub@hikari-hub を実行する。`,
+    "終わったら、Claude Code を開き直すように私に伝えてください。",
   ].join("\n");
 }
 function viewMembers() {
   const pr = project(), fields = SCHEMA.settings.project.fields;
   const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
   const steps = S.lang === "zh"
-    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "在这一页登记自己的称呼", "在 Claude Code 里安装 hub 插件（只需一次）", "在游戏仓库里运行下面的加入命令（每个仓库一次，不会往仓库里提交任何文件）", "之后照常让智能体干活：它会先登记要做的事，再按规则做，做完写报告"]
-    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "このページで自分の呼び名を登録する", "Claude Code に hub プラグインを入れる（1 回だけ）", "ゲームのリポジトリの中で、下の参加のコマンドを実行する（リポジトリごとに 1 回。リポジトリには何もコミットされない）", "あとは普段どおりエージェントに頼む：やることを登録し、ルールに沿って作業し、終わりに報告を書く"];
-  const cmds = [["/hub:join " + (pr.hub_url || "<URL>"), t("joinCmd")], ["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
+    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "让自己的 Claude Code 安装 skill（把下面那段话贴给它，只需一次）", "之后照常让智能体干活：它会自己登记要做的事，按规则做，做完写报告"]
+    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "自分の Claude Code にスキルを入れてもらう（下の文を貼る。1 回だけ）", "あとは普段どおりエージェントに頼む：やることを自分で登録し、ルールに沿って作業し、終わりに報告を書く"];
+  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
   return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>

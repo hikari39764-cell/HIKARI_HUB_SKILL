@@ -170,7 +170,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
     seed |= {
         "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "main",
                              "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2,
-                             "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt"], "hub_url": "https://claude.ai/artifact/EXAMPLE", "skill_source": "example/hikari-hub"},
+                             "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt"], "skill_source": "example/hikari-hub"},
         "settings/plan": {"ready": ["c-000002", "c-000003"], "assign": {"c-000003": "kato"},
                           "milestones": [{"id": "ms-000001", "date": "2026-11-19", "title": "試遊会 第2回"}, {"id": "ms-000002", "date": "2026-12-03", "title": "中間提出"}]},
         "members/u_owner" if not owner else "members/u_me": {"handle": "hikari", "role": "ディレクター・プログラマー"},

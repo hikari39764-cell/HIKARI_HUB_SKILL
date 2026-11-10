@@ -1,6 +1,6 @@
 # ハブの読み書き（ArtifactData の使い方）
 
-どの呼び出しにも `url`（`.hikari-hub/link.json` の `url`）を付ける。項目の一覧は `data-model.md`。
+どの呼び出しにも `url` を付ける（`${CLAUDE_PLUGIN_ROOT}/projects.json` で、このリポジトリの `owner/name` に対応する `url`）。項目の一覧は `data-model.md`。
 
 ## id と時刻
 

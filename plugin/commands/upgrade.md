@@ -4,7 +4,7 @@ description: （オーナー専用）このプロジェクトのハブのペー�
 
 **オーナーだけが実行する。** データ（カードや報告、ルール）は変わらない。変わるのはページの画面だけ。
 
-1. `.hikari-hub/link.json` から `name` と `url` を読む。
+1. `${CLAUDE_PLUGIN_ROOT}/projects.json` から、このリポジトリの `name` と `url` を読む。
 2. `Artifact` ツールの `action: "read"` で、いまのページを読む（publish の前に必要）。
 3. `${CLAUDE_PLUGIN_ROOT}/owner/hub.html` を `.hikari-hub/page/hub.html` にコピーし、`__PROJECT_NAME__` を作品名に置き換える。
 4. `Artifact` ツールで publish する（`url` にいまのページを指定）。`capabilities` は、`${CLAUDE_PLUGIN_ROOT}/owner/capabilities.json` がいまの宣言と違うときだけ渡す。同じなら省く（省くと今の宣言が引き継がれる）。

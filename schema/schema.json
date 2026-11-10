@@ -1469,18 +1469,11 @@
           "zh": "什么样的作品"
         },
         {
-          "key": "hub_url",
-          "type": "text",
-          "ja": "このページの URL",
-          "zh": "本页的 URL",
-          "help": "メンバーが /hub:join で使う"
-        },
-        {
           "key": "skill_source",
           "type": "text",
-          "ja": "スキルの入手先",
-          "zh": "skill 包的来源",
-          "help": "メンバーがスキルを入れるときの指定。GitHub の owner/name か URL"
+          "ja": "スキルのリポジトリ",
+          "zh": "skill 的仓库",
+          "help": "GitHub の owner/name。メンバーがエージェントに頼む文に入る"
         },
         {
           "key": "repo",

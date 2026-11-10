@@ -31,8 +31,7 @@
 |---|---|---|
 | `name` | 作品名 |  |
 | `summary` | どんな作品か |  |
-| `hub_url` | このページの URL | メンバーが /hub:join で使う |
-| `skill_source` | スキルの入手先 | メンバーがスキルを入れるときの指定。GitHub の owner/name か URL |
+| `skill_source` | スキルのリポジトリ | GitHub の owner/name。メンバーがエージェントに頼む文に入る |
 | `repo` | GitHub リポジトリ | owner/name |
 | `base_branch` | 元にするブランチ | 既定 main |
 | `areas` | 領域の一覧 |  |
