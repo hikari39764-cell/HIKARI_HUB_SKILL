@@ -29,6 +29,8 @@ COLLECTIONS = {c["key"]: c for c in SCHEMA["collections"]}
 OWNER_ONLY = ["settings"] + [c["key"] for c in SCHEMA["collections"] if c["writer"] == "owner"]
 HUB = json.loads((ROOT / "plugin" / "hub.json").read_text(encoding="utf-8"))
 PROJECTS = json.loads((ROOT / "plugin" / "projects.json").read_text(encoding="utf-8"))
+# 招待された人が読むだけの作品（書けるのはオーナーだけ）：エンジンの中枢（D:/PJ/HIKARI-HQ/cloud が docs/engine/ に置くページ）。
+READ_ONLY_PROJECTS = ["engine"]
 HEAD = ('<!doctype html><html lang="ja"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">')
 RULES = """rules_version = '2';
@@ -37,6 +39,7 @@ RULES = """rules_version = '2';
 //
 //   オーナー    ：下の isOwner() に書いたメールの Google アカウント。すべての作品を読み書きでき、招待の一覧を管理する。
 //   メンバー    ：作品の invites/<Google アカウントのメール（小文字）> がある人。その作品を読み、記録を作る・直す。
+//                 ただし __READ_ONLY_TEXT__ は招待された人も読むだけ（書けるのはオーナーだけ）。
 //   オーナーだけ：__OWNER_ONLY_TEXT__ への書き込み、招待の一覧、記録の削除。
 //   本人だけ    ：members/<自分の uid>。
 service cloud.firestore {
@@ -53,6 +56,7 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/projects/$(pid)/invites/$(request.auth.token.email.lower()));
     }
     function isMember(pid) { return isOwner() || invited(pid); }
+    function canWrite(pid) { return isOwner() || (invited(pid) && !(pid in [__READ_ONLY__])); }
 
     // ページと hub コマンドが「自分はオーナーか」を確かめる場所（読めればオーナー。中身は無い）。
     match /hub/owner {
@@ -63,13 +67,13 @@ service cloud.firestore {
     }
     match /projects/{pid}/members/{uid} {
       allow read: if isMember(pid);
-      allow create, update: if isOwner() || (invited(pid) && request.auth.uid == uid);
+      allow create, update: if isOwner() || (canWrite(pid) && request.auth.uid == uid);
       allow delete: if isOwner();
     }
     match /projects/{pid}/{coll}/{id} {
       allow read: if coll != 'invites' && isMember(pid);
       allow create, update: if (coll in [__OWNER_ONLY__] && isOwner())
-        || (!(coll in [__OWNER_ONLY__, 'invites', 'members']) && isMember(pid));
+        || (!(coll in [__OWNER_ONLY__, 'invites', 'members']) && canWrite(pid));
       allow delete: if isOwner();
     }
   }
@@ -133,7 +137,8 @@ def firestore_rules() -> str:
     if not re.fullmatch(r"[^\s'@/]+@[^\s'@/]+", email) and email != "OWNER_EMAIL_HERE":
         raise SystemExit("firebase/owner-email.local がメールの形になっていません")
     quoted = ", ".join(f"'{k}'" for k in OWNER_ONLY)
-    return RULES.replace("__OWNER_ONLY_TEXT__", "・".join(OWNER_ONLY)).replace("__OWNER_ONLY__", quoted).replace("__OWNER_EMAIL__", email)
+    read_only = ", ".join(f"'{k}'" for k in READ_ONLY_PROJECTS)
+    return RULES.replace("__READ_ONLY_TEXT__", "・".join(READ_ONLY_PROJECTS)).replace("__READ_ONLY__", read_only).replace("__OWNER_ONLY_TEXT__", "・".join(OWNER_ONLY)).replace("__OWNER_ONLY__", quoted).replace("__OWNER_EMAIL__", email)
 
 
 def embed(value) -> str:
