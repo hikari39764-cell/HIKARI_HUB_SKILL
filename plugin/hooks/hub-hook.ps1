@@ -1,9 +1,12 @@
 # HIKARI Production Hub guard hook (keep this file ASCII-only: Windows PowerShell 5.1 reads
 # BOM-less scripts in the system code page; all user-facing text lives in hub-messages.json).
 #
+# A repository takes part in a hub once /hub:join has written .hikari-hub/link.json into it
+# (a local, git-excluded folder). Everywhere else this hook does nothing.
+#
 #   session : SessionStart - tells the agent this repository is a hub project and what to do first.
-#   edit    : PreToolUse (Edit / Write / MultiEdit / NotebookEdit) - no card, no edit; no edits on the
-#             base branch; protected files and files outside the card's scope need the human's OK.
+#   edit    : PreToolUse (Edit / Write / MultiEdit / NotebookEdit) - no registered work, no edit;
+#             no edits on the base branch; owner-protected files need the human's OK.
 #
 # The guard fails open: if the hook itself breaks, work is not blocked.
 param([string]$Mode = "edit")
@@ -22,11 +25,11 @@ function Read-Json([string]$path) {
     return [IO.File]::ReadAllText($path, $utf8) | ConvertFrom-Json
 }
 
-# Walks up from $start to the folder that holds .hikari-hub.toml.
+# Walks up from $start to the folder that holds .hikari-hub/link.json.
 function Find-HubRoot([string]$start) {
     $dir = $start
     while ($dir) {
-        if (Test-Path -LiteralPath (Join-Path $dir ".hikari-hub.toml")) { return $dir }
+        if (Test-Path -LiteralPath (Join-Path $dir ".hikari-hub/link.json")) { return $dir }
         $parent = Split-Path -Path $dir -Parent
         if (-not $parent -or $parent -eq $dir) { return $null }
         $dir = $parent
@@ -86,13 +89,12 @@ try {
         if ($event -and $event.cwd) { $start = [string]$event.cwd }
         $root = Find-HubRoot $start
         if (-not $root) { exit 0 }
-        $name = ""
-        if ([IO.File]::ReadAllText((Join-Path $root ".hikari-hub.toml"), $utf8) -match 'name\s*=\s*"([^"]*)"') { $name = $Matches[1] }
+        $link = Read-Json (Join-Path $root ".hikari-hub/link.json")
         $active = Read-Json (Join-Path $root ".hikari-hub/active.json")
         if ($active -and $active.card) {
-            Write-Out ($msg.session_active -f $name, [string]$active.title, [string]$active.branch)
+            Write-Out ($msg.session_active -f [string]$link.name, [string]$active.title, [string]$active.branch)
         } else {
-            Write-Out ($msg.session_idle -f $name)
+            Write-Out ($msg.session_idle -f [string]$link.name)
         }
         exit 0
     }
@@ -104,7 +106,7 @@ try {
     $root = Find-HubRoot (Split-Path -Path $file -Parent)
     if (-not $root) { exit 0 }
     $rel = $file.Substring($root.Length).TrimStart('\', '/').Replace("\", "/")
-    # The agent's own working files (cache, active card, pending notes) are always writable.
+    # The agent's own working files (link, cache, active work, pending notes) are always writable.
     if ($rel.StartsWith(".hikari-hub/", [StringComparison]::OrdinalIgnoreCase)) { exit 0 }
 
     $project = Read-Json (Join-Path $root ".hikari-hub/cache/settings/project.json")
@@ -112,20 +114,15 @@ try {
 
     $requireCard = $true
     if ($null -ne $project.require_card) { $requireCard = [bool]$project.require_card }
-    $active = Read-Json (Join-Path $root ".hikari-hub/active.json")
-    $hasCard = [bool]($active -and $active.card)
-
     if ($requireCard) {
-        if (-not $hasCard) { Send-Decision "deny" $msg.no_card }
+        $active = Read-Json (Join-Path $root ".hikari-hub/active.json")
+        if (-not ($active -and $active.card)) { Send-Decision "deny" $msg.no_card }
         $base = "main"
         if ($project.base_branch) { $base = [string]$project.base_branch }
         $branch = Get-Branch $root
         if ($branch -and $branch -eq $base) { Send-Decision "deny" ($msg.on_base -f $base, [string]$active.branch) }
     }
     if (Test-PathMatch $rel $project.protected_paths) { Send-Decision "ask" ($msg.protected -f $rel) }
-    if ($hasCard -and $active.paths -and @($active.paths).Count -gt 0 -and -not (Test-PathMatch $rel $active.paths)) {
-        Send-Decision "ask" ($msg.out_of_scope -f $rel, [string]$active.title)
-    }
     exit 0
 } catch {
     [Console]::Error.WriteLine("hub-hook: " + $_.Exception.Message)

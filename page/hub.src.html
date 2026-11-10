@@ -184,7 +184,7 @@ const T = {
   readonly: ["閲覧のみ", "只读"], owner: ["オーナー", "所有者"], add: ["新規", "新建"], edit: ["編集", "编辑"], save: ["保存", "保存"], cancel: ["やめる", "取消"], del: ["削除", "删除"], delSure: ["本当に削除", "确认删除"],
   saved: ["保存しました", "已保存"], failed: ["保存できませんでした", "保存失败"], denied: ["書き込む権限がありません", "没有写入权限"], need: ["入力してください", "请填写"],
   none: ["ありません", "没有"], all: ["すべて表示", "显示全部"], openOnly: ["進行中だけ", "只看进行中"], back: ["一覧へ", "返回列表"],
-  working: ["作業中", "进行中"], waitYou: ["あなたの確認待ち", "等你处理"], next: ["予定（次に取るカード）", "预定（接下来领的卡）"], deadlines: ["締切", "截止"], editing: ["編集中", "编辑中"],
+  working: ["作業中", "进行中"], waitYou: ["あなたの確認待ち", "等你处理"], next: ["オーナーのおすすめ（予定）", "所有者建议先做的（预定）"], deadlines: ["締切", "截止"], editing: ["編集中", "编辑中"],
   recent: ["最近の報告", "最近的汇报"], openBugs: ["未対応の不具合", "未处理的 bug"], openQs: ["答えを待っている質問", "等回答的疑问"],
   later: ["あとで", "以后"], ready: ["予定", "预定"], review: ["確認待ち", "等确认"], done: ["完了", "完成"],
   take: ["取る", "领取"], toReady: ["予定へ", "放进预定"], offReady: ["外す", "移出"], assign: ["担当", "担当"], anyone: ["誰でも", "谁都行"], daysLeft: ["あと {n} 日", "还有 {n} 天"], today: ["今日", "今天"], overdue: ["{n} 日超過", "超期 {n} 天"],
@@ -197,13 +197,13 @@ const T = {
   lock: ["編集中を宣言", "宣告编辑中"], release: ["解除", "解除"], daily: ["日報を書く", "写日报"], reportsOf: ["このカードの報告", "这张卡的汇报"], state: ["状態", "状态"], by: ["書いた人", "谁写的"], updated: ["更新", "更新"],
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
   uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
-  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："], unplanned: ["予定外", "计划外"],
+  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："], joinCmd: ["参加のコマンド", "加入命令"],
   viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
 const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
 const VIEWS = [
-  { key: "home" }, { key: "board" }, { key: "reports", coll: "reports" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
+  { key: "home" }, { key: "board" }, { key: "reports", coll: "reports" }, { key: "guides", coll: "guides" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
   { key: "decisions", coll: "decisions" }, { key: "knowledge", coll: "knowledge" }, { key: "engine" }, { key: "mistakes", coll: "mistakes" },
   { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
 ];
@@ -295,7 +295,7 @@ function stPill(coll, d) {
   const label = S.lang === "zh" ? (name === "予定" ? t("ready") : (def && def.zh) || name) : name;
   return `<span class="st ${stClass(coll, d)}">${esc(label)}${d.state === "確認待ち" && d.waiting ? "・" + esc(d.waiting) : ""}</span>`;
 }
-const tags = (d) => [d.unplanned && t("unplanned"), d.kind, d.severity, d.frequency, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+const tags = (d) => [d.kind, d.severity, d.frequency, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
 // 終了した作業の報告で、必ず書く項目が抜けているもの（空の配列は「なし」として書いてあると見なす）。
 function gaps(coll, d) {
   const req = COLL[coll].required_when_done;
@@ -495,7 +495,7 @@ function viewBoard() {
   const ready = p.ready.map((id) => cards.find((c) => c.id === id)).filter((c) => c && c.state === "あとで");
   const later = cards.filter((c) => c.state === "あとで" && !p.ready.includes(c.id));
   const cols = [
-    [t("later"), later.map((c) => kc(c, o ? btn("plan-add", t("toReady"), { id: c.id }, "mini star") : ""))],
+    [t("later"), later.map((c) => kc(c, (o ? btn("plan-add", t("toReady"), { id: c.id }, "mini star") : "") + (canWrite("cards") ? btn("state", t("take"), { coll: "cards", id: c.id, to: "作業中" }, "mini") : "")))],
     [t("ready"), ready.map((c) => kc(c, (o ? btn("plan-up", "↑", { id: c.id }, "mini ghost") + btn("plan-down", "↓", { id: c.id }, "mini ghost") + btn("plan-assign", t("assign"), { id: c.id }, "mini ghost") + btn("plan-remove", t("offReady"), { id: c.id }, "mini ghost") : "") + (canWrite("cards") ? btn("state", t("take"), { coll: "cards", id: c.id, to: "作業中" }, "mini") : "")))],
     [t("working"), cards.filter((c) => c.state === "作業中").map((c) => kc(c))],
     [t("review"), cards.filter((c) => c.state === "確認待ち").map((c) => kc(c, `<span class="tag">${esc(c.waiting || "レビュー")}</span>`))],
@@ -575,15 +575,15 @@ function viewMembers() {
   const pr = project(), fields = SCHEMA.settings.project.fields;
   const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
   const steps = S.lang === "zh"
-    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "在这一页登记自己的称呼", "接受 GitHub 仓库的邀请，clone 仓库", "在 Claude Code 里添加插件市场并安装 hub 插件（见仓库 README）", "在仓库里对 Claude Code 说：/hub:today"]
-    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "このページで自分の呼び名を登録する", "GitHub リポジトリの招待を承認して clone する", "Claude Code にマーケットプレイスを追加して hub プラグインを入れる（リポジトリの README を参照）", "リポジトリの中で Claude Code に /hub:today と言う"];
-  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "领一张卡、开分支、开工" : "カードを取り、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、推送、写终了报告" : "コミット・push・終了報告"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
+    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "在这一页登记自己的称呼", "在 Claude Code 里安装 hub 插件（只需一次）", "在游戏仓库里运行下面的加入命令（每个仓库一次，不会往仓库里提交任何文件）", "之后照常让智能体干活：它会先登记要做的事，再按规则做，做完写报告"]
+    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "このページで自分の呼び名を登録する", "Claude Code に hub プラグインを入れる（1 回だけ）", "ゲームのリポジトリの中で、下の参加のコマンドを実行する（リポジトリごとに 1 回。リポジトリには何もコミットされない）", "あとは普段どおりエージェントに頼む：やることを登録し、ルールに沿って作業し、終わりに報告を書く"];
+  const cmds = [["/hub:join " + (pr.hub_url || "<URL>"), t("joinCmd")], ["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
   return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
       <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : f.type === "bool" ? (pr[f.key] ? "✓" : "—") : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
       <section class="card"><h2>${t("join")}</h2><div class="md"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div></section>
-      <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${c}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
+      <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${esc(c)}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
     </div>`;
 }
 function viewSearch() {

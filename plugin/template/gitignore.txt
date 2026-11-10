@@ -1,6 +1,0 @@
-# HIKARI：自動で作られるもの
-Library/
-CMakeUserPresets.json
-
-# HIKARI 制作ハブ：手元の控え（.hikari-hub.toml はコミットする）
-.hikari-hub/

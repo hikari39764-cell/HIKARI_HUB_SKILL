@@ -31,22 +31,23 @@
 |---|---|---|
 | `name` | 作品名 |  |
 | `summary` | どんな作品か |  |
+| `hub_url` | このページの URL | メンバーが /hub:join で使う |
 | `repo` | GitHub リポジトリ | owner/name |
 | `base_branch` | 元にするブランチ | 既定 main |
 | `sdk` | HIKARI SDK のバージョン |  |
 | `areas` | 領域の一覧 |  |
 | `budget_hours` | カードの既定予算（時間） |  |
 | `max_sessions` | 1 人が同時に進められる作業 |  |
-| `require_card` | カードを取るまでファイルを変更させない | オフにすると、カードなし・元ブランチでの変更もフックが止めなくなる（保護パスと範囲外の確認は残る） |
+| `require_card` | 作業を登録するまでファイルを変更させない | オンのとき、エージェントは /hub:start でやることを登録するまで（また元ブランチでは）ファイルを変更できない。オフにしても保護パスの確認は残る |
 | `protected_paths` | 保護するパス | ここにあるファイルをエージェントが変えるときは、人の確認が要る。フォルダは末尾に /、ワイルドカードは *（例 ProjectSettings/、CMakeLists.txt、*.hikari） |
 
 ### `settings/plan`
 
-ready: 予定に入っているカード id の配列（上から順に取る）。assign: {カード id: 呼び名}（空なら誰でも取れる）。milestones: [{id, title, date}]
+ready: オーナーがおすすめするカード id の配列（上から順。入っていなくても誰でも始められる）。assign: {カード id: 呼び名}（おすすめの担当）。milestones: [{id, title, date}]
 
 ## `cards` — カード
 
-作業の単位。オーナーが「予定」に入れたカードを、メンバーとエージェントが自分で取って進める。
+作業の単位。何をやるかは各自が決めてよい：自分で作って、自分で始める。オーナーの「予定」は、おすすめの順番。
 
 - 書ける人：メンバー　／　id：`c-xxxxxx`
 - 状態（`state`）：`あとで` → `作業中` → `確認待ち` → `完了`（終わり） → `やらない`（終わり）。新しく作るときは `あとで`
@@ -69,7 +70,6 @@ ready: 予定に入っているカード id の配列（上から順に取る）
 | `pr` | text | PR | URL か番号 |
 | `bug` | ref | 元の不具合 |  |
 | `started_at` | time | 着手 |  |
-| `unplanned` | bool | 予定外 | オーナーの「予定」に無いカードを取った・その場で作ったときに true |
 
 ## `reports` — 報告
 
@@ -77,7 +77,7 @@ ready: 予定に入っているカード id の配列（上から順に取る）
 
 - 書ける人：メンバー　／　id：`r-xxxxxx`
 - 状態（`state`）：`作業中` → `終了`（終わり） → `中断`（終わり）。新しく作るときは `作業中`
-- 終了のとき必ず書く項目：`conclusion`、`changes`、`evidence`、`unverified`、`remaining`、`learned`、`mistakes`、`questions`（ないときは空の配列か「なし」）
+- 終了のとき必ず書く項目：`conclusion`、`changes`、`evidence`、`unverified`、`remaining`、`tuning`、`learned`、`mistakes`、`questions`（ないときは空の配列か「なし」）
 - 作るときに書く項目：`today`、`next`、`trouble`
 
 | 項目 | 型 | 意味 | 補足 |
@@ -95,6 +95,7 @@ ready: 予定に入っているカード id の配列（上から順に取る）
 | `evidence` | list | 確認したこと | どのシーンで何を試したか、前後の数字や画像。試していなければそう書く |
 | `unverified` | list | 未確認 |  |
 | `remaining` | list | 残り |  |
+| `tuning` | list | 調整できるところ | この作業で作った・変えた「人が調整できるところ」を書いた調整ガイドの id。調整できるところが無い作業なら「なし：理由」を 1 行 |
 | `learned` | list | 学んだこと | ナレッジに書いたものの名前（id） |
 | `mistakes` | list | ミス | ミス帳に書いたものの名前（id） |
 | `questions` | list | 質問 | 質問板に出したものの名前（id） |
@@ -148,6 +149,26 @@ ready: 予定に入っているカード id の配列（上から順に取る）
 | `state` | state | 状態 |  |
 | `answers` | answers | 回答 | {回答 id: {by, by_agent, at, text, evidence[]}} のマップ。update で自分の回答だけを足す（ほかの回答を消さない） |
 | `conclusion` | longtext | 結論 |  |
+
+## `guides` — 調整ガイド
+
+作った機能を、人があとから調整できるようにする案内。機能ごとに 1 つ：エディタで変えられる値と、コードで微調整するところ。エージェントは機能を作る・変えるたびに必ず書く。
+
+- 書ける人：メンバー　／　id：`g-xxxxxx`
+- 状態（`state`）：`有効` → `古い`（終わり）。新しく作るときは `有効`
+- 作るときに書く項目：`title`、`summary`、`params`、`code`、`check`、`areas`、`paths`
+
+| 項目 | 型 | 意味 | 補足 |
+|---|---|---|---|
+| `title` | text（必須） | 機能の名前 | 人が探すときの言葉で（例「敵のノックバック」） |
+| `summary` | longtext（必須） | 何をするものか | 仕組みを 2〜4 行で。どのコンポーネント・システムが何を持つか |
+| `params` | list | エディタで調整できる値 | 1 行に 1 つ：コンポーネント名.項目名 — 何が変わるか（既定値・範囲・単位）。どのプレハブ・シーンに付いているかも |
+| `code` | list | コードで微調整するところ | 1 行に 1 つ：ファイル:関数や定数 — そこを変えると何が変わるか。エディタに出せなかった理由も |
+| `check` | longtext | 確かめ方 | どのシーンで、何をすると、調整の結果が見えるか |
+| `areas` | areas | 領域 |  |
+| `paths` | list | 関連ファイル |  |
+| `card` | ref | 作ったカード |  |
+| `state` | state | 状態 |  |
 
 ## `knowledge` — ナレッジ
 

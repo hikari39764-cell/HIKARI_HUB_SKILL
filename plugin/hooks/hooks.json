@@ -1,0 +1,30 @@
+{
+  "description": "HIKARI 制作ハブ：ハブに参加したリポジトリで、会話の最初に案内を出し、作業を登録するまでファイルの変更を止める",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell",
+            "args": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1", "session"],
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell",
+            "args": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1", "edit"],
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

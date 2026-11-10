@@ -1,6 +1,6 @@
 # ハブの読み書き（ArtifactData の使い方）
 
-どの呼び出しにも `url`（`.hikari-hub.toml` の `url`）を付ける。項目の一覧は `data-model.md`。
+どの呼び出しにも `url`（`.hikari-hub/link.json` の `url`）を付ける。項目の一覧は `data-model.md`。
 
 ## id と時刻
 
@@ -10,7 +10,7 @@
 echo "c-$(date +%s%N | git hash-object --stdin | cut -c1-6)"
 ```
 
-  接頭辞は `data-model.md` の各コレクションに書いてある（カード `c`、報告 `r`、不具合 `b`、質問 `q`、ナレッジ `k`、ミス `m`、決めること `d`、編集中 `l`、ルール提案 `p`、エンジン要望 `e`、回答 `a`）。まとめて要るときは 1 回のコマンドで必要な数だけ作る。
+  接頭辞は `data-model.md` の各コレクションに書いてある（カード `c`、報告 `r`、調整ガイド `g`、不具合 `b`、質問 `q`、ナレッジ `k`、ミス `m`、決めること `d`、編集中 `l`、ルール提案 `p`、エンジン要望 `e`、回答 `a`）。まとめて要るときは 1 回のコマンドで必要な数だけ作る。
 - 時刻：`date -Iseconds`（例 `2026-11-10T13:05:00+09:00`）。
 
 ## 版（version）の約束
@@ -27,15 +27,30 @@ rm -rf .hikari-hub/cache
 
 次を**1 つのメッセージで並行して**呼ぶ（`action: "list"`、`out_dir: ".hikari-hub/cache"`、`query: {"limit": 1000}`）：
 
-`settings`、`rules`、`engine`、`members`、`cards`、`locks`、`decisions`、`questions`、`knowledge`、`mistakes`
+`settings`、`rules`、`engine`、`members`、`cards`、`locks`、`guides`、`decisions`、`questions`、`knowledge`、`mistakes`
 
 - 結果は `.hikari-hub/cache/<コレクション>/<id>.json` に入る。中身は Read / Grep で読む（例：`Grep "敵" .hikari-hub/cache/knowledge`）。
 - ファイルには `version` が入らない（ツールの結果の一覧には出る）。書く直前に `get` で読み直して、その `version` を使う。
 - `reports` は多くなるので全部は読まない。カードの前回の報告だけ読む：`action: "query"`、`collection: "reports"`、`query: {"where": [["card", "==", "<カード id>"]], "limit": 20}`。
 - `bugs`・`engine_requests`・`proposals` は、同じものを出していないか確かめるときに読む。
-- 「予定」のカード：`settings/plan` の `ready`（上から順）にあって、`cards` の `state` が `あとで` のもの。担当は `assign[カード id]`（無ければ誰でも取れる）。
+- `settings/plan` の `ready` は、オーナーがおすすめするカードの順番（参考）。入っていないカードも、自分で作ったカードも、そのまま始めてよい。
 
-## カードを取る
+## カードを作って始める・既にあるカードを始める
+
+自分で作るとき（`if_version` なし。最初から `作業中` で作ってよい）：
+
+```json
+{"action": "set", "collection": "cards", "doc_id": "c-3fa9c1",
+ "data": {"title": "敵のノックバック", "kind": "機能", "summary": "被弾した敵を後ろへ押し出す。",
+          "acceptance": ["距離と時間をエディタで調整できる", "壁を抜けない"],
+          "paths": ["Source/Runtime/Enemy/"], "areas": ["敵"],
+          "state": "作業中", "assignee": "kato", "started_at": "2026-11-10T13:05:00+09:00",
+          "branch": "feat/c-3fa9c1-enemy-knockback",
+          "by": "kato", "by_agent": "claude-code", "at": "2026-11-10T13:05:00+09:00",
+          "updated_at": "2026-11-10T13:05:00+09:00", "updated_by": "kato"}}
+```
+
+既にあるカードを始めるとき：
 
 ```json
 {"action": "update", "collection": "cards", "doc_id": "c-3fa9c1", "if_version": 4,
@@ -44,11 +59,11 @@ rm -rf .hikari-hub/cache
           "updated_at": "2026-11-10T13:05:00+09:00", "updated_by": "kato"}}
 ```
 
-取る直前に `get` で読み直して `version` と `state` を確かめる。`state` が `あとで` でなければ取らない。
+既にあるカードは、直前に `get` で読み直して `version` と `state` を確かめる。ほかの人が `作業中` なら始めない。
 
 ## いま作業中のカードを手元に書く（`.hikari-hub/active.json`）
 
-カードを取って、ブランチを切って、報告を作ったあとに書く。見張りのフックがこれを読む。
+カードを作業中にして、ブランチを切って、報告を作ったあとに書く。フックがこれを読む。
 
 ```json
 {"card": "c-3fa9c1", "title": "敵のノックバック", "report": "r-91c2aa",
@@ -57,8 +72,7 @@ rm -rf .hikari-hub/cache
  "started_at": "2026-11-10T13:05:00+09:00"}
 ```
 
-- `paths` はカードの `paths` と同じ。フォルダは末尾に `/`。空ならフックは範囲を確かめない。
-- 終わったら消す。カードを取らずにこのファイルだけ書くことはしない。
+- 終わったら消す。ハブに登録せずにこのファイルだけ書くことはしない。
 
 ## 作業の報告を作る・進捗を足す・終える
 
@@ -91,6 +105,7 @@ rm -rf .hikari-hub/cache
           "evidence": ["ビルド：警告 0", "テスト用シーンでの確認は未実施（人に依頼）"],
           "unverified": ["実機での動き", "ボス戦"],
           "remaining": ["空中被弾の動き（カード c-7b20e4 にした）"],
+          "tuning": ["g-2c7e15"],
           "learned": ["k-55d0c1"], "mistakes": ["m-0a91f3"], "questions": [],
           "cost_hours": 1.6, "cost_tokens": "0.9M", "pr": "https://github.com/<owner>/<repo>/pull/12",
           "updated_at": "2026-11-10T15:10:00+09:00", "updated_by": "kato"}}
@@ -98,10 +113,18 @@ rm -rf .hikari-hub/cache
 
 そのあとカードを更新する（`if_version` 付き）：`{"state": "確認待ち", "waiting": "レビュー", "pr": "..."}`。完了条件を満たしていなければ `{"state": "あとで", "assignee": ""}`。
 
-## まとめて作る（学んだこと・ミス・質問・不具合など）
+## まとめて作る（調整ガイド・学んだこと・ミス・質問・不具合など）
 
 ```json
 {"action": "batch", "writes": [
+  {"op": "set", "collection": "guides", "doc_id": "g-2c7e15",
+   "data": {"title": "敵のノックバック", "summary": "被弾した敵を、当たった向きの反対へ押し出す。KnockbackComponent が値を持ち、KnockbackSystem が FixedUpdate で動かす。",
+            "params": ["KnockbackComponent.distance — 飛ぶ距離（既定 1.5 m、0〜10）。敵プレハブ Enemy_Grunt・Enemy_Heavy に付いている",
+                       "KnockbackComponent.seconds — 飛んでいる時間（既定 0.2 秒、0〜2）"],
+            "code": ["Source/Runtime/Enemy/KnockbackSystem.cpp:kWallMargin — 壁の手前で止まる余白（0.05 m）。物理の都合でエディタに出していない"],
+            "check": "テスト用シーン EnemyTest で敵を攻撃する。distance を変えて Play し直すと飛ぶ距離が変わる。",
+            "areas": ["敵"], "paths": ["Source/Runtime/Enemy/"], "card": "c-3fa9c1", "state": "有効",
+            "by": "kato", "by_agent": "claude-code", "at": "…", "updated_at": "…", "updated_by": "kato"}},
   {"op": "set", "collection": "knowledge", "doc_id": "k-55d0c1",
    "data": {"title": "物理の押し出しは FixedUpdate で入れる", "body": "Update で入れると壁を抜ける。…",
             "areas": ["敵"], "paths": ["Source/Runtime/Enemy/"], "source": "r-91c2aa", "state": "要確認",
@@ -114,6 +137,7 @@ rm -rf .hikari-hub/cache
 ```
 
 - 新しい記録の `state` は、そのコレクションの最初の状態（`data-model.md`）。
+- 調整ガイドは機能ごとに 1 つ。同じ機能のガイドがもうあれば、新しく作らずに `update`（`if_version` 付き）で直す。
 - 不具合の名前は現象そのまま。質問の `to` は `エージェント`・`オーナー`・メンバーの呼び名。
 - `決めること` の `options` は `[{"text": "…", "recommended": true}, {"text": "…", "recommended": false}]`。`recommended: true` はちょうど 1 つ。`decider` を書く。
 
@@ -143,6 +167,6 @@ rm -rf .hikari-hub/cache
 
 ## 書けないとき
 
-- `ArtifactData` が無い環境（Claude Code 以外のエージェントなど）：ハブには書けない。`.hikari-hub/cache` があればそれを読んで作業し、終わりに**終了報告の内容を文章で人に渡す**（人がページから入れるか、Claude Code に頼む）。
+- `ArtifactData` が無い環境：ハブには書けない。`.hikari-hub/cache` があればそれを読んで作業し、終わりに**終了報告と調整できるところを文章で人に渡す**（人がページから入れる）。
 - 書き込みが「見つからない」「拒否」で返るとき：オーナー領域（`settings`・`rules`・`engine`）に書こうとしているか、その人が編集者として招待されていない。人に伝える。
 - ハブに届かないとき：作業は続け、報告の内容を `.hikari-hub/pending.md` に書いておき、次に届いたときに書き込む。
