@@ -1,0 +1,8 @@
+{
+  "title": "プロジェクトの構成",
+  "area": "はじめに",
+  "body": "```text\nMyGame/\n  Assets/            エディタで作るシーン・モデル・VFX・UI・フォントなど\n  ProjectSettings/   機能の有効化、入力、物理、起動シーンなど\n  Source/Runtime/    ゲームのコード（ゲームと一緒に配布される）\n  Source/Editor/     （任意）エディタ拡張。CMake で別に宣言する\n  Data/              （任意）作品のテキストデータ。実行時は読み取り専用\n  Library/           ビルド・インポートの結果。コミットしない\n  Project.hikari     ランチャーが開くプロジェクトの記述\n  CMakeLists.txt     find_package(HIKARI ...) と hikari_add_game_project(...)\n```\n\n- `Source/Runtime` に足した `.h` / `.cpp` は CMake が自動で集める。\n- `CMakeUserPresets.json` はエディタが PC ごとに書く。コミットしない。\n- テンプレートの `.gitattributes` は `Assets/` の `.bin` `.dds` `.png` を Git LFS にしている。",
+  "order": 20,
+  "must": true,
+  "sdk": "4.17"
+}

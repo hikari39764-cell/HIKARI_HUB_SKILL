@@ -1,0 +1,8 @@
+{
+  "title": "コンポーネントと、エディタで調整できる値",
+  "area": "コード",
+  "body": "`HIKARI/Project/GameComponent.h`、`PropertyFields.h`。値は `DescribeProperties` に **1 項目 1 行で 1 回だけ** 書く。同じ宣言が、シーンからの読み込み・保存・インスペクタ表示の 3 つに使われる。\n\n```cpp\nclass KnockbackComponent final : public HIKARI::IGameComponent {\npublic:\n    void DescribeProperties(HIKARI::PropertyFields& fields) override {\n        if (!fields.Section(\"Knockback\", true)) {\n            return;\n        }\n        fields.Float(\"distance\", \"Distance (m)\", distance, 0.0f, 10.0f, 0.05f);\n        fields.Float(\"seconds\", \"Seconds\", seconds, 0.0f, 2.0f, 0.01f);\n    }\n\n    float distance = 1.5f;\n    float seconds = 0.2f;\n};\n```\n\n- 1 つ目の引数は**保存キー**。あとから変えると保存済みの値が読めなくなる。変えない。\n- 保存値がない項目は、メンバーの初期値のまま。範囲付きの数値は読み込み時にも範囲に収まる。\n- `Section` は読み込み・保存のときは必ず `true` を返す（インスペクタで閉じていても中の項目は処理される）。\n- 使える項目：`Bool`、`Int`、`Float`、`Float3`、`Color3`、`Text`、`Choice`（名前で保存する選択肢。enum 版もある）、`SceneObject`（シーン内オブジェクトの参照）、`Asset` / `AssetId`（種類を選んで GUID で参照。Cook が依存を集める）、`Texture`、`Vfx`、`InputAction`、`Variable`、`Event`。`Note` と `Button` はインスペクタ専用。\n- コールバックに渡る `GameComponentContext` から `GetObject()`、`GetWorld()`、変数の読み書き、`EmitEvent` が使える。コールバックの外に持ち出さない。\n- コンポーネントに `World*` やエンジン内部のポインタを持たせない。フレームをまたいでオブジェクトを指すなら `GameProjectObjectHandle`（`ObjectView::GetHandle()`）を持つ。",
+  "order": 30,
+  "must": true,
+  "sdk": "4.17"
+}

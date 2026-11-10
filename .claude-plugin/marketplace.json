@@ -1,0 +1,12 @@
+{
+  "name": "hikari-hub",
+  "owner": { "name": "hikari" },
+  "description": "HIKARI エンジンのゲームプロジェクトでチーム作業をするためのプラグイン（HIKARI 制作ハブ）",
+  "plugins": [
+    {
+      "name": "hub",
+      "source": "./plugin",
+      "description": "ハブのカードを自分で取り、ブランチを切り、ルールとエンジン知識を読んで作業し、報告・不具合・質問をハブに書く"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+
+# <種別>(<範囲>): <何をしたか・日本語 50 字以内>
+#
+# <なぜ・どう確かめたか（任意）>
+#
+# Card: <カード id>
+#
+# 種別: feat 新しい機能 / fix 不具合の修正 / tune 数値・見た目の調整 / asset 素材 / level シーン・レベル
+#       refactor 動きを変えない整理 / perf 速さ / docs 文書 / chore 設定・ビルド
+# 使い方: git config commit.template .gitmessage

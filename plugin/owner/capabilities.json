@@ -1,0 +1,34 @@
+{
+  "db": {
+    "rules": [
+      {
+        "path": "",
+        "read": "view",
+        "write": "admin"
+      },
+      {
+        "path": "settings",
+        "write": "owner"
+      },
+      {
+        "path": "rules",
+        "write": "owner"
+      },
+      {
+        "path": "engine",
+        "write": "owner"
+      },
+      {
+        "path": "members",
+        "read": "view",
+        "write": "owner"
+      },
+      {
+        "path": "members/{self}",
+        "write": "admin"
+      }
+    ]
+  },
+  "user": {},
+  "assets": {}
+}

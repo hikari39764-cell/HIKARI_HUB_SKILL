@@ -1,0 +1,8 @@
+{
+  "title": "システム（IGameSystem）",
+  "area": "コード",
+  "body": "`HIKARI/Project/GameSystem.h`。必要なものだけ override する。\n\n- 呼ばれる順：`PreUpdate` → （固定刻みの回数だけ `PreFixedUpdate` → `FixedUpdate` → `PostFixedUpdate`）→ `Update` → `LateUpdate` → `PreRender` → `Render` → `PostRender`\n- `OnWorldAttached` / `OnWorldDetached`：World に付いた・外れたとき。**ゲーム開始の合図ではない**（編集中にも呼ばれる）。\n- `DescribeSettings(PropertyFields&)`：シーンに保存するシステムの設定を宣言する。\n- 引数の `FrameContext`（`FrameContext.h`）：\n  - `gameDt`：ゲームの時間（時間倍率込み）。普通はこれを使う\n  - `fixedDt`：固定刻み（既定 1/60 秒）。`FixedUpdate` で使う\n  - `unscaledDt`：時間倍率をかける前。ポーズ中の UI など\n  - `paused`、`frameIndex`、`fixedStepsThisFrame`、`fixedInterpolationAlpha` など\n- 物理に関わる動き（押し出し、力、移動の意図）は `FixedUpdate` に書く。\n\n```cpp\nclass Game final : public HIKARI::IGameSystem {\npublic:\n    void Update(HIKARI::WorldView& world, const HIKARI::FrameContext& frame) override {\n        auto* session = dynamic_cast<GameSession*>(world.GetGameSession());\n        if (session == nullptr || frame.paused) {\n            return; // Play 中でない、またはポーズ中\n        }\n        session->gameplaySeconds += frame.gameDt;\n    }\n};\n```",
+  "order": 20,
+  "must": true,
+  "sdk": "4.17"
+}

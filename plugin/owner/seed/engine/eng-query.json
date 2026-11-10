@@ -1,0 +1,8 @@
+{
+  "title": "オブジェクトを探す・まとめて処理する",
+  "area": "コード",
+  "body": "`HIKARI/Project/WorldView.h`、`HIKARI/Runtime/ComponentTypeId.h`。\n\n```cpp\nworld.ForEachComponent<KnockbackComponent>(\n    HIKARI::MakeComponentTypeId(kKnockbackType),\n    [&](HIKARI::ObjectView object, KnockbackComponent& knockback) {\n        HIKARI::GameProjectTransform transform{};\n        if (object.GetWorldTransform(transform)) {\n            // ...\n        }\n    });\n```\n\n- エディタで選んだオブジェクトを指す：コンポーネントに `fields.SceneObject(\"target\", \"Target\", targetId_)` を置き、`world.FindSceneObject(targetId_)` で解決して `IsValid()` を確かめる。\n- ハンドルから：`world.FindObject(handle)`。\n- **名前や Tag で探す公開 API はない。** 「同じ名前なら自動でつながる」仕組みもない。参照はフィールドで持つ。\n- `ObjectView`：`GetName`、`GetSceneObjectId`、`GetLocalTransform` / `GetWorldTransform`、`SetLocalTransform` / `SetWorldTransform`、`GetParent`。内蔵コンポーネントの操作は `GetLight`、`GetDecal`、`GetModel`、`GetWorldSprite`、`GetWorldText`、`GetSpriteAnimation`、`GetSpriteMaterial`、`GetMaterialFx`（対象がなければ各操作が Unsupported を返す）。",
+  "order": 50,
+  "must": true,
+  "sdk": "4.17"
+}

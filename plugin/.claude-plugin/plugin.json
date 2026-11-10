@@ -1,0 +1,7 @@
+{
+  "name": "hub",
+  "displayName": "HIKARI 制作ハブ",
+  "description": "HIKARI エンジンのゲームプロジェクトでチーム作業をするための手順とコマンド。カードを取る・ブランチを切る・報告・不具合・質問・ナレッジの共有、エンジンの必須知識。",
+  "author": { "name": "hikari" },
+  "keywords": ["hikari", "game", "team"]
+}

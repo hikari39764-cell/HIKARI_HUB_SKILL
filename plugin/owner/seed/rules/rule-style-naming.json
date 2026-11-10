@@ -1,0 +1,7 @@
+{
+  "title": "命名とファイル",
+  "category": "コード規約",
+  "body": "- HIKARI SDK に合わせる：型・関数は `PascalCase`、変数・引数・構造体のフィールドは `camelCase`、private メンバーは末尾に `_`（例 `speed_`）、enum の値は `PascalCase`。\n- 名前空間はプロジェクトのテンプレートが作ったものをそのまま使う。\n- 主なクラス 1 つにつき `.h` と `.cpp` を 1 組。ファイル名はクラス名と同じ。機能ごとにフォルダを分ける（例 `Source/Runtime/Enemy/`）。\n- include の順：自分のヘッダ → 標準ライブラリ → HIKARI SDK（`HIKARI/Project/...`）→ 作品内の他のヘッダ。",
+  "order": 20,
+  "core": false
+}

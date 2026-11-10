@@ -1,0 +1,742 @@
+<title>__PROJECT_NAME__ ハブ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=JetBrains+Mono:wght@500&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;700&display=swap">
+<style>
+:root {
+  /* 貼り紙の作業台：紙の地、太い墨の縁、硬い影。星の黄 = いま・重点、杏 = あなたの確認待ち。左に目次、右に内容。 */
+  --paper: #FAF8EE; --paper-2: #F2EFDF; --card: #FFFFFF; --ink: #17160F; --muted: #5E5B4B;
+  --rule: #17160F; --shade: #17160F; --star: #F1F977; --apricot: #FFBC7B;
+  --bad: #D8453D; --good: #3E8F5C; --soft: #D9D5C2;
+  --display: "Dela Gothic One", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  --body: "Noto Sans JP", "Noto Sans SC", "Hiragino Sans", "Yu Gothic UI", "Microsoft YaHei", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--paper); z-index: 20; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--apricot); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 12px; }
+code { font-family: var(--mono); font-size: .86em; background: var(--paper-2); border: 1.5px solid var(--soft); border-radius: 5px; padding: 0 4px; overflow-wrap: anywhere; }
+
+/* ---------- 上の帯 ---------- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; background: var(--paper); border-bottom: 2.5px solid var(--rule); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-block: 8px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 17px; text-decoration: none; white-space: nowrap; min-width: 0; }
+.brand img { width: 30px; height: 30px; object-fit: contain; transform: rotate(-6deg); }
+.chip { font-size: 12px; font-weight: 700; border: 2px solid var(--rule); border-radius: 999px; padding: 0 9px; white-space: nowrap; background: var(--card); }
+.chip.live { background: var(--star); color: #17160F; border-color: #17160F; }
+.chip.warn { background: var(--apricot); color: #17160F; border-color: #17160F; }
+.top .grow { flex: 1 1 140px; min-width: 0; }
+#q { width: 100%; max-width: 320px; border: 2px solid var(--rule); border-radius: 999px; background: var(--card); padding: 2px 12px; }
+
+/* ---------- 骨組み ---------- */
+.shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 18px; padding-block: 16px 40px; align-items: start; }
+#nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); display: flex; flex-direction: column; gap: 3px; }
+#nav a { text-decoration: none; font-weight: 700; font-size: 14px; padding: 5px 10px; border-radius: 10px; border: 2px solid transparent; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+#nav a:hover { border-color: var(--rule); background: var(--card); }
+#nav a.on { background: var(--star); color: #17160F; border-color: #17160F; box-shadow: 3px 3px 0 var(--shade); }
+.badge { font-size: 11px; font-weight: 900; line-height: 1.6; background: var(--apricot); color: #17160F; border: 2px solid #17160F; border-radius: 999px; padding: 0 6px; }
+main { min-width: 0; display: grid; gap: 16px; }
+
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(22px, 3.4vw, 30px); line-height: 1.25; margin: 0; text-wrap: balance; }
+h2 { font-size: 13px; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+h3 { font-size: 16px; margin: 0 0 4px; }
+.head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.card { background: var(--card); border: 2.5px solid var(--rule); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.card.now { box-shadow: 4px 4px 0 var(--shade); border-color: #17160F; background: linear-gradient(var(--star), var(--star)) left top / 8px 100% no-repeat, var(--card); padding-left: 20px; }
+.card.wait { box-shadow: 4px 4px 0 var(--shade); border-color: #17160F; background: linear-gradient(var(--apricot), var(--apricot)) left top / 8px 100% no-repeat, var(--card); padding-left: 20px; }
+.note { padding: 10px 14px; border-left: 6px solid var(--apricot); background: var(--paper-2); border-radius: 0 12px 12px 0; }
+.empty { color: var(--muted); font-size: 14px; margin: 2px 0; }
+
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 7px 0; border-top: 2px solid var(--paper-2); text-decoration: none; }
+.row:first-of-type { border-top: 0; }
+a.row:hover b { text-decoration: underline; }
+.row b { font-weight: 700; overflow-wrap: anywhere; }
+.row small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.row .side { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+.when { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.st { display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.5; border: 2px solid var(--rule); border-radius: 999px; padding: 0 8px; white-space: nowrap; background: var(--card); }
+.st.open { background: var(--star); color: #17160F; border-color: #17160F; }
+.st.wait { background: var(--apricot); color: #17160F; border-color: #17160F; }
+.st.closed { background: var(--paper-2); color: var(--muted); }
+.st.bad { background: var(--bad); color: #fff; border-color: #17160F; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; border: 1.5px solid var(--soft); border-radius: 6px; padding: 0 5px; color: var(--muted); white-space: nowrap; }
+.meter { height: 9px; border: 2px solid var(--rule); border-radius: 999px; background: var(--paper-2); overflow: hidden; margin-top: 4px; }
+.meter i { display: block; height: 100%; background: var(--star); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; line-height: 1.3; padding: 5px 12px; border: 2px solid #17160F; border-radius: 10px; background: var(--apricot); color: #17160F; box-shadow: 2px 2px 0 #17160F; cursor: pointer; }
+.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #17160F; }
+.btn.ghost { background: var(--card); color: var(--ink); border-color: var(--rule); box-shadow: none; }
+.btn.star { background: var(--star); }
+.btn.danger { background: var(--bad); color: #fff; }
+.btn.mini { font-size: 12px; padding: 1px 8px; border-radius: 8px; box-shadow: none; }
+.btn[disabled] { opacity: .5; cursor: default; }
+
+/* ---------- ボード ---------- */
+.board { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.col { background: var(--paper-2); border: 2px solid var(--soft); border-radius: 12px; padding: 8px; min-width: 0; }
+.col h2 { margin: 2px 4px 8px; }
+.kc { display: block; background: var(--card); border: 2px solid var(--rule); border-radius: 10px; padding: 7px 9px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; text-decoration: none; }
+.kc.now { border-color: #17160F; box-shadow: 3px 3px 0 var(--shade); background: linear-gradient(var(--star), var(--star)) left top / 6px 100% no-repeat, var(--card); padding-left: 14px; }
+.kc b { display: block; overflow-wrap: anywhere; }
+.kc .acts { margin-top: 5px; }
+
+/* ---------- 詳細 ---------- */
+.kv { display: grid; grid-template-columns: minmax(84px, auto) minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.kv dt { color: var(--muted); font-weight: 700; font-size: 13px; }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.kv ul, .kv ol { margin: 0; padding-left: 1.2em; }
+.md { min-width: 0; overflow-wrap: anywhere; }
+.md p { margin: 0 0 8px; }
+.md h3, .md h4, .md h5 { margin: 12px 0 4px; font-size: 15px; }
+.md ul, .md ol { margin: 0 0 8px; padding-left: 1.3em; }
+.md li + li { margin-top: 2px; }
+.md pre { margin: 0 0 8px; background: var(--paper-2); border: 2px solid var(--soft); border-radius: 10px; padding: 8px 10px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
+.md pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+.md .tw { overflow-x: auto; margin: 0 0 8px; }
+.md table { border-collapse: collapse; font-size: 13.5px; }
+.md th, .md td { border: 1.5px solid var(--soft); padding: 4px 8px; text-align: left; vertical-align: top; }
+.md th { background: var(--paper-2); }
+.md > :last-child { margin-bottom: 0; }
+.imgs { display: flex; flex-wrap: wrap; gap: 8px; }
+.imgs img, .imgs video { max-width: min(100%, 320px); max-height: 240px; border: 2px solid var(--rule); border-radius: 8px; }
+.opt { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; padding: 8px 10px; border: 2px solid var(--rule); border-radius: 10px; margin-top: 6px; }
+.opt.rec { background: var(--apricot); color: #17160F; border-color: #17160F; }
+.opt.chosen { background: var(--star); color: #17160F; border-color: #17160F; }
+.opt span { flex: 1 1 200px; min-width: 0; }
+.ans { border-top: 2px dashed var(--soft); padding-top: 8px; margin-top: 8px; }
+
+/* ---------- 入力 ---------- */
+dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 40px); border: 2.5px solid #17160F; border-radius: 16px; box-shadow: 7px 7px 0 var(--shade); background: var(--card); color: var(--ink); padding: 0; }
+dialog::backdrop { background: rgba(18, 17, 9, .55); }
+#dlg-form { display: grid; gap: 12px; padding: 16px 18px; }
+.f { display: grid; gap: 3px; }
+.f label { font-weight: 700; font-size: 13px; }
+.f small { color: var(--muted); font-size: 12px; }
+.f input[type="text"], .f input[type="number"], .f select, .f textarea { width: 100%; border: 2px solid var(--rule); border-radius: 10px; background: var(--paper); padding: 5px 10px; }
+.f textarea { min-height: 84px; resize: vertical; line-height: 1.6; }
+.f textarea.tall { min-height: 220px; font-family: var(--mono); font-size: 13px; }
+.checks { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.checks label { font-weight: 500; display: inline-flex; gap: 4px; align-items: center; }
+.dlg-foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.dlg-foot .left { margin-right: auto; }
+#toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 6px 14px; font-weight: 700; font-size: 13px; max-width: calc(100vw - 32px); }
+#toast.bad { background: var(--bad); color: #fff; }
+
+@media (max-width: 820px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 10px 32px; }
+  #nav { position: static; flex-direction: row; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  #nav::-webkit-scrollbar { display: none; }
+  #nav a { white-space: nowrap; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .kv dd { margin-bottom: 8px; }
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#home"><img src="__LOGO__" alt=""><span id="brand-name">__PROJECT_NAME__</span></a>
+    <span class="chip" id="conn">…</span>
+    <div class="grow"><input id="q" type="text" autocomplete="off" aria-label="検索"></div>
+    <span class="chip" id="me-chip"></span>
+    <button class="btn ghost mini" type="button" data-act="lang" id="lang-btn">中文</button>
+  </div>
+</header>
+<div class="wrap shell">
+  <nav id="nav" aria-label="メニュー"></nav>
+  <main id="main"></main>
+</div>
+<dialog id="dlg"><form id="dlg-form" method="dialog"></form></dialog>
+<div id="toast" hidden></div>
+<script type="application/json" id="schema">__SCHEMA__</script>
+<script>
+(() => {
+"use strict";
+const SCHEMA = JSON.parse(document.getElementById("schema").textContent);
+const COLL = Object.fromEntries(SCHEMA.collections.map((c) => [c.key, c]));
+const PREFIX = SCHEMA.collections.filter((c) => c.prefix).map((c) => [c.prefix + "-", c.key]).sort((a, b) => b[0].length - a[0].length);
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, handle: "", owner: false, write: null }, db: null, assets: null, live: null, late: false, q: "", all: {} };
+for (const c of SCHEMA.collections) S.data[c.key] = new Map();
+try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
+
+// 画面の文字（日本語 / 中文）。記録の中身は訳さない。
+const T = {
+  home: ["ホーム", "今天"], board: ["ボード", "看板"], engine: ["エンジン知識", "引擎知识"], rules: ["ルール", "规则"], members: ["メンバー", "成员"],
+  requests: ["エンジンへの要望", "引擎要望"], search: ["検索", "搜索"], live: ["つながっています", "已连接"], offline: ["データに届きません", "连不上数据"], connecting: ["接続中…", "连接中…"],
+  readonly: ["閲覧のみ", "只读"], owner: ["オーナー", "所有者"], add: ["新規", "新建"], edit: ["編集", "编辑"], save: ["保存", "保存"], cancel: ["やめる", "取消"], del: ["削除", "删除"], delSure: ["本当に削除", "确认删除"],
+  saved: ["保存しました", "已保存"], failed: ["保存できませんでした", "保存失败"], denied: ["書き込む権限がありません", "没有写入权限"], need: ["入力してください", "请填写"],
+  none: ["ありません", "没有"], all: ["すべて表示", "显示全部"], openOnly: ["進行中だけ", "只看进行中"], back: ["一覧へ", "返回列表"],
+  working: ["作業中", "进行中"], waitYou: ["あなたの確認待ち", "等你处理"], next: ["予定（次に取るカード）", "预定（接下来领的卡）"], deadlines: ["締切", "截止"], editing: ["編集中", "编辑中"],
+  recent: ["最近の報告", "最近的汇报"], openBugs: ["未対応の不具合", "未处理的 bug"], openQs: ["答えを待っている質問", "等回答的疑问"],
+  later: ["あとで", "以后"], ready: ["予定", "预定"], review: ["確認待ち", "等确认"], done: ["完了", "完成"],
+  take: ["取る", "领取"], toReady: ["予定へ", "放进预定"], offReady: ["外す", "移出"], assign: ["担当", "担当"], anyone: ["誰でも", "谁都行"], daysLeft: ["あと {n} 日", "还有 {n} 天"], today: ["今日", "今天"], overdue: ["{n} 日超過", "超期 {n} 天"],
+  milestones: ["締切を編集", "编辑截止"], msHelp: ["1 行に 1 つ：YYYY-MM-DD 名前", "一行一个：YYYY-MM-DD 名字"],
+  decide: ["これに決める", "选这个"], recommended: ["推奨", "推荐"], decided: ["決定", "已定"], answer: ["回答する", "回答"], resolve: ["解決にする", "标为已解决"], toKnowledge: ["結論をナレッジに残す", "把结论留成知识"],
+  verify: ["確かめた（有効にする）", "已验证（改为有效）"], toCard: ["カードにする", "转成卡"], adopt: ["採用してルールにする", "采用并写进规则"], reject: ["却下", "驳回"], propose: ["ルールを提案", "提规则建议"], proposals: ["ルール提案", "规则提案"],
+  must: ["必読", "必读"], core: ["簡報に必ず入る", "每次简报必带"], project: ["プロジェクト", "项目"], editProject: ["設定を編集", "编辑设置"], profile: ["自分の情報", "我的信息"],
+  register: ["呼び名を登録する", "登记称呼"], registerWhy: ["報告や担当に使う名前です。最初に登録してください（半角英数字）。", "用于汇报和担当的名字，请先登记（半角英数字）。"], handleTaken: ["その呼び名は使われています", "这个称呼已被使用"], handleBad: ["半角の英数字・- _ で 2〜20 文字", "2〜20 位半角英数字或 - _"],
+  setup: ["まずプロジェクトの設定を入力してください。", "请先填写项目设置。"], join: ["参加の手順", "加入步骤"], agentHow: ["エージェントの使い方", "智能体怎么用"],
+  lock: ["編集中を宣言", "宣告编辑中"], release: ["解除", "解除"], daily: ["日報を書く", "写日报"], reportsOf: ["このカードの報告", "这张卡的汇报"], state: ["状態", "状态"], by: ["書いた人", "谁写的"], updated: ["更新", "更新"],
+  optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
+  uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
+  viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
+};
+const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
+const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
+const VIEWS = [
+  { key: "home" }, { key: "board" }, { key: "reports", coll: "reports" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
+  { key: "decisions", coll: "decisions" }, { key: "knowledge", coll: "knowledge" }, { key: "engine" }, { key: "mistakes", coll: "mistakes" },
+  { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
+];
+const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
+
+// ---------- データの読み出し ----------
+const docs = (coll) => [...S.data[coll]].map(([id, d]) => ({ id, ...d }));
+const project = () => S.data.settings.get("project") || {};
+const plan = () => ({ ready: [], assign: {}, milestones: [], ...S.data.settings.get("plan") });
+const stateDef = (coll, name) => (COLL[coll].states || []).find((s) => s.name === name);
+const isOpen = (coll, d) => !COLL[coll].states || (stateDef(coll, d.state) || { open: true }).open;
+const stage = (c) => (c.state === "あとで" && plan().ready.includes(c.id) ? "予定" : c.state);
+const titleOf = (d) => d.title || d.target || d.handle || d.id;
+const collOf = (id) => (PREFIX.find(([p]) => String(id).startsWith(p)) || [])[1];
+const isOwnerOnly = (coll) => COLL[coll].writer === "owner";
+const canWrite = (coll) => (isOwnerOnly(coll) ? S.me.owner : S.me.write !== false && !!S.me.handle);
+const pad = (n) => String(n).padStart(2, "0");
+function now() {
+  const d = new Date(), o = -d.getTimezoneOffset();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${o < 0 ? "-" : "+"}${pad(Math.floor(Math.abs(o) / 60))}:${pad(Math.abs(o) % 60)}`;
+}
+const fmt = (iso) => (iso ? String(iso).slice(5, 16).replace("T", " ") : "");
+const byText = (d) => esc(d.by || "") + (d.by_agent ? ` · ${esc(d.by_agent)}` : "");
+function newId(prefix) {
+  const a = new Uint8Array(3);
+  crypto.getRandomValues(a);
+  return prefix + "-" + [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function daysTo(date) {
+  const a = new Date(date + "T00:00:00"), b = new Date();
+  b.setHours(0, 0, 0, 0);
+  return Math.round((a - b) / 86400000);
+}
+
+// ---------- Markdown（先に全部エスケープしてから、決まった記法だけ戻す） ----------
+function inline(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function md(text) {
+  const lines = String(text ?? "").replace(/\r/g, "").split("\n");
+  const out = [];
+  let i = 0, para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map(inline).join("<br>")}</p>`); para = []; } };
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^```/.test(line)) {
+      flush();
+      const buf = [];
+      for (i++; i < lines.length && !/^```/.test(lines[i]); i++) buf.push(lines[i]);
+      i++;
+      out.push(`<pre><code>${esc(buf.join("\n"))}</code></pre>`);
+    } else if (/^\|.*\|\s*$/.test(line)) {
+      flush();
+      const rows = [];
+      for (; i < lines.length && /^\|.*\|\s*$/.test(lines[i]); i++) rows.push(lines[i].trim().slice(1, -1).split("|").map((c) => c.trim()));
+      const head = rows.length > 1 && rows[1].every((c) => /^:?-+:?$/.test(c));
+      const body = head ? rows.slice(2) : rows;
+      out.push(`<div class="tw"><table>${head ? `<tr>${rows[0].map((c) => `<th>${inline(c)}</th>`).join("")}</tr>` : ""}${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</table></div>`);
+    } else if (/^#{1,4}\s/.test(line)) {
+      flush();
+      const n = Math.min(5, line.match(/^#+/)[0].length + 2);
+      out.push(`<h${n}>${inline(line.replace(/^#+\s*/, ""))}</h${n}>`);
+      i++;
+    } else if (/^\s*([-*]|\d+\.)\s+/.test(line)) {
+      flush();
+      const ordered = /^\s*\d+\./.test(line), items = [];
+      for (; i < lines.length && (/^\s*([-*]|\d+\.)\s+/.test(lines[i]) || (/^\s{2,}\S/.test(lines[i]) && items.length)); i++) {
+        if (/^\s{0,1}([-*]|\d+\.)\s+/.test(lines[i]) || !items.length) items.push(lines[i].replace(/^\s*([-*]|\d+\.)\s+/, ""));
+        else items[items.length - 1] += "\n" + lines[i].trim().replace(/^([-*]|\d+\.)\s+/, "・");
+      }
+      out.push(`<${ordered ? "ol" : "ul"}>${items.map((it) => `<li>${it.split("\n").map(inline).join("<br>")}</li>`).join("")}</${ordered ? "ol" : "ul"}>`);
+    } else if (!line.trim()) { flush(); i++; } else { para.push(line); i++; }
+  }
+  flush();
+  return out.join("");
+}
+
+// ---------- 部品 ----------
+function stClass(coll, d) {
+  if (!COLL[coll].states) return "";
+  if (coll === "cards" && d.state === "確認待ち") return "wait";
+  if (coll === "decisions" && d.state === "未決定") return "wait";
+  return isOpen(coll, d) ? "open" : "closed";
+}
+function stPill(coll, d) {
+  if (!COLL[coll].states || !d.state) return "";
+  const name = coll === "cards" ? stage(d) : d.state, def = stateDef(coll, d.state);
+  const label = S.lang === "zh" ? (name === "予定" ? t("ready") : (def && def.zh) || name) : name;
+  return `<span class="st ${stClass(coll, d)}">${esc(label)}${d.state === "確認待ち" && d.waiting ? "・" + esc(d.waiting) : ""}</span>`;
+}
+const tags = (d) => [d.kind, d.severity, d.frequency, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+function row(coll, d, sub) {
+  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span></a>`;
+}
+const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
+const btn = (act, label, data = {}, cls = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
+function toast(text, bad) {
+  const el = $("#toast");
+  el.textContent = text;
+  el.className = bad ? "bad" : "";
+  el.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+const matchQ = (d) => !S.q || JSON.stringify(d).toLowerCase().includes(S.q);
+
+// ---------- 書き込み ----------
+function stamp(isNew) {
+  const at = now();
+  return isNew ? { by: S.me.handle, at, updated_at: at, updated_by: S.me.handle } : { updated_at: at, updated_by: S.me.handle };
+}
+async function write(coll, id, data, isNew) {
+  if (!S.db) return false;
+  try {
+    const ref = S.db.doc(coll + "/" + id);
+    if (isNew) await ref.set({ ...data, ...stamp(true) });
+    else await ref.update({ ...data, ...stamp(false) });
+    toast(t("saved"));
+    return true;
+  } catch (e) {
+    toast(e && e.code === "invalid_argument" ? t("denied") : `${t("failed")}（${(e && e.code) || "?"}）`, true);
+    return false;
+  }
+}
+async function writePlan(next) {
+  try { await S.db.doc("settings/plan").set({ ...next, ...stamp(false) }); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
+}
+
+// ---------- 入力フォーム（項目は schema から作る） ----------
+function fieldInput(f, v) {
+  const id = "f-" + f.key, help = f.help ? `<small>${esc(f.help)}</small>` : "";
+  const label = `<label for="${id}">${esc(L(f))}${f.required ? " *" : ""}</label>`;
+  const opts = (arr, cur, emptyOk = true) => (emptyOk ? `<option value=""></option>` : "") + arr.map((o) => `<option value="${esc(o.v ?? o)}" ${String(o.v ?? o) === String(cur ?? "") ? "selected" : ""}>${esc(o.l ?? o)}</option>`).join("");
+  let input;
+  switch (f.type) {
+    case "longtext": input = `<textarea id="${id}" class="${["body", "detail"].includes(f.key) ? "tall" : ""}">${esc(v ?? "")}</textarea>`; break;
+    case "list": input = `<textarea id="${id}">${esc((v || []).join("\n"))}</textarea><small>${t("listHelp")}</small>`; break;
+    case "options": input = `<textarea id="${id}">${esc((v || []).map((o) => (o.recommended ? "★ " : "") + o.text).join("\n"))}</textarea><small>${t("optHelp")}</small>`; break;
+    case "number": input = `<input type="number" step="any" id="${id}" value="${esc(v ?? "")}">`; break;
+    case "bool": return `<div class="f"><label class="checks"><span><input type="checkbox" id="${id}" ${v ? "checked" : ""}> ${esc(L(f))}</span></label>${help}</div>`;
+    case "choice": input = `<select id="${id}">${opts(f.choices, v)}</select>`; break;
+    case "state": input = `<select id="${id}">${opts(f.states, v, false)}</select>`; break;
+    case "rulecategory": input = `<select id="${id}">${opts(COLL.rules.categories, v)}</select>`; break;
+    case "milestone": input = `<select id="${id}">${opts(plan().milestones.map((m) => ({ v: m.id, l: `${m.date} ${m.title}` })), v)}</select>`; break;
+    case "member": input = `<select id="${id}">${opts(docs("members").map((m) => m.handle).filter(Boolean), v)}</select>`; break;
+    case "areas": input = `<div class="checks" id="${id}">${(project().areas || []).map((a) => `<label><input type="checkbox" value="${esc(a)}" ${(v || []).includes(a) ? "checked" : ""}>${esc(a)}</label>`).join("") || `<span class="muted">—</span>`}</div>`; break;
+    case "assets": input = `<input type="file" id="${id}" multiple accept="image/*,video/*">`; break;
+    default: input = `<input type="text" id="${id}" value="${esc(v ?? "")}" autocomplete="off">`;
+  }
+  return `<div class="f">${label}${input}${f.type === "list" || f.type === "options" ? "" : help}</div>`;
+}
+async function fieldValue(f) {
+  const el = $("#f-" + f.key);
+  if (!el) return undefined;
+  const lines = () => el.value.split("\n").map((s) => s.trim()).filter(Boolean);
+  switch (f.type) {
+    case "list": return lines();
+    case "options": return lines().map((s) => ({ text: s.replace(/^[★*]\s*/, ""), recommended: /^[★*]/.test(s) }));
+    case "number": return el.value === "" ? null : Number(el.value);
+    case "bool": return el.checked;
+    case "areas": return [...el.querySelectorAll("input:checked")].map((i) => i.value);
+    case "assets": {
+      if (!el.files.length) return undefined;
+      if (!S.assets) throw new Error(t("uploadFail"));
+      const ids = [];
+      for (const file of el.files) ids.push((await S.assets.upload(file)).id);
+      return ids;
+    }
+    default: return el.value.trim();
+  }
+}
+// defs: 項目の配列。onSave(values) が true を返したら閉じる。
+function openForm({ title, defs, values = {}, onSave, note = "", del }) {
+  const form = $("#dlg-form");
+  form.innerHTML = `<h1>${esc(title)}</h1>${note ? `<p class="muted">${esc(note)}</p>` : ""}${defs.map((f) => fieldInput(f, values[f.key])).join("")}
+    <div class="dlg-foot">${del ? `<span class="left">${btn("del-ask", t("del"), {}, "ghost mini")}</span>` : ""}${btn("close", t("cancel"), {}, "ghost")}<button class="btn" type="submit">${t("save")}</button></div>`;
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    try {
+      const out = {};
+      for (const f of defs) {
+        const v = await fieldValue(f);
+        if (v === undefined) continue;
+        if (f.required && blank(v)) { toast(`${L(f)}：${t("need")}`, true); return; }
+        if (f.type === "options" && (v.length < 2 || v.filter((o) => o.recommended).length !== 1)) { toast(t("optBad"), true); return; }
+        out[f.key] = v;
+      }
+      if (await onSave(out)) $("#dlg").close();
+    } catch (e) { toast(String((e && e.message) || t("failed")), true); } finally { submit.disabled = false; }
+  };
+  openForm.del = del;
+  $("#dlg").showModal();
+}
+const fieldsOf = (coll, keys) => keys.map((k) => COLL[coll].fields.find((f) => f.key === k)).filter(Boolean);
+function editDefs(coll) {
+  const skip = new Set(["time", "log", "answers", "assets"]);
+  return COLL[coll].fields.filter((f) => !skip.has(f.type)).map((f) => (f.type === "state" ? { ...f, states: COLL[coll].states.map((s) => s.name) } : f));
+}
+function createDoc(coll, preset = {}, after) {
+  const c = COLL[coll];
+  openForm({
+    title: `${L(c.label)}：${t("add")}`, note: L(c.summary), defs: fieldsOf(coll, c.create), values: preset,
+    onSave: async (v) => {
+      const id = preset.id || newId(c.prefix), base = c.states ? { state: c.states[0].name } : {};
+      if (coll === "reports") Object.assign(base, { kind: "日報", title: now().slice(0, 10), state: "終了" });
+      const ok = await write(coll, id, { ...base, ...preset.extra, ...v }, true);
+      if (ok && after) await after(id);
+      if (ok && !isOwnerOnly(coll)) location.hash = id;
+      return ok;
+    },
+  });
+}
+function editDoc(coll, id) {
+  const d = S.data[coll].get(id);
+  if (!d) return;
+  openForm({
+    title: `${L(COLL[coll].label)}：${t("edit")}`, defs: editDefs(coll), values: d, onSave: (v) => write(coll, id, v, false),
+    del: isOwnerOnly(coll) ? async () => { try { await S.db.doc(coll + "/" + id).delete(); toast(t("saved")); location.hash = coll === "engine" ? "engine" : "rules"; return true; } catch { toast(t("failed"), true); return false; } } : null,
+  });
+}
+
+// ---------- 画面 ----------
+function renderNav(view) {
+  const counts = {
+    decisions: docs("decisions").filter((d) => d.state === "未決定" && mine(d.decider)).length,
+    questions: docs("questions").filter((d) => d.state === "未回答").length,
+    rules: S.me.owner ? docs("proposals").filter((d) => d.state === "提案").length : 0,
+    requests: S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").length : 0,
+  };
+  $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${esc(viewLabel(v))}${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
+}
+const mine = (who) => (who && who === S.me.handle) || (S.me.owner && (!who || who === "オーナー"));
+
+function viewHome() {
+  const cards = docs("cards"), p = plan(), reports = docs("reports");
+  const working = cards.filter((c) => c.state === "作業中").map((c) => {
+    const r = reports.find((x) => x.card === c.id && x.state === "作業中"), last = r && (r.progress || []).slice(-1)[0];
+    return row("cards", c, `${esc(c.assignee || "")}${r && r.by_agent ? " · " + esc(r.by_agent) : ""}${last ? " — " + esc(last.note) : ""}`);
+  });
+  const waits = [
+    ...docs("decisions").filter((d) => d.state === "未決定" && mine(d.decider)).map((d) => row("decisions", d, `${L(COLL.decisions.label)} · ${byText(d)}`)),
+    ...cards.filter((c) => c.state === "確認待ち" && (c.waiting === "レビュー" || !c.waiting ? c.assignee !== S.me.handle : S.me.owner)).map((c) => row("cards", c, `${esc(c.waiting || "レビュー")} · ${esc(c.assignee || "")}${c.pr ? " · PR " + esc(c.pr) : ""}`)),
+    ...docs("questions").filter((d) => d.state === "未回答" && mine(d.to)).map((d) => row("questions", d, `${L(COLL.questions.label)} · ${byText(d)}`)),
+    ...(S.me.owner ? docs("proposals").filter((d) => d.state === "提案").map((d) => row("proposals", d, `${t("proposals")} · ${byText(d)}`)) : []),
+    ...(S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").map((d) => row("engine_requests", d, `${t("requests")} · ${byText(d)}`)) : []),
+  ];
+  const next = p.ready.map((id) => cards.find((c) => c.id === id)).filter((c) => c && c.state === "あとで").slice(0, 6)
+    .map((c) => row("cards", c, `${t("assign")}：${esc(p.assign[c.id] || t("anyone"))} ${tags(c)}`));
+  const ms = [...p.milestones].sort((a, b) => a.date.localeCompare(b.date)).map((m) => {
+    const mine_ = cards.filter((c) => c.milestone === m.id && c.state !== "やらない"), done = mine_.filter((c) => c.state === "完了").length, n = daysTo(m.date);
+    return `<div class="row"><span><b>${esc(m.title)}</b><small>${done} / ${mine_.length}</small><div class="meter"><i style="width:${mine_.length ? Math.round((done / mine_.length) * 100) : 0}%"></i></div></span><span class="side"><span class="st ${n < 0 ? "bad" : n <= 3 ? "wait" : ""}">${n > 0 ? t("daysLeft", n) : n === 0 ? t("today") : t("overdue", -n)}</span><span class="when">${esc(m.date)}</span></span></div>`;
+  });
+  const locks = docs("locks").filter((l) => l.state === "編集中").map((l) => `<div class="row"><span><b>${esc(l.target)}</b><small>${byText(l)}${l.until ? " · " + esc(l.until) : ""}</small></span><span class="side">${canWrite("locks") ? btn("state", t("release"), { coll: "locks", id: l.id, to: "解除" }, "ghost mini") : ""}</span></div>`);
+  const sev = { "止まる": 0, "遊べるが困る": 1, "見た目だけ": 2 };
+  const bugs = docs("bugs").filter((b) => isOpen("bugs", b)).sort((a, b) => (sev[a.severity] ?? 3) - (sev[b.severity] ?? 3)).slice(0, 6).map((b) => row("bugs", b));
+  const qs = docs("questions").filter((q) => q.state === "未回答").slice(0, 6).map((q) => row("questions", q, `→ ${esc(q.to || "エージェント")} · ${byText(q)}`));
+  const recent = reports.sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at))).slice(0, 6).map((r) => row("reports", r, `${byText(r)}${r.conclusion ? " — " + esc(String(r.conclusion).slice(0, 80)) : ""}`));
+  const hints = [];
+  if (S.live && !project().name) hints.push(`<div class="note">${t("setup")} ${S.me.owner ? btn("project", t("editProject")) : ""}</div>`);
+  if (S.live && S.me.write !== false && !S.me.handle) hints.push(`<div class="note">${t("registerWhy")} ${btn("profile", t("register"))}</div>`);
+  if (S.live && S.me.write === false) hints.push(`<div class="note">${t("viewerNote")}</div>`);
+  return `${hints.join("")}
+    <div class="head"><h1>${esc(project().name || "__PROJECT_NAME__")}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
+    <div class="grid">
+      <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
+      <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${list(waits)}</section>
+      <section class="card"><h2>${t("next")}</h2>${list(next)}</section>
+      <section class="card"><h2>${t("deadlines")}</h2>${list(ms)}</section>
+      <section class="card"><h2>${t("editing")}</h2>${list(locks)}</section>
+      <section class="card"><h2>${t("recent")}</h2>${list(recent)}</section>
+      <section class="card"><h2>${t("openBugs")}</h2>${list(bugs)}</section>
+      <section class="card"><h2>${t("openQs")}</h2>${list(qs)}</section>
+    </div>`;
+}
+
+function viewBoard() {
+  const cards = docs("cards").filter(matchQ), p = plan(), o = S.me.owner;
+  const kc = (c, extra = "") => `<a class="kc ${c.state === "作業中" ? "now" : ""}" href="#${esc(c.id)}"><b>${esc(c.title)}</b><span class="muted">${esc(c.assignee || p.assign[c.id] || "")}</span> ${tags(c)}${extra ? `<span class="acts">${extra}</span>` : ""}</a>`;
+  const ready = p.ready.map((id) => cards.find((c) => c.id === id)).filter((c) => c && c.state === "あとで");
+  const later = cards.filter((c) => c.state === "あとで" && !p.ready.includes(c.id));
+  const cols = [
+    [t("later"), later.map((c) => kc(c, o ? btn("plan-add", t("toReady"), { id: c.id }, "mini star") : ""))],
+    [t("ready"), ready.map((c) => kc(c, (o ? btn("plan-up", "↑", { id: c.id }, "mini ghost") + btn("plan-down", "↓", { id: c.id }, "mini ghost") + btn("plan-assign", t("assign"), { id: c.id }, "mini ghost") + btn("plan-remove", t("offReady"), { id: c.id }, "mini ghost") : "") + (canWrite("cards") ? btn("state", t("take"), { coll: "cards", id: c.id, to: "作業中" }, "mini") : "")))],
+    [t("working"), cards.filter((c) => c.state === "作業中").map((c) => kc(c))],
+    [t("review"), cards.filter((c) => c.state === "確認待ち").map((c) => kc(c, `<span class="tag">${esc(c.waiting || "レビュー")}</span>`))],
+    [t("done"), cards.filter((c) => c.state === "完了").sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))).slice(0, 20).map((c) => kc(c))],
+  ];
+  return `<div class="head"><h1>${t("board")}</h1><div class="acts">${o ? btn("milestones", t("milestones"), {}, "ghost") : ""}${canWrite("cards") ? btn("new", L(COLL.cards.label) + " +", { coll: "cards" }) : ""}</div></div>
+    <div class="board">${cols.map(([name, items]) => `<div class="col"><h2>${esc(name)} <span class="chip">${items.length}</span></h2>${items.join("") || `<p class="empty">—</p>`}</div>`).join("")}</div>`;
+}
+
+function viewList(coll) {
+  const c = COLL[coll], showAll = S.all[coll] || !c.states;
+  const rows = docs(coll).filter((d) => (showAll || isOpen(coll, d)) && matchQ(d)).sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at)));
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}</div></div>
+    <p class="muted">${esc(L(c.summary))}</p><section class="card">${list(rows.map((d) => row(coll, d)))}</section>`;
+}
+
+function fieldView(coll, f, v, d) {
+  switch (f.type) {
+    case "longtext": return `<div class="md">${md(v)}</div>`;
+    case "list": return `<ul>${v.map((x) => `<li>${inline(x)}</li>`).join("")}</ul>`;
+    case "areas": return v.map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+    case "bool": return v ? "✓" : "";
+    case "ref": { const rc = collOf(v), rd = rc && S.data[rc].get(v); return `<a href="#${esc(v)}">${esc(rd ? titleOf(rd) : v)}</a>`; }
+    case "milestone": { const m = plan().milestones.find((x) => x.id === v); return esc(m ? `${m.date} ${m.title}` : v); }
+    case "log": return `<ul>${v.map((x) => `<li><span class="when">${esc(fmt(x.at))}</span> ${esc(x.note)}</li>`).join("")}</ul>`;
+    case "assets": return `<div class="imgs">${v.map((id) => `<a href="/_blob/${esc(id)}" target="_blank" rel="noopener"><img src="/_blob/${esc(id)}" alt="" loading="lazy"></a>`).join("")}</div>`;
+    case "time": return esc(fmt(v));
+    case "options": {
+      const can = d.state === "未決定" && mine(d.decider);
+      return v.map((o, i) => `<div class="opt ${d.state === "決定" && d.choice === o.text ? "chosen" : o.recommended && d.state === "未決定" ? "rec" : ""}"><span>${o.recommended ? `<b>${t("recommended")}</b> ` : ""}${inline(o.text)}</span>${can ? btn("decide", t("decide"), { id: d.id, i }, "mini star") : ""}</div>`).join("");
+    }
+    case "answers": return Object.values(v).sort((a, b) => String(a.at).localeCompare(String(b.at))).map((a) => `<div class="ans"><small class="muted">${byText(a)} · ${esc(fmt(a.at))}</small><div class="md">${md(a.text)}</div>${blank(a.evidence) ? "" : `<ul>${a.evidence.map((x) => `<li>${inline(x)}</li>`).join("")}</ul>`}</div>`).join("");
+    default: return f.key === "pr" && /^https:\/\//.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v);
+  }
+}
+function viewDetail(coll, id) {
+  const raw = S.data[coll].get(id), c = COLL[coll];
+  const back = (VIEWS.find((v) => v.coll === coll) || { key: coll === "cards" ? "board" : coll === "proposals" ? "rules" : coll === "locks" ? "home" : coll }).key;
+  if (!raw) return `<p class="empty">${t("none")}</p><p><a href="#${back}">${t("back")}</a></p>`;
+  const d = { id, ...raw }, p = plan(), w = canWrite(coll), acts = [];
+  if (w && c.states) for (const s of c.states) if (s.name !== d.state && !(coll === "decisions" && s.name === "決定") && !(coll === "proposals" && s.name !== "提案" && !S.me.owner)) acts.push(btn("state", "→ " + (S.lang === "zh" ? s.zh : s.name), { coll, id, to: s.name }, "ghost mini"));
+  const special = [];
+  if (coll === "cards" && S.me.owner && d.state === "あとで") special.push(p.ready.includes(id) ? btn("plan-remove", t("offReady"), { id }, "ghost") + btn("plan-assign", `${t("assign")}：${p.assign[id] || t("anyone")}`, { id }, "ghost") : btn("plan-add", t("toReady"), { id }, "star"));
+  if (coll === "questions" && w && d.state !== "解決") special.push(btn("answer", t("answer"), { id }), btn("resolve", t("resolve"), { id }, "ghost"));
+  if (coll === "knowledge" && w && d.state === "要確認" && d.by !== S.me.handle) special.push(btn("state", t("verify"), { coll, id, to: "有効" }, "star"));
+  if (coll === "bugs" && w && !d.card && isOpen(coll, d)) special.push(btn("bug-card", t("toCard"), { id }));
+  if (coll === "proposals" && S.me.owner && d.state === "提案") special.push(btn("adopt", t("adopt"), { id }, "star"), btn("reject", t("reject"), { id }, "ghost"));
+  if (w) special.push(btn("edit", t("edit"), { coll, id }, "ghost"));
+  const rows = c.fields.filter((f) => !["title", "state"].includes(f.key) && !blank(d[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${fieldView(coll, f, d[f.key], d)}</dd>`);
+  const related = coll === "cards" ? docs("reports").filter((r) => r.card === id).sort((a, b) => String(b.at).localeCompare(String(a.at))).map((r) => row("reports", r, `${byText(r)}${r.conclusion ? " — " + esc(String(r.conclusion).slice(0, 80)) : ""}`)) : [];
+  return `<p><a href="#${back}" class="muted">← ${t("back")}</a></p>
+    <div class="head"><h1>${esc(titleOf(d))}</h1><div class="acts">${special.join("")}</div></div>
+    <div class="acts">${stPill(coll, d)} <span class="muted">${byText(d)} · ${esc(fmt(d.at))}${d.updated_by ? ` · ${t("updated")} ${esc(d.updated_by)} ${esc(fmt(d.updated_at))}` : ""}</span> <span class="mono muted">${esc(id)}</span></div>
+    <section class="card"><dl class="kv">${rows.join("") || `<dd class="empty">—</dd>`}</dl></section>
+    ${acts.length ? `<div class="acts"><span class="muted">${t("state")}</span>${acts.join("")}</div>` : ""}
+    ${related.length ? `<section class="card"><h2>${t("reportsOf")}</h2>${related.join("")}</section>` : ""}`;
+}
+
+function viewGrouped(coll, groups, groupKey, flag) {
+  const c = COLL[coll], all = docs(coll).filter(matchQ).sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const extra = [...new Set(all.map((d) => d[groupKey]).filter((g) => g && !groups.includes(g)))];
+  const sections = [...groups, ...extra].map((g) => {
+    const items = all.filter((d) => d[groupKey] === g);
+    return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
+  });
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
+    <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t("none")}</p>`}`;
+}
+function viewRules() {
+  const props = docs("proposals").filter((p) => S.all.proposals || p.state === "提案").map((p) => row("proposals", p));
+  return `${viewGrouped("rules", COLL.rules.categories, "category", "core")}
+    <section class="card"><h2>${t("proposals")} ${btn("toggle-all", S.all.proposals ? t("openOnly") : t("all"), { coll: "proposals" }, "ghost mini")}</h2>${list(props)}</section>`;
+}
+
+function viewMembers() {
+  const pr = project(), fields = SCHEMA.settings.project.fields;
+  const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
+  const steps = S.lang === "zh"
+    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "在这一页登记自己的称呼", "接受 GitHub 仓库的邀请，clone 仓库", "在 Claude Code 里添加插件市场并安装 hub 插件（见仓库 README）", "在仓库里对 Claude Code 说：/hub:today"]
+    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "このページで自分の呼び名を登録する", "GitHub リポジトリの招待を承認して clone する", "Claude Code にマーケットプレイスを追加して hub プラグインを入れる（リポジトリの README を参照）", "リポジトリの中で Claude Code に /hub:today と言う"];
+  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "领一张卡、开分支、开工" : "カードを取り、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、推送、写终了报告" : "コミット・push・終了報告"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
+  return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}</div></div>
+    <div class="grid">
+      <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
+      <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
+      <section class="card"><h2>${t("join")}</h2><div class="md"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div></section>
+      <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${c}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
+    </div>`;
+}
+function viewSearch() {
+  const rows = [];
+  for (const c of SCHEMA.collections) if (c.key !== "members") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(c.key === "rules" || c.key === "engine" ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
+  return `<div class="head"><h1>${t("results")}</h1></div><section class="card">${list(rows)}</section>`;
+}
+
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1)) || "home", v = VIEWS.find((x) => x.key === h);
+  if (v) return { view: v.key, coll: v.coll };
+  const coll = collOf(h);
+  if (coll && !isOwnerOnly(coll)) return { view: (VIEWS.find((x) => x.coll === coll) || { key: coll === "cards" ? "board" : coll === "proposals" ? "rules" : "home" }).key, coll, id: h };
+  return { view: "home" };
+}
+function render() {
+  const r = route();
+  renderNav(r.view);
+  document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "ja";
+  $("#lang-btn").textContent = S.lang === "zh" ? "日本語" : "中文";
+  $("#q").placeholder = t("search");
+  $("#brand-name").textContent = project().name || "__PROJECT_NAME__";
+  const conn = $("#conn");
+  conn.textContent = S.live ? t("live") : S.live === false || S.late ? t("offline") : t("connecting");
+  conn.className = "chip " + (S.live ? "live" : S.live === false || S.late ? "warn" : "");
+  $("#me-chip").textContent = S.me.handle ? S.me.handle + (S.me.owner ? `（${t("owner")}）` : "") : S.me.write === false ? t("readonly") : "";
+  $("#me-chip").hidden = !$("#me-chip").textContent;
+  let html;
+  if (S.live === false) html = `<div class="note">${t("signIn")}</div>`;
+  else if (r.id) html = viewDetail(r.coll, r.id);
+  else if (S.q && r.view === "home") html = viewSearch();
+  else if (r.view === "home") html = viewHome();
+  else if (r.view === "board") html = viewBoard();
+  else if (r.view === "rules") html = viewRules();
+  else if (r.view === "engine") html = viewGrouped("engine", COLL.engine.areas, "area", "must");
+  else if (r.view === "members") html = viewMembers();
+  else html = viewList(r.coll);
+  $("#main").innerHTML = html;
+}
+let queued = false;
+function schedule() {
+  if (queued) return;
+  queued = true;
+  // 画面が隠れている間も止まらないよう、描画の合図ではなくタイマーでまとめる。
+  setTimeout(() => { queued = false; render(); }, 30);
+}
+
+// ---------- 操作 ----------
+const ACT = {
+  lang() { S.lang = S.lang === "zh" ? "ja" : "zh"; try { localStorage.setItem("hub-lang", S.lang); } catch { /* 保存できなくても切り替わる */ } schedule(); },
+  close() { $("#dlg").close(); },
+  "del-ask"(_, el) { if (el.dataset.sure) { openForm.del().then((ok) => ok && $("#dlg").close()); } else { el.dataset.sure = "1"; el.textContent = t("delSure"); el.className = "btn danger mini"; } },
+  "toggle-all"({ coll }) { S.all[coll] = !S.all[coll]; schedule(); },
+  new({ coll }) { createDoc(coll); },
+  edit({ coll, id }) { editDoc(coll, id); },
+  async state({ coll, id, to }) {
+    const patch = { state: to };
+    if (coll === "cards" && to === "作業中") Object.assign(patch, { assignee: S.me.handle, started_at: now() });
+    if (coll === "cards" && to === "確認待ち") patch.waiting = S.data.cards.get(id).waiting || "レビュー";
+    if (coll === "knowledge" && to === "有効") patch.verified_by = S.me.handle;
+    await write(coll, id, patch, false);
+  },
+  async "plan-add"({ id }) { const p = plan(); if (!p.ready.includes(id)) await writePlan({ ...p, ready: [...p.ready, id] }); },
+  async "plan-remove"({ id }) { const p = plan(), assign = { ...p.assign }; delete assign[id]; await writePlan({ ...p, ready: p.ready.filter((x) => x !== id), assign }); },
+  async "plan-up"({ id }) { await movePlan(id, -1); },
+  async "plan-down"({ id }) { await movePlan(id, 1); },
+  "plan-assign"({ id }) {
+    const p = plan();
+    openForm({ title: t("assign"), defs: [{ key: "who", type: "member", ja: "担当", zh: "担当", help: S.lang === "zh" ? "留空 = 谁都能领" : "空 = 誰でも取れる" }], values: { who: p.assign[id] },
+      onSave: ({ who }) => { const assign = { ...p.assign }; if (who) assign[id] = who; else delete assign[id]; return writePlan({ ...p, assign }); } });
+  },
+  milestones() {
+    const p = plan();
+    openForm({ title: t("milestones"), defs: [{ key: "lines", type: "list", ja: "締切", zh: "截止", help: t("msHelp") }], values: { lines: p.milestones.map((m) => `${m.date} ${m.title}`) }, note: t("msHelp"),
+      onSave: ({ lines }) => {
+        const ms = [];
+        for (const line of lines) {
+          const m = line.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
+          if (!m) { toast(t("msHelp"), true); return false; }
+          const old = p.milestones.find((x) => x.title === m[2]);
+          ms.push({ id: old ? old.id : newId("ms"), date: m[1], title: m[2] });
+        }
+        return writePlan({ ...p, milestones: ms });
+      } });
+  },
+  async decide({ id, i }) { const d = S.data.decisions.get(id); await write("decisions", id, { state: "決定", choice: d.options[Number(i)].text, decided_by: S.me.handle }, false); },
+  answer({ id }) {
+    openForm({ title: t("answer"), defs: [{ key: "text", type: "longtext", required: true, ja: "回答", zh: "回答" }, { key: "evidence", type: "list", ja: "根拠", zh: "依据" }],
+      onSave: (v) => write("questions", id, { state: "回答あり", answers: { [newId("a")]: { ...v, by: S.me.handle, at: now() } } }, false) });
+  },
+  resolve({ id }) {
+    const q = S.data.questions.get(id);
+    openForm({ title: t("resolve"), defs: [{ key: "conclusion", type: "longtext", required: true, ja: "結論", zh: "结论" }, { key: "keep", type: "bool", ja: t("toKnowledge"), zh: t("toKnowledge") }], values: { conclusion: q.conclusion, keep: true },
+      onSave: async ({ conclusion, keep }) => {
+        if (!(await write("questions", id, { state: "解決", conclusion }, false))) return false;
+        if (keep) await write("knowledge", newId("k"), { title: q.title, body: conclusion, areas: q.areas || [], paths: q.paths || [], source: id, state: "要確認" }, true);
+        return true;
+      } });
+  },
+  "bug-card"({ id }) {
+    const b = S.data.bugs.get(id);
+    createDoc("cards", { title: "修正：" + b.title, kind: "修正", summary: [b.where, b.actual].filter(Boolean).join("\n"), areas: b.areas || [], extra: { bug: id } },
+      (cid) => write("bugs", id, { card: cid, state: "対応中" }, false));
+  },
+  adopt({ id }) {
+    const p = S.data.proposals.get(id), rule = p.rule && S.data.rules.get(p.rule), rid = p.rule && rule ? p.rule : newId("rule");
+    openForm({ title: t("adopt"), defs: fieldsOf("rules", COLL.rules.create), values: rule ? { ...rule, body: p.body } : { title: p.title, category: p.category, body: p.body },
+      onSave: async (v) => (await write("rules", rid, v, !rule)) && write("proposals", id, { state: "採用" }, false) });
+  },
+  reject({ id }) { openForm({ title: t("reject"), defs: [{ key: "reply", type: "longtext", required: true, ja: "返事", zh: "回复" }], onSave: (v) => write("proposals", id, { state: "却下", ...v }, false) }); },
+  project() {
+    const defs = SCHEMA.settings.project.fields;
+    openForm({ title: t("project"), defs, values: project(), onSave: async (v) => { try { await S.db.doc("settings/project").set({ ...project(), ...v, ...stamp(false) }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; } } });
+  },
+  profile() {
+    const mineDoc = S.data.members.get(S.me.uid) || {};
+    openForm({ title: mineDoc.handle ? t("profile") : t("register"), note: t("registerWhy"), defs: fieldsOf("members", COLL.members.create), values: mineDoc,
+      onSave: async (v) => {
+        if (!/^[A-Za-z0-9_-]{2,20}$/.test(v.handle)) { toast(t("handleBad"), true); return false; }
+        if (docs("members").some((m) => m.id !== S.me.uid && m.handle === v.handle)) { toast(t("handleTaken"), true); return false; }
+        try { await S.db.doc("members/" + S.me.uid).set({ ...mineDoc, ...v, updated_at: now() }); S.me.handle = v.handle; toast(t("saved")); schedule(); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
+      } });
+  },
+};
+async function movePlan(id, step) {
+  const p = plan(), ready = [...p.ready], i = ready.indexOf(id), j = i + step;
+  if (i < 0 || j < 0 || j >= ready.length) return;
+  [ready[i], ready[j]] = [ready[j], ready[i]];
+  await writePlan({ ...p, ready });
+}
+document.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act]");
+  if (!el) return;
+  ev.preventDefault();
+  const fn = ACT[el.dataset.act];
+  if (fn) Promise.resolve(fn({ ...el.dataset }, el)).catch(() => toast(t("failed"), true));
+});
+$("#q").addEventListener("input", (ev) => { S.q = ev.target.value.trim().toLowerCase(); schedule(); });
+window.addEventListener("hashchange", () => { window.scrollTo(0, 0); schedule(); });
+
+// ---------- 接続 ----------
+async function start() {
+  render();
+  setTimeout(() => { if (S.live == null) { S.late = true; schedule(); } }, 10000);
+  const claude = window.claude;
+  const [db, user, assets] = claude && claude.use ? await Promise.all([claude.use("db"), claude.use("user"), claude.use("assets")]) : [null, null, null];
+  S.db = db;
+  S.assets = assets;
+  if (!db) { S.live = false; render(); return; }
+  if (user) {
+    const [uid, owner, write] = await Promise.all([user.id(), user.isOwner(), user.can("data.write")]);
+    Object.assign(S.me, { uid, owner: !!owner, write });
+  }
+  const sub = (key, query) => query.onSnapshot((snap) => {
+    S.data[key] = new Map(snap.docs.map((d) => [d.id, d.data()]));
+    if (key === "members" && S.me.uid) S.me.handle = (S.data.members.get(S.me.uid) || {}).handle || "";
+    if (!snap.metadata.fromCache) S.live = true;
+    schedule();
+  }, () => { S.late = true; schedule(); });
+  sub("settings", db.collection("settings"));
+  for (const c of SCHEMA.collections) sub(c.key, c.key === "reports" ? db.collection(c.key).orderBy("at", "desc").limit(300) : db.collection(c.key).limit(1000));
+}
+start();
+})();
+</script>

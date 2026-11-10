@@ -1,0 +1,8 @@
+{
+  "title": "ヘッダの読み方（困ったらここから）",
+  "area": "資料",
+  "body": "`<HIKARI>/Sdk/include/HIKARI/Project/` にある。名前の付け方：\n\n- `〜View.h` / `〜Views.h`：`WorldView` から取るサービス（操作の窓口）\n- `〜Types.h`：その機能で使う構造体と enum\n- `GameSystem.h`、`GameComponent.h`、`PropertyFields.h`、`FrameContext.h`、`GameProjectSession.h`：ゲームコードの土台\n- `RuntimeFeature.h`、`RuntimeRegistration.h`、`GameProjectModule.h`：登録\n- `WorldView.h`、`WorldTypes.h`、`WorldQuery.h`、`ComponentViews.h`：オブジェクトと World\n- `Editor〜.h`、`GameProjectEditorModule〜.h`：エディタ拡張（`Source/Editor` 用）\n- `Render〜.h`、`MassSystem.h`、`World〜Types.h`：描画の拡張、大量オブジェクト（上級。必要になるまで触らない）\n\n探し方：やりたいことの言葉で `grep` する（例 `grep -rn \"Vibration\" <HIKARI>/Sdk/include/HIKARI/Project`）。見つからなければ「まだない」と考えて、ハブの「エンジンへの要望」に出す。",
+  "order": 10,
+  "must": true,
+  "sdk": "4.17"
+}

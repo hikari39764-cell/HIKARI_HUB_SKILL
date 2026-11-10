@@ -1,0 +1,8 @@
+{
+  "title": "作品のテキストデータ（Data/）",
+  "area": "資料",
+  "body": "- レベル設定や表のような作品のテキストは、プロジェクト直下の `Data/` に UTF-8 で置ける。\n- 読むのは `world.GetProjectData().ReadText(relativePath, sink)`（`ProjectDataView.h`）。同期・読み取り専用で、プロジェクトのファイルやセーブデータは書かない。\n- 形式と検証は自分のコードで決める。セーブには使わない（`SaveGameView`）。",
+  "order": 30,
+  "must": false,
+  "sdk": "4.17"
+}

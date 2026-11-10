@@ -1,0 +1,7 @@
+{
+  "title": "公開 SDK だけを使う",
+  "category": "コードの約束",
+  "body": "- include してよいのは `HIKARI/Project/*` と `HIKARI/Runtime/ComponentTypeId.h` だけ。`HIKARI/Scene`、`HIKARI/Render3D`、`HIKARI/Gfx`、エディタの非公開ヘッダは使わない。\n- エンジンのソースは直さない。足りない機能・不具合は「エンジンへの要望」に出し、今の回避策を書いておく。",
+  "order": 20,
+  "core": true
+}

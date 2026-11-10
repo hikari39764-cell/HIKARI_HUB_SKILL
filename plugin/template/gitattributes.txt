@@ -1,0 +1,15 @@
+* text=auto
+*.h text eol=crlf
+*.cpp text eol=crlf
+*.md text eol=lf
+
+# 大きい素材は Git LFS。結合できないものは lockable（編集の前に git lfs lock）
+Assets/**/*.bin filter=lfs diff=lfs merge=lfs -text
+Assets/**/*.dds filter=lfs diff=lfs merge=lfs -text
+Assets/**/*.png filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text lockable
+*.blend filter=lfs diff=lfs merge=lfs -text lockable
