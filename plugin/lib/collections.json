@@ -1,0 +1,25 @@
+{
+  "all": [
+    "settings",
+    "cards",
+    "reports",
+    "bugs",
+    "questions",
+    "guides",
+    "knowledge",
+    "mistakes",
+    "decisions",
+    "locks",
+    "proposals",
+    "engine_requests",
+    "rules",
+    "engine",
+    "members"
+  ],
+  "skip": [
+    "reports",
+    "bugs",
+    "proposals",
+    "engine_requests"
+  ]
+}

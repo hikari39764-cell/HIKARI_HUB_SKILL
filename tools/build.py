@@ -1,10 +1,13 @@
 """HIKARI 制作ハブのビルド。
 
-schema/schema.json（項目の宣言）と content/（既定のルール・エンジン知識）から、次のものを作る：
+schema/schema.json（項目の宣言）、content/（既定のルール・エンジン知識）、plugin/hub.json（接続先）、
+plugin/projects.json（作品の一覧）から、次のものを作る：
 
-  plugin/owner/hub.html                 公開するプロジェクトページ（作品名は /hub:new が差し込む）
-  plugin/owner/capabilities.json        公開時に渡す権限の宣言（db のアクセス規則）
+  docs/index.html                       ハブのサイト（GitHub Pages が配る。全作品で 1 ページ、?p=<作品 id>）
+  firebase/firestore.rules              データベースのアクセス規則（オーナーが Firebase コンソールに貼る。コミットしない）
+                                        オーナーのメールは firebase/owner-email.local から入れる（これもコミットしない）
   plugin/owner/seed/<collection>/*.json 新しいプロジェクトに入れる初期データ
+  plugin/lib/collections.json           hub コマンドが同期するコレクションの一覧（skip は必要なときだけ読むもの）
   plugin/skills/work/references/data-model.md  エージェント向けのデータの書き方
   plugin/skills/work/references/engine.md      エンジン知識（ハブに届かないときの控え）
   dist/preview-owner.html, preview-member.html 手元で見るためのプレビュー（コミットしない）
@@ -24,6 +27,54 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads((ROOT / "schema" / "schema.json").read_text(encoding="utf-8"))
 COLLECTIONS = {c["key"]: c for c in SCHEMA["collections"]}
 OWNER_ONLY = ["settings"] + [c["key"] for c in SCHEMA["collections"] if c["writer"] == "owner"]
+HUB = json.loads((ROOT / "plugin" / "hub.json").read_text(encoding="utf-8"))
+PROJECTS = json.loads((ROOT / "plugin" / "projects.json").read_text(encoding="utf-8"))
+HEAD = ('<!doctype html><html lang="ja"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">')
+RULES = """rules_version = '2';
+// HIKARI 制作ハブのアクセス規則（自動生成：tools/build.py）。
+// Firebase コンソールの Firestore Database →「ルール」に全部貼って「公開」する。
+//
+//   オーナー    ：下の isOwner() に書いたメールの Google アカウント。すべての作品を読み書きでき、招待の一覧を管理する。
+//   メンバー    ：作品の invites/<Google アカウントのメール（小文字）> がある人。その作品を読み、記録を作る・直す。
+//   オーナーだけ：__OWNER_ONLY_TEXT__ への書き込み、招待の一覧、記録の削除。
+//   本人だけ    ：members/<自分の uid>。
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() == '__OWNER_EMAIL__';
+    }
+    function invited(pid) {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/projects/$(pid)/invites/$(request.auth.token.email.lower()));
+    }
+    function isMember(pid) { return isOwner() || invited(pid); }
+
+    // ページと hub コマンドが「自分はオーナーか」を確かめる場所（読めればオーナー。中身は無い）。
+    match /hub/owner {
+      allow read: if isOwner();
+    }
+    match /projects/{pid}/invites/{email} {
+      allow read, write: if isOwner();
+    }
+    match /projects/{pid}/members/{uid} {
+      allow read: if isMember(pid);
+      allow create, update: if isOwner() || (invited(pid) && request.auth.uid == uid);
+      allow delete: if isOwner();
+    }
+    match /projects/{pid}/{coll}/{id} {
+      allow read: if coll != 'invites' && isMember(pid);
+      allow create, update: if (coll in [__OWNER_ONLY__] && isOwner())
+        || (!(coll in [__OWNER_ONLY__, 'invites', 'members']) && isMember(pid));
+      allow delete: if isOwner();
+    }
+  }
+}
+"""
 
 
 def write(path: Path, text: str) -> None:
@@ -60,6 +111,9 @@ def sections(folder: str, group_key: str) -> list[dict]:
 
 
 def check_schema() -> None:
+    unknown = [k for k in SCHEMA["sync_skip"] if k not in COLLECTIONS]
+    if unknown:
+        raise SystemExit(f"sync_skip に無いコレクション {unknown}")
     for c in SCHEMA["collections"]:
         keys = {f["key"] for f in c["fields"]}
         missing = [k for k in c["create"] if k not in keys]
@@ -72,26 +126,36 @@ def check_schema() -> None:
         raise SystemExit("prefix が重複しています")
 
 
-def capabilities() -> dict:
-    """読むのは招待された全員、書くのは編集者以上。オーナー領域はオーナーだけ、members は本人だけ。"""
-    rules = [{"path": "", "read": "view", "write": "admin"}]
-    rules += [{"path": key, "write": "owner"} for key in OWNER_ONLY]
-    rules += [{"path": "members", "read": "view", "write": "owner"}, {"path": "members/{self}", "write": "admin"}]
-    return {"db": {"rules": rules}, "user": {}, "assets": {}}
+def firestore_rules() -> str:
+    """オーナーのメールは公開しない：手元の firebase/owner-email.local（1 行）から入れる。無ければ貼る前に書き換える。"""
+    local = ROOT / "firebase" / "owner-email.local"
+    email = local.read_text(encoding="utf-8").strip().lower() if local.exists() else "OWNER_EMAIL_HERE"
+    if not re.fullmatch(r"[^\s'@/]+@[^\s'@/]+", email) and email != "OWNER_EMAIL_HERE":
+        raise SystemExit("firebase/owner-email.local がメールの形になっていません")
+    quoted = ", ".join(f"'{k}'" for k in OWNER_ONLY)
+    return RULES.replace("__OWNER_ONLY_TEXT__", "・".join(OWNER_ONLY)).replace("__OWNER_ONLY__", quoted).replace("__OWNER_EMAIL__", email)
 
 
-def page(project_name: str | None = None) -> str:
+def embed(value) -> str:
+    """<script type="application/json"> の中に入れる JSON。"""
+    return json.dumps(value, ensure_ascii=False).replace("</", "<\\/")
+
+
+def page(config: dict, backend: str | None = None) -> str:
+    """backend を渡すと、Firebase の窓口の代わりにそのスクリプト（プレビューの見本）を入れる。"""
     html = (ROOT / "page" / "hub.src.html").read_text(encoding="utf-8")
     logo = "data:image/png;base64," + base64.b64encode((ROOT / "page" / "logo.png").read_bytes()).decode("ascii")
-    html = html.replace("__SCHEMA__", json.dumps(SCHEMA, ensure_ascii=False).replace("</", "<\\/")).replace("__LOGO__", logo)
-    return html.replace("__PROJECT_NAME__", project_name) if project_name else html
+    if backend is not None:
+        head, _, rest = html.partition("<!--backend-->")
+        html = head + f"<script>{backend}</script>" + rest.partition("<!--/backend-->")[2]
+    return HEAD + html.replace("__SCHEMA__", embed(SCHEMA)).replace("__CONFIG__", embed(config)).replace("__LOGO__", logo)
 
 
 def data_model() -> str:
     lines = [
         "# ハブのデータ（自動生成：schema/schema.json から）",
         "",
-        "プロジェクトページの共有データベースにある記録の一覧。`ArtifactData` ツールで読み書きする。",
+        "ハブのデータベース（作品ごと）にある記録の一覧。`hub` コマンドで読み書きする。",
         "書き方の手順と例は `hub-io.md`。ここは「どのコレクションに、どんな項目があるか」。",
         "",
         "## すべての記録に付ける項目",
@@ -108,9 +172,9 @@ def data_model() -> str:
         "",
         "## 書ける人",
         "",
-        "- **メンバー**：編集者として招待された人と、そのエージェント。",
+        "- **メンバー**：オーナーに招待された人と、その人の鍵を使うエージェント。記録を作る・直すことができる（消せるのはオーナーだけ）。",
         "- **オーナーだけ**：" + "、".join(f"`{k}`" for k in OWNER_ONLY) + "。ほかの人が書こうとすると拒否される（エージェントは書かない）。",
-        "- **本人だけ**：`members`（ページで本人が登録する。エージェントは読むだけ）。",
+        "- **本人だけ**：`members/<自分の uid>`（呼び名。ページで本人が登録する。まだ無ければエージェントが `git config user.name` で登録する）。",
         "",
         "## settings（オーナーだけが書く）",
         "",
@@ -166,6 +230,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
     """プレビュー用の見本データ（公開ページには入らない）。"""
     me = "hikari" if owner else "kato"
     seed = {f"rules/{d['id']}": d["data"] for d in rules} | {f"engine/{d['id']}": d["data"] for d in engine}
+    seed["invites/kato@example.com"] = {"at": "2026-11-09T09:00:00+09:00"}
     stamp = lambda by, at, agent=None: {"by": by, "at": at, "updated_at": at, "updated_by": by} | ({"by_agent": agent} if agent else {})
     seed |= {
         "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "main",
@@ -215,7 +280,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
                                "reason": "スクリーンショットでは揺れの強さが伝わらなかった。", "state": "提案", **stamp("ko", "2026-11-10T09:40:00+09:00")},
         "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
     }
-    return seed
+    return {f"projects/sample/{k}": v for k, v in seed.items()}
 
 
 def main() -> None:
@@ -228,24 +293,28 @@ def main() -> None:
         raise SystemExit(f"分類が schema にありません：{bad}")
 
     owner = ROOT / "plugin" / "owner"
-    write(owner / "hub.html", page())
-    write(owner / "capabilities.json", json.dumps(capabilities(), ensure_ascii=False, indent=2) + "\n")
+    site = page({"firebase": HUB["firebase"], "projects": PROJECTS})
+    write(ROOT / "docs" / "index.html", site)
+    write(ROOT / "docs" / ".nojekyll", "")
+    write(ROOT / "firebase" / "firestore.rules", firestore_rules())
     shutil.rmtree(owner / "seed", ignore_errors=True)
     for folder, docs in (("rules", rules), ("engine", engine)):
         for d in docs:
             write(owner / "seed" / folder / f"{d['id']}.json", json.dumps(d["data"], ensure_ascii=False, indent=2) + "\n")
+
+    listing = {"all": ["settings"] + list(COLLECTIONS), "skip": SCHEMA["sync_skip"]}
+    write(ROOT / "plugin" / "lib" / "collections.json", json.dumps(listing, ensure_ascii=False, indent=2) + "\n")
 
     refs = ROOT / "plugin" / "skills" / "work" / "references"
     write(refs / "data-model.md", data_model())
     write(refs / "engine.md", engine_reference(engine))
 
     mock = (ROOT / "tools" / "preview_mock.js").read_text(encoding="utf-8")
+    sample = {"firebase": {}, "projects": [{"repo": "example/sample-game", "name": "サンプル作品", "id": "sample"}]}
     for name, is_owner in (("owner", True), ("member", False)):
-        seed = json.dumps(preview_seed(rules, engine, is_owner), ensure_ascii=False).replace("</", "<\\/")
-        head = "<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>"
-        script = mock.replace("__SEED__", seed).replace("__OWNER__", "true" if is_owner else "false")
-        write(ROOT / "dist" / f"preview-{name}.html", f"{head}<script>{script}</script>" + page("サンプル作品"))
-    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、ページ {len(page().encode('utf-8')) // 1024} KB")
+        script = mock.replace("__SEED__", embed(preview_seed(rules, engine, is_owner))).replace("__OWNER__", "true" if is_owner else "false")
+        write(ROOT / "dist" / f"preview-{name}.html", page(sample, script))
+    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、作品 {len(PROJECTS)} 件、サイト {len(site.encode('utf-8')) // 1024} KB")
 
 
 if __name__ == "__main__":

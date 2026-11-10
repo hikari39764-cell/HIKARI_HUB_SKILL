@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "sync_skip": ["reports", "bugs", "proposals", "engine_requests"],
   "meta_fields": {
     "by": {
       "ja": "書いた人",
@@ -1412,8 +1413,8 @@
         "zh": "成员"
       },
       "summary": {
-        "ja": "ドキュメント id は本人の Claude アカウント id。本人だけが自分のものを書ける。",
-        "zh": "文档 id 是本人的 Claude 账号 id，只有本人能写自己的。"
+        "ja": "ドキュメント id は本人の uid（ログインした Google アカウントごとの id。`hub whoami` で分かる）。本人だけが自分のものを書ける。",
+        "zh": "文档 id 是本人的 uid（按登录的 Google 账号区分，`hub whoami` 可查），只有本人能写自己的。"
       },
       "fields": [
         {

@@ -3,7 +3,7 @@
 #
 # A repository belongs to a hub when its "origin" remote (owner/name) is listed in ../projects.json.
 # Everywhere else this hook does nothing. Nothing is ever committed to the game repository: the
-# agent's working files live in <repo>/.hikari-hub/, which the skill adds to .git/info/exclude.
+# agent's working files live in <repo>/.hikari-hub/, which the hub tool lists in .git/info/exclude.
 #
 #   session : SessionStart - tells the agent this repository is a hub project and what to do first.
 #   edit    : PreToolUse (Edit / Write / MultiEdit / NotebookEdit) - no registered work, no edit;
@@ -12,69 +12,7 @@
 # The guard fails open: if the hook itself breaks, work is not blocked.
 param([string]$Mode = "edit")
 
-$utf8 = New-Object System.Text.UTF8Encoding($false)
-
-function Write-Out([string]$text) {
-    $bytes = $utf8.GetBytes($text)
-    $stdout = [Console]::OpenStandardOutput()
-    $stdout.Write($bytes, 0, $bytes.Length)
-    $stdout.Flush()
-}
-
-function Read-Text([string]$path) {
-    if (-not (Test-Path -LiteralPath $path)) { return "" }
-    return [IO.File]::ReadAllText($path, $utf8)
-}
-
-function Read-Json([string]$path) {
-    $text = Read-Text $path
-    if (-not $text.Trim()) { return $null }
-    return $text | ConvertFrom-Json
-}
-
-# Walks up from $start to the folder that holds .git (a folder, or a pointer file in a worktree).
-function Find-RepoRoot([string]$start) {
-    $dir = $start
-    while ($dir) {
-        if (Test-Path -LiteralPath (Join-Path $dir ".git")) { return $dir }
-        $parent = Split-Path -Path $dir -Parent
-        if (-not $parent -or $parent -eq $dir) { return $null }
-        $dir = $parent
-    }
-    return $null
-}
-
-# This checkout's git dir: .git itself, or the dir a worktree's .git file points at.
-function Get-GitDir([string]$root) {
-    $git = Join-Path $root ".git"
-    if (Test-Path -LiteralPath $git -PathType Container) { return $git }
-    if ((Read-Text $git) -notmatch 'gitdir:\s*(.+)') { return "" }
-    $target = $Matches[1].Trim()
-    if (-not [IO.Path]::IsPathRooted($target)) { $target = Join-Path $root $target }
-    return $target
-}
-
-# "owner/name" of the origin remote, lower-cased; empty when there is none.
-function Get-RepoKey([string]$gitDir) {
-    $common = $gitDir
-    $pointer = (Read-Text (Join-Path $gitDir "commondir")).Trim()
-    if ($pointer) {
-        if ([IO.Path]::IsPathRooted($pointer)) { $common = $pointer } else { $common = Join-Path $gitDir $pointer }
-    }
-    if ((Read-Text (Join-Path $common "config")) -notmatch '(?s)\[remote "origin"\][^\[]*?url\s*=\s*(\S+)') { return "" }
-    $url = $Matches[1] -replace '\.git$', ''
-    if ($url -match '([^/:]+)/([^/]+)$') { return ($Matches[1] + "/" + $Matches[2]).ToLowerInvariant() }
-    return ""
-}
-
-function Find-Project([string]$gitDir) {
-    $key = Get-RepoKey $gitDir
-    if (-not $key) { return $null }
-    foreach ($project in @(Read-Json (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "projects.json"))) {
-        if ($project -and ([string]$project.repo).ToLowerInvariant() -eq $key) { return $project }
-    }
-    return $null
-}
+. (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-common.ps1")
 
 function Get-Branch([string]$gitDir) {
     if ((Read-Text (Join-Path $gitDir "HEAD")) -match 'ref:\s*refs/heads/(\S+)') { return $Matches[1] }
@@ -133,16 +71,17 @@ try {
     $hasWork = [bool]($active -and $active.card)
 
     if ($Mode -eq "session") {
+        $intro = $msg.session -f [string]$hub.name, (Get-ProjectUrl ([string]$hub.id)), (Get-ToolPath)
         if ($hasWork) {
-            Write-Out ($msg.session_active -f [string]$hub.name, [string]$active.title, [string]$active.branch)
+            Write-Out ($intro + ($msg.session_active -f [string]$active.title, [string]$active.branch))
         } else {
-            Write-Out ($msg.session_idle -f [string]$hub.name)
+            Write-Out ($intro + $msg.session_idle)
         }
         exit 0
     }
 
     $rel = $file.Substring($root.Length).TrimStart('\', '/').Replace("\", "/")
-    # The agent's own working files (cache, active work, pending notes) are always writable.
+    # The agent's own working files (cache, records to push, active work) are always writable.
     if ($rel.StartsWith(".hikari-hub/", [StringComparison]::OrdinalIgnoreCase)) { exit 0 }
 
     $project = Read-Json (Join-Path $root ".hikari-hub/cache/settings/project.json")

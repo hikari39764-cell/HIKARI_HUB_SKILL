@@ -1,5 +1,4 @@
-<title>__PROJECT_NAME__ ハブ</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<title>HIKARI 制作ハブ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=JetBrains+Mono:wght@500&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;700&display=swap">
 <style>
@@ -43,6 +42,7 @@ code { font-family: var(--mono); font-size: .86em; background: var(--paper-2); b
 
 /* ---------- 骨組み ---------- */
 .shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 18px; padding-block: 16px 40px; align-items: start; }
+.shell.solo { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
 #nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); display: flex; flex-direction: column; gap: 3px; }
 #nav a { text-decoration: none; font-weight: 700; font-size: 14px; padding: 5px 10px; border-radius: 10px; border: 2px solid transparent; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
 #nav a:hover { border-color: var(--rule); background: var(--card); }
@@ -113,6 +113,7 @@ a.row:hover b { text-decoration: underline; }
 .md th { background: var(--paper-2); }
 .md > :last-child { margin-bottom: 0; }
 .imgs { display: flex; flex-wrap: wrap; gap: 8px; }
+.imgs img { cursor: zoom-in; min-width: 60px; min-height: 40px; background: var(--paper-2); }
 .imgs img, .imgs video { max-width: min(100%, 320px); max-height: 240px; border: 2px solid var(--rule); border-radius: 8px; }
 .opt { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; padding: 8px 10px; border: 2px solid var(--rule); border-radius: 10px; margin-top: 6px; }
 .opt.rec { background: var(--apricot); color: #17160F; border-color: #17160F; }
@@ -149,7 +150,7 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#home"><img src="__LOGO__" alt=""><span id="brand-name">__PROJECT_NAME__</span></a>
+    <a class="brand" href="#home"><img src="__LOGO__" alt=""><span id="brand-name">HIKARI 制作ハブ</span></a>
     <span class="chip" id="conn">…</span>
     <div class="grow"><input id="q" type="text" autocomplete="off" aria-label="検索"></div>
     <span class="chip" id="me-chip"></span>
@@ -163,6 +164,36 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
 <dialog id="dlg"><form id="dlg-form" method="dialog"></form></dialog>
 <div id="toast" hidden></div>
 <script type="application/json" id="schema">__SCHEMA__</script>
+<script type="application/json" id="hub-config">__CONFIG__</script>
+<!--backend-->
+<script type="module">
+// Firebase（Google ログインと Firestore）を、ページが使う小さな窓口にする。update は入れ子のマップを合わせる（merge）。
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import { initializeFirestore, doc, collection, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+const app = initializeApp(JSON.parse(document.getElementById("hub-config").textContent).firebase);
+const auth = getAuth(app), store = initializeFirestore(app, { ignoreUndefinedProperties: true });
+const snapOf = (s) => ({ id: s.id, exists: s.exists(), data: () => s.data(), metadata: s.metadata });
+const docRef = (path) => {
+  const ref = doc(store, path);
+  return { get: async () => snapOf(await getDoc(ref)), set: (d) => setDoc(ref, d), update: (d) => setDoc(ref, d, { merge: true }), delete: () => deleteDoc(ref),
+    onSnapshot: (next, fail) => onSnapshot(ref, (s) => next(snapOf(s)), fail) };
+};
+const collRef = (path, cons = []) => ({
+  orderBy: (field, dir) => collRef(path, [...cons, orderBy(field, dir)]), limit: (n) => collRef(path, [...cons, limit(n)]),
+  onSnapshot: (next, fail) => onSnapshot(query(collection(store, path), ...cons), (s) => next({ docs: s.docs.map(snapOf), metadata: s.metadata }), fail),
+});
+window.hubBackend = {
+  db: { doc: docRef, collection: collRef },
+  onAuth: (cb) => onAuthStateChanged(auth, (u) => cb(u && { uid: u.uid, email: u.email, name: u.displayName })),
+  signIn: () => signInWithPopup(auth, new GoogleAuthProvider()),
+  signOut: () => signOut(auth),
+  // エージェントの鍵：この人のログインを更新するためのトークン。エージェントの hub コマンドがこれで本人として読み書きする。
+  key: () => "hhk1." + auth.currentUser.refreshToken,
+};
+window.dispatchEvent(new Event("hub-backend"));
+</script>
+<!--/backend-->
 <script>
 (() => {
 "use strict";
@@ -173,7 +204,11 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
 
-const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, handle: "", owner: false, write: null }, db: null, assets: null, live: null, late: false, q: "", all: { reports: true } };
+// ハブの設定（Firebase の接続先と、作品の一覧）。plugin/hub.json と plugin/projects.json からビルドで入る。
+const CONFIG = JSON.parse(document.getElementById("hub-config").textContent);
+const PID = (() => { const p = new URLSearchParams(location.search).get("p") || ""; return /^[a-z0-9_-]{1,40}$/.test(p) ? p : ""; })();
+// signed: null = まだ分からない。denied: この作品に招待されていない。
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true } };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
 
@@ -196,9 +231,13 @@ const T = {
   setup: ["まずプロジェクトの設定を入力してください。", "请先填写项目设置。"], join: ["参加の手順", "加入步骤"], agentHow: ["エージェントの使い方", "智能体怎么用"],
   lock: ["編集中を宣言", "宣告编辑中"], release: ["解除", "解除"], daily: ["日報を書く", "写日报"], reportsOf: ["このカードの報告", "这张卡的汇报"], state: ["状態", "状态"], by: ["書いた人", "谁写的"], updated: ["更新", "更新"],
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
-  uploadFail: ["アップロードできませんでした", "上传失败"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"], signIn: ["Claude にサインインして開いてください。", "请登录 Claude 后打开。"],
+  uploadFail: ["画像を入れられませんでした（大きすぎるか、画像ではありません）", "图片放不进去（太大或不是图片）"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"],
+  hubName: ["HIKARI 制作ハブ", "HIKARI 制作中枢"], login: ["Google でログイン", "用 Google 登录"], logout: ["ログアウト", "退出登录"], loginWhy: ["チームのハブです。オーナーに招待された Google アカウントでログインしてください。", "这是团队的中枢。请用所有者邀请过的 Google 账号登录。"],
+  pick: ["作品を選ぶ", "选择作品"], notInvited: ["この作品にはまだ招待されていません。オーナーに、下の Google アカウントのメールを伝えて招待してもらってください。", "你还没被邀请进这个作品。请把下面这个 Google 账号的邮箱告诉所有者，让他加进邀请名单。"],
+  key: ["エージェントの鍵", "智能体的钥匙"], keyCopy: ["鍵をコピー", "复制钥匙"], keyWarn: ["鍵は、あなた本人としてハブに読み書きできるものです。人に渡したり、チャットに貼ったりしないでください。", "钥匙能以你本人的身份读写中枢。不要给别人，也不要贴到聊天里。"],
+  invites: ["招待", "邀请名单"], inviteAdd: ["招待する", "邀请"], inviteHelp: ["招待する人の Google アカウントのメール。この一覧はオーナーにしか見えません。", "填被邀请者的 Google 账号邮箱。这份名单只有所有者看得到。"], inviteBad: ["メールの形になっていません", "不是邮箱的格式"], remove: ["外す", "移除"], removeSure: ["本当に外す", "确认移除"],
   askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
-  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："],  viewerNote: ["このページは閲覧のみです。書き込むにはオーナーに「編集者」として招待してもらってください。", "当前只读。要写入，请让所有者以“编辑者”身份邀请你。"],
+  gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
 const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
@@ -212,6 +251,7 @@ const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
 // ---------- データの読み出し ----------
 const docs = (coll) => [...S.data[coll]].map(([id, d]) => ({ id, ...d }));
 const project = () => S.data.settings.get("project") || {};
+const projectName = () => project().name || (CONFIG.projects.find((p) => p.id === PID) || {}).name || t("hubName");
 const plan = () => ({ ready: [], assign: {}, milestones: [], ...S.data.settings.get("plan") });
 const stateDef = (coll, name) => (COLL[coll].states || []).find((s) => s.name === name);
 const isOpen = (coll, d) => !COLL[coll].states || (stateDef(coll, d.state) || { open: true }).open;
@@ -332,8 +372,29 @@ async function write(coll, id, data, isNew) {
     toast(t("saved"));
     return true;
   } catch (e) {
-    toast(e && e.code === "invalid_argument" ? t("denied") : `${t("failed")}（${(e && e.code) || "?"}）`, true);
+    toast(e && e.code === "permission-denied" ? t("denied") : `${t("failed")}（${(e && e.code) || "?"}）`, true);
     return false;
+  }
+}
+// 画像は縮めてデータベースに入れる（無料枠にはファイル置き場が無い。1 枚は約 0.9 MB まで）。
+async function uploadImage(file) {
+  const bmp = await createImageBitmap(file).catch(() => null);
+  if (!bmp) throw new Error(t("uploadFail"));
+  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const cv = Object.assign(document.createElement("canvas"), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+  cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+  const data = [0.82, 0.6, 0.4].map((q) => cv.toDataURL("image/jpeg", q)).find((d) => d.length < 900000);
+  if (!data) throw new Error(t("uploadFail"));
+  const id = newId("f");
+  await S.db.doc("files/" + id).set({ data, name: file.name, by: S.me.handle, at: now() });
+  return id;
+}
+const IMAGES = new Map();
+function loadImages() {
+  for (const el of document.querySelectorAll("img[data-file]:not([src])")) {
+    const id = el.dataset.file;
+    if (!IMAGES.has(id)) IMAGES.set(id, S.db.doc("files/" + id).get().then((s) => (s.exists ? String(s.data().data || "") : "")).catch(() => ""));
+    IMAGES.get(id).then((data) => { if (/^data:image\/(jpeg|png|webp);base64,/.test(data)) el.src = data; });
   }
 }
 async function writePlan(next) {
@@ -358,7 +419,7 @@ function fieldInput(f, v) {
     case "milestone": input = `<select id="${id}">${opts(plan().milestones.map((m) => ({ v: m.id, l: `${m.date} ${m.title}` })), v)}</select>`; break;
     case "member": input = `<select id="${id}">${opts(docs("members").map((m) => m.handle).filter(Boolean), v)}</select>`; break;
     case "areas": input = `<div class="checks" id="${id}">${(project().areas || []).map((a) => `<label><input type="checkbox" value="${esc(a)}" ${(v || []).includes(a) ? "checked" : ""}>${esc(a)}</label>`).join("") || `<span class="muted">—</span>`}</div>`; break;
-    case "assets": input = `<input type="file" id="${id}" multiple accept="image/*,video/*">`; break;
+    case "assets": input = `<input type="file" id="${id}" multiple accept="image/*">`; break;
     default: input = `<input type="text" id="${id}" value="${esc(v ?? "")}" autocomplete="off">`;
   }
   return `<div class="f">${label}${input}${f.type === "list" || f.type === "options" ? "" : help}</div>`;
@@ -375,9 +436,8 @@ async function fieldValue(f) {
     case "areas": return [...el.querySelectorAll("input:checked")].map((i) => i.value);
     case "assets": {
       if (!el.files.length) return undefined;
-      if (!S.assets) throw new Error(t("uploadFail"));
       const ids = [];
-      for (const file of el.files) ids.push((await S.assets.upload(file)).id);
+      for (const file of el.files) ids.push(await uploadImage(file));
       return ids;
     }
     default: return el.value.trim();
@@ -474,9 +534,8 @@ function viewHome() {
   const hints = [];
   if (S.live && !project().name) hints.push(`<div class="note">${t("setup")} ${S.me.owner ? btn("project", t("editProject")) : ""}</div>`);
   if (S.live && S.me.write !== false && !S.me.handle) hints.push(`<div class="note">${t("registerWhy")} ${btn("profile", t("register"))}</div>`);
-  if (S.live && S.me.write === false) hints.push(`<div class="note">${t("viewerNote")}</div>`);
   return `${hints.join("")}
-    <div class="head"><h1>${esc(project().name || "__PROJECT_NAME__")}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
+    <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
       <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${list(waits)}</section>
@@ -521,7 +580,7 @@ function fieldView(coll, f, v, d) {
     case "ref": { const rc = collOf(v), rd = rc && S.data[rc].get(v); return `<a href="#${esc(v)}">${esc(rd ? titleOf(rd) : v)}</a>`; }
     case "milestone": { const m = plan().milestones.find((x) => x.id === v); return esc(m ? `${m.date} ${m.title}` : v); }
     case "log": return `<ul>${v.map((x) => `<li><span class="when">${esc(fmt(x.at))}</span> ${esc(x.note)}</li>`).join("")}</ul>`;
-    case "assets": return `<div class="imgs">${v.map((id) => `<a href="/_blob/${esc(id)}" target="_blank" rel="noopener"><img src="/_blob/${esc(id)}" alt="" loading="lazy"></a>`).join("")}</div>`;
+    case "assets": return `<div class="imgs">${v.map((id) => `<img data-file="${esc(id)}" data-act="zoom" alt="">`).join("")}</div>`;
     case "time": return esc(fmt(v));
     case "options": {
       const can = d.state === "未決定" && mine(d.decider);
@@ -576,7 +635,7 @@ function askText() {
   const src = project().skill_source || "<スキルのリポジトリ>";
   return [
     `このスキルを入れてください：https://github.com/${src}`,
-    `シェルで claude plugin marketplace add ${src} と claude plugin install hub@hikari-hub を実行する。`,
+    `シェルで claude plugin marketplace add ${src} と claude plugin install hub@hikari-hub を実行する（もう入っていれば claude plugin marketplace update hikari-hub と claude plugin update hub@hikari-hub）。`,
     "終わったら、Claude Code を開き直すように私に伝えてください。",
   ].join("\n");
 }
@@ -584,14 +643,20 @@ function viewMembers() {
   const pr = project(), fields = SCHEMA.settings.project.fields;
   const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
   const steps = S.lang === "zh"
-    ? ["打开邀请邮件里的链接，用 Claude 账号登录", "让自己的 Claude Code 安装 skill（把下面那段话贴给它，只需一次）", "之后照常让智能体干活：它会自己登记要做的事，按规则做，做完写报告"]
-    : ["招待メールのリンクを開き、Claude のアカウントでログインする", "自分の Claude Code にスキルを入れてもらう（下の文を貼る。1 回だけ）", "あとは普段どおりエージェントに頼む：やることを自分で登録し、ルールに沿って作業し、終わりに報告を書く"];
+    ? ["把自己的 Google 账号邮箱告诉所有者，让他加进邀请名单；然后用那个账号登录这个页面", "让自己的 Claude Code 安装 skill（把下面那段话贴给它，只需一次），装完重开 Claude Code", "在这个页面按“复制钥匙”，然后对智能体说“连上中枢”（每台电脑一次）", "之后照常让智能体干活：它会自己登记要做的事，按规则做，做完写报告"]
+    : ["自分の Google アカウントのメールをオーナーに伝えて招待してもらい、そのアカウントでこのページにログインする", "自分の Claude Code にスキルを入れてもらう（下の文を貼る。1 回だけ）。終わったら Claude Code を開き直す", "このページで「鍵をコピー」を押し、エージェントに「ハブにつないで」と言う（パソコンごとに 1 回）", "あとは普段どおりエージェントに頼む：やることを自分で登録し、ルールに沿って作業し、終わりに報告を書く"];
+  const keySteps = S.lang === "zh"
+    ? ["按“复制钥匙”（钥匙进到剪贴板，不会显示在画面上）", "对自己的智能体说“连上中枢”（它会执行 /hub:login，从剪贴板读取）", "之后智能体就能以你的名义读写中枢。换电脑时再做一次"]
+    : ["「鍵をコピー」を押す（鍵はクリップボードに入る。画面には出ない）", "自分のエージェントに「ハブにつないで」と言う（/hub:login がクリップボードから読む）", "これでエージェントが、あなたの名前でハブを読み書きできる。別のパソコンではもう 1 回"];
+  const invites = [...S.invites.keys()].sort().map((mail) => `<div class="row"><span><b>${esc(mail)}</b></span><span class="side">${btn("invite-del", t("remove"), { mail }, "ghost mini")}</span></div>`);
   const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
-  return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}</div></div>
+  return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}${btn("logout", t("logout"), {}, "ghost")}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
       <section class="card"><h2>${t("project")} ${S.me.owner ? btn("project", t("editProject"), {}, "ghost mini") : ""}</h2><dl class="kv">${fields.filter((f) => !blank(pr[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${Array.isArray(pr[f.key]) ? pr[f.key].map((x) => `<span class="tag">${esc(x)}</span>`).join(" ") : f.type === "longtext" ? md(pr[f.key]) : f.type === "bool" ? (pr[f.key] ? "✓" : "—") : esc(pr[f.key])}</dd>`).join("") || `<dd class="empty">${t("setup")}</dd>`}</dl></section>
+      ${S.me.owner ? `<section class="card"><h2>${t("invites")} <span class="chip">${invites.length}</span> ${btn("invite-add", t("inviteAdd"), {}, "mini")}</h2><p class="muted">${t("inviteHelp")}</p>${list(invites)}</section>` : ""}
       <section class="card"><h2>${t("join")}</h2><div class="md"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div></section>
+      <section class="card"><h2>${t("key")} ${btn("copy-key", t("keyCopy"), {}, "mini")}</h2><div class="md"><ol>${keySteps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div><p class="muted">${t("keyWarn")}</p></section>
       <section class="card"><h2>${t("askAgent")} ${btn("copy-ask", t("copy"), {}, "ghost mini")}</h2><div class="md"><pre><code id="ask-text">${esc(askText())}</code></pre></div></section>
       <section class="card"><h2>${t("agentHow")}</h2>${cmds.map(([c, d]) => `<div class="row"><span><b class="mono">${esc(c)}</b><small>${esc(d)}</small></span></div>`).join("")}</section>
     </div>`;
@@ -600,6 +665,18 @@ function viewSearch() {
   const rows = [];
   for (const c of SCHEMA.collections) if (c.key !== "members") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(c.key === "rules" || c.key === "engine" ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
   return `<div class="head"><h1>${t("results")}</h1></div><section class="card">${list(rows)}</section>`;
+}
+
+const whoami = () => `<p class="muted">${esc([S.me.name, S.me.email].filter(Boolean).join(" · "))} ${btn("logout", t("logout"), {}, "ghost mini")}</p>`;
+function viewLogin() {
+  return `<div class="head"><h1>${t("hubName")}</h1></div><section class="card"><p>${t("loginWhy")}</p><p>${btn("login", t("login"))}</p></section>`;
+}
+function viewPick() {
+  const rows = CONFIG.projects.map((p) => `<a class="row" href="?p=${esc(p.id)}"><span><b>${esc(p.name)}</b><small>${esc(p.repo)}</small></span></a>`);
+  return `<div class="head"><h1>${t("hubName")}</h1></div>${whoami()}<section class="card"><h2>${t("pick")}</h2>${list(rows)}</section>`;
+}
+function viewDenied() {
+  return `<div class="head"><h1>${esc(projectName())}</h1></div><div class="note">${t("notInvited")}<br><b>${esc(S.me.email)}</b></div>${whoami()}`;
 }
 
 function route() {
@@ -615,14 +692,21 @@ function render() {
   document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "ja";
   $("#lang-btn").textContent = S.lang === "zh" ? "日本語" : "中文";
   $("#q").placeholder = t("search");
-  $("#brand-name").textContent = project().name || "__PROJECT_NAME__";
-  const conn = $("#conn");
-  conn.textContent = S.live ? t("live") : S.live === false || S.late ? t("offline") : t("connecting");
-  conn.className = "chip " + (S.live ? "live" : S.live === false || S.late ? "warn" : "");
+  const inProject = !!(S.signed && PID && !S.denied);
+  $("#brand-name").textContent = projectName();
+  document.title = PID ? `${projectName()} ハブ` : t("hubName");
+  $("#nav").hidden = $("#q").hidden = !inProject;
+  $(".shell").classList.toggle("solo", !inProject);
+  const conn = $("#conn"), up = S.live || (S.signed != null && !inProject);
+  conn.textContent = up ? t("live") : S.late ? t("offline") : t("connecting");
+  conn.className = "chip " + (up ? "live" : S.late ? "warn" : "");
   $("#me-chip").textContent = S.me.handle ? S.me.handle + (S.me.owner ? `（${t("owner")}）` : "") : S.me.write === false ? t("readonly") : "";
   $("#me-chip").hidden = !$("#me-chip").textContent;
   let html;
-  if (S.live === false) html = `<div class="note">${t("signIn")}</div>`;
+  if (S.signed == null) html = `<p class="empty">${t(S.late ? "offline" : "connecting")}</p>`;
+  else if (!S.signed) html = viewLogin();
+  else if (!PID) html = viewPick();
+  else if (S.denied) html = viewDenied();
   else if (r.id) html = viewDetail(r.coll, r.id);
   else if (S.q && r.view === "home") html = viewSearch();
   else if (r.view === "home") html = viewHome();
@@ -632,6 +716,7 @@ function render() {
   else if (r.view === "members") html = viewMembers();
   else html = viewList(r.coll);
   $("#main").innerHTML = html;
+  if (inProject) loadImages();
 }
 let queued = false;
 function schedule() {
@@ -645,6 +730,22 @@ function schedule() {
 const ACT = {
   lang() { S.lang = S.lang === "zh" ? "ja" : "zh"; try { localStorage.setItem("hub-lang", S.lang); } catch { /* 保存できなくても切り替わる */ } schedule(); },
   close() { $("#dlg").close(); },
+  login() { return BACKEND.signIn().catch((e) => toast(`${t("failed")}（${(e && e.code) || "?"}）`, true)); },
+  logout() { return BACKEND.signOut(); },
+  async "copy-key"() { try { await navigator.clipboard.writeText(BACKEND.key()); toast(t("copied")); } catch { toast(t("failed"), true); } },
+  zoom(_, el) { if (!el.src) return; $("#dlg-form").innerHTML = `<img src="${esc(el.src)}" alt="" style="max-width:100%"><div class="dlg-foot">${btn("close", t("back"), {}, "ghost")}</div>`; $("#dlg-form").onsubmit = null; $("#dlg").showModal(); },
+  "invite-add"() {
+    openForm({ title: t("inviteAdd"), note: t("inviteHelp"), defs: [{ key: "mail", type: "text", required: true, ja: "Google アカウントのメール", zh: "Google 账号的邮箱" }],
+      onSave: async ({ mail }) => {
+        const id = mail.toLowerCase();
+        if (!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(id)) { toast(t("inviteBad"), true); return false; }
+        try { await S.db.doc("invites/" + id).set({ at: now() }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
+      } });
+  },
+  async "invite-del"({ mail }, el) {
+    if (!el.dataset.sure) { el.dataset.sure = "1"; el.textContent = t("removeSure"); el.className = "btn danger mini"; return; }
+    try { await S.db.doc("invites/" + mail).delete(); toast(t("saved")); } catch { toast(t("failed"), true); }
+  },
   "del-ask"(_, el) { if (el.dataset.sure) { openForm.del().then((ok) => ok && $("#dlg").close()); } else { el.dataset.sure = "1"; el.textContent = t("delSure"); el.className = "btn danger mini"; } },
   "toggle-all"({ coll }) { S.all[coll] = !S.all[coll]; schedule(); },
   async "copy-ask"() {
@@ -739,27 +840,48 @@ $("#q").addEventListener("input", (ev) => { S.q = ev.target.value.trim().toLower
 window.addEventListener("hashchange", () => { window.scrollTo(0, 0); schedule(); });
 
 // ---------- 接続 ----------
-async function start() {
-  render();
-  setTimeout(() => { if (S.live == null) { S.late = true; schedule(); } }, 10000);
-  const claude = window.claude;
-  const [db, user, assets] = claude && claude.use ? await Promise.all([claude.use("db"), claude.use("user"), claude.use("assets")]) : [null, null, null];
-  S.db = db;
-  S.assets = assets;
-  if (!db) { S.live = false; render(); return; }
-  if (user) {
-    const [uid, owner, write] = await Promise.all([user.id(), user.isOwner(), user.can("data.write")]);
-    Object.assign(S.me, { uid, owner: !!owner, write });
-  }
-  const sub = (key, query) => query.onSnapshot((snap) => {
-    S.data[key] = new Map(snap.docs.map((d) => [d.id, d.data()]));
-    if (key === "members" && S.me.uid) S.me.handle = (S.data.members.get(S.me.uid) || {}).handle || "";
-    if (!snap.metadata.fromCache) S.live = true;
+// BACKEND はページの外から渡される小さな窓口（本番は Firebase、手元のプレビューはメモリ上の見本）：
+//   db.doc(path) / db.collection(path)、onAuth(cb)、signIn()、signOut()、key()
+let BACKEND = null, unsubs = [];
+// ログインした人が変わったときに、読み込みをやり直す。
+function listen() {
+  for (const stop of unsubs) stop();
+  unsubs = [];
+  for (const key of Object.keys(S.data)) S.data[key] = new Map();
+  Object.assign(S, { db: null, live: null, denied: false, invites: new Map() });
+  Object.assign(S.me, { handle: "", owner: false, write: null });
+  if (!S.me.uid) return;
+  const failed = (e) => { if (e && e.code === "permission-denied") S.denied = true; else S.late = true; schedule(); };
+  if (PID) S.db = { doc: (p) => BACKEND.db.doc(`projects/${PID}/${p}`), collection: (p) => BACKEND.db.collection(`projects/${PID}/${p}`) };
+  // オーナーは、アクセス規則に書いてあるメールの人。hub/owner はオーナーにしか読めないので、読めればオーナー。
+  const uid = S.me.uid;
+  BACKEND.db.doc("hub/owner").get().then(() => {
+    if (S.me.uid !== uid) return;
+    S.me.owner = true;
+    if (S.db) unsubs.push(S.db.collection("invites").limit(500).onSnapshot((s) => { S.invites = new Map(s.docs.map((d) => [d.id, d.data()])); schedule(); }, () => schedule()));
     schedule();
-  }, () => { S.late = true; schedule(); });
-  sub("settings", db.collection("settings"));
-  for (const c of SCHEMA.collections) sub(c.key, c.key === "reports" ? db.collection(c.key).orderBy("at", "desc").limit(300) : db.collection(c.key).limit(1000));
+  }, () => {});
+  if (!S.db) return;
+  const sub = (key, query) => unsubs.push(query.onSnapshot((snap) => {
+    S.data[key] = new Map(snap.docs.map((d) => [d.id, d.data()]));
+    if (key === "members") S.me.handle = (S.data.members.get(S.me.uid) || {}).handle || "";
+    if (!snap.metadata.fromCache) { S.live = true; S.me.write = true; }
+    schedule();
+  }, failed));
+  sub("settings", S.db.collection("settings"));
+  for (const c of SCHEMA.collections) sub(c.key, c.key === "reports" ? S.db.collection(c.key).orderBy("at", "desc").limit(300) : S.db.collection(c.key).limit(1000));
 }
-start();
+function connect() {
+  BACKEND = window.hubBackend;
+  BACKEND.onAuth((user) => {
+    S.signed = !!user;
+    Object.assign(S.me, { uid: user ? user.uid : null, email: (user && user.email) || "", name: (user && user.name) || "" });
+    listen();
+    schedule();
+  });
+}
+render();
+setTimeout(() => { if (S.signed == null || (S.db && S.live == null && !S.denied)) { S.late = true; schedule(); } }, 10000);
+if (window.hubBackend) connect(); else window.addEventListener("hub-backend", connect, { once: true });
 })();
 </script>
