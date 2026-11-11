@@ -1,7 +1,7 @@
 {
   "title": "当たった物を一瞬光らせる（受けた攻撃の発光）",
   "area": "コード",
-  "body": "`HIKARI/Project/ComponentViews.h` の `ModelView`（`object.GetModel()`）で、材質槽の色を実行時だけ変える。資産とシーンは変わらない。\n\n- 光らせる前に `TryGetMaterialColor(槽, color)` で今の色を読む（`color` は既定のまま渡す）。\n- 光っている間は `SetMaterialColorOverride(槽, 元の色, 元の不透明度, 光の色, 強さ)` を毎フレーム呼んで強さを下げていく。\n- 終わったら `ClearMaterialColorOverride(槽)` で元に戻す。\n- 槽の番号はモデルの材質の順（0 から）。`TryGetMaterialColor` が `false` を返す番号から先は無い。\n- 制作時の上書きが無い槽は、最初の呼び出しで取り込んだ材質の写しが作られる（見た目は同じ、テクスチャはモデルのまま）。描画の組み直しはその 1 回だけで、あとの色の変更は軽い。写しは戻した後も残る。\n- World を作り直すと上書きは消える。光らせる版のモデルを重ねて描く必要はない。",
+  "body": "`HIKARI/Project/ComponentViews.h` の `ModelView`（`object.GetModel()`）で、材質槽の色を実行時だけ変える。資産とシーンは変わらない。\n\n- 光らせる前に `TryGetMaterialColor(槽, color)` で今の色を読む（`color` は既定のまま渡す）。\n- 光っている間は `SetMaterialColorOverride(槽, 元の色, 元の不透明度, 光の色, 強さ)` を毎フレーム呼んで強さを下げていく。\n- ここで渡す発光は**画面基準**：光の色 × 強さの `1` が画面上の白。昼でも夜でも同じ明るさに見える。白く飛ばすなら 1〜2 くらいから調整する。周りの物は照らさない（GI には入らない）。\n- 終わったら `ClearMaterialColorOverride(槽)` で元に戻す。\n- 槽の番号はモデルの材質の順（0 から）。`TryGetMaterialColor` が `false` を返す番号から先は無い。\n- 制作時の上書きが無い槽は、最初の呼び出しで取り込んだ材質の写しが作られる（見た目は同じ、テクスチャはモデルのまま）。描画の組み直しはその 1 回だけで、あとの色の変更は軽い。写しは戻した後も残る。\n- World を作り直すと上書きは消える。光らせる版のモデルを重ねて描く必要はない。",
   "order": 70,
   "must": false
 }
