@@ -66,7 +66,10 @@ function Get-RepoKey([string]$gitDir) {
 function Find-Project([string]$gitDir) {
     $key = Get-RepoKey $gitDir
     if (-not $key) { return $null }
-    foreach ($project in @(Read-Json (Join-Path $pluginRoot "projects.json"))) {
+    # Assign before looping: Windows PowerShell 5.1 emits a JSON array as one object, so @(Read-Json ...) holds the
+    # whole list as a single item and no entry matches once projects.json lists two or more projects.
+    $projects = Read-Json (Join-Path $pluginRoot "projects.json")
+    foreach ($project in $projects) {
         if ($project -and ([string]$project.repo).ToLowerInvariant() -eq $key) { return $project }
     }
     return $null
