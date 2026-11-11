@@ -176,6 +176,17 @@ world.ForEachComponent<KnockbackComponent>(
 - 実行中に出すものはエディタでプレハブにしておき、コードからは生成を頼む（非同期。結果を読んでから使う）。内蔵のモデルやカメラをコードで一から組み立てる前提にしない。
 - 探しても見つからない機能は「まだない」。ハブの「エンジンへの要望」に出す。
 
+## 当たった物を一瞬光らせる（受けた攻撃の発光）
+
+`HIKARI/Project/ComponentViews.h` の `ModelView`（`object.GetModel()`）で、材質槽の色を実行時だけ変える。資産とシーンは変わらない。
+
+- 光らせる前に `TryGetMaterialColor(槽, color)` で今の色を読む（`color` は既定のまま渡す）。
+- 光っている間は `SetMaterialColorOverride(槽, 元の色, 元の不透明度, 光の色, 強さ)` を毎フレーム呼んで強さを下げていく。
+- 終わったら `ClearMaterialColorOverride(槽)` で元に戻す。
+- 槽の番号はモデルの材質の順（0 から）。`TryGetMaterialColor` が `false` を返す番号から先は無い。
+- 制作時の上書きが無い槽は、最初の呼び出しで取り込んだ材質の写しが作られる（見た目は同じ、テクスチャはモデルのまま）。描画の組み直しはその 1 回だけで、あとの色の変更は軽い。写しは戻した後も残る。
+- World を作り直すと上書きは消える。光らせる版のモデルを重ねて描く必要はない。
+
 # ビルド
 
 ## ビルドして確かめる　［必読］
@@ -255,6 +266,13 @@ $sdk = '<HIKARI のインストール先>\Sdk'
 - シーンやアセットのファイルを手で書き換える。
 - 速さ・時間・距離・色などの調整値をコードに直書きする。
 
+## キャラクターに付いて行く流体の域（煙の場）
+
+- 流体の域（Fluid 層）は既定で世界空間：再生を始めた位置に格子が固定され、あとで効果を動かしても域は動かない（動くのは中の源だけ）。`VfxView::Update` の位置も `SetVelocity` も、世界空間の域の位置は変えない。置いた場所で煙を受け止める使い方（剣気の尾迹を受ける場など）のための既定。
+- 付いて行かせるなら、域の層で「ドメインをレイヤーに追従」（`basic.localSimulation`）をオンにし、「相対風」（`fluidDomain.relativeWind`）を `1` にする。域は層の変換（`Update` の位置、`SetVelocity`、付けた物体）に付いて行き、煙は世界に残る。相対風が 0 だと煙は域と一緒に動く。
+- この設定なら、ほかの効果の流体注入層（親の無い FluidSource）は、動いた後の域にもそのまま入る。
+- 効果のファイルをエディタの外で変えたら、取り込み直すまで実行には反映されない。`fluidDomain` に無い名前（`localSpace` など）は読まれない。
+
 # 資料
 
 ## ヘッダの読み方（困ったらここから）　［必読］
@@ -283,3 +301,28 @@ $sdk = '<HIKARI のインストール先>\Sdk'
 - レベル設定や表のような作品のテキストは、プロジェクト直下の `Data/` に UTF-8 で置ける。
 - 読むのは `world.GetProjectData().ReadText(relativePath, sink)`（`ProjectDataView.h`）。同期・読み取り専用で、プロジェクトのファイルやセーブデータは書かない。
 - 形式と検証は自分のコードで決める。セーブには使わない（`SaveGameView`）。
+
+## シーン・描画の様式・後処理のファイルの形
+
+普段はエディタで作る（ファイルを手で書き換えないのは「やってはいけないこと」の通り）。ここは、ファイルを読んで中身を確かめるときと、確認用のシーンなどをファイルで用意するしかないときのための控え。用意するなら、同じ版のエディタで保存したファイルを手本にして次の形に合わせる。エンジンは今の形式の版だけを読み、合わないファイルは読まずに理由をログへ書く。
+
+**シーン（`.hscene`）**
+
+- 一番上：`version`（今は `10`。違うとログに `[SceneAsset] unsupported scene version` が出て読まれない）、`sceneName`、`environment`、`camera`（`defaultCameraObjectId`）、`cinematics`、`lightingBake`、`systems`、`objects`。
+- `environment`：`profile`（環境。内蔵 ID `engine.environment.*` か `.henvironment` の GUID）、`weather`（`engine.weather.*` か `.hweather` の GUID。空ならプロファイルの既定）、`renderStyle`（描画の様式。`engine.style.*` か `.hrenderstyle` の GUID）、`time`（`year`・`month`・`day`・`localHours`）、`timeScale`（0 で時刻を止める）、`location`（`latitudeDegrees`・`longitudeDegrees`・`utcOffsetHours`・`northYawDegrees`）。書かない項目は既定値。
+- `objects` の 1 つ：`id`（シーンの中で重ならない整数）、`name`、`parent`（親の `id` か `null`）、`enabled`、`transform`（`position`・`rotationEulerDeg`・`scale`）、`components`（`id`・`type`・`properties` の並び）。`properties` の名前は、組み込みのコンポーネントならエディタで保存したシーンにある名前、自作のコンポーネントなら `DescribeProperties` で宣言した名前。
+
+**描画の様式（`.hrenderstyle`）**：後処理はここで重ねる
+
+- `formatVersion`（`1`）、`name`、`shading`、`post`。`post` は上から順に重なる `{"profile": "…", "enabled": true}` の並び。`profile` は内蔵 ID（`engine.post.profile.pixel` など）か `.hpostprofile` の GUID。
+
+**後処理のプロファイル（`.hpostprofile`）**：効果の値を上書きするだけ
+
+- `formatVersion`（`1`）、`name`、`effect`（`engine.post.effect.pixel` などか `.hposteffect` の GUID）、`values`。
+- `values` は `{"キー": [数を 1〜4 個]}`。キー・既定値・範囲は効果のファイル（`.hposteffect`）の `params`（`key`・`defaultValues`・`minValues`・`maxValues`）にある。内蔵の効果は `<HIKARI>/EngineContent/Post/Effects/*.hposteffect`。書かないキーは効果の既定値になる（内蔵のプロファイルの `values` が空なのはそのため）。
+- 例：`{"formatVersion": 1, "name": "Pixel", "effect": "engine.post.effect.pixel", "values": {"strength": [1.0], "pixelSize": [4.0]}}`
+
+**新しいファイルを足したら**
+
+- 資産として使うには取り込みが要る（エディタで開く、または無頭で `--import-assets Assets`）。GUID は取り込みで `ProjectSettings/AssetMeta/` に作られる。
+- 読めたかどうかは無頭実行のログで確かめる。値を毎フレーム変えたいときは、ファイルではなくコード（`SubmitPostProfileParameter` など、ヘッダで確かめる）で上書きする。
