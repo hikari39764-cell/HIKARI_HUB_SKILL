@@ -38,6 +38,10 @@ code { font-family: var(--mono); font-size: .86em; background: var(--paper-2); b
 .chip.live { background: var(--star); color: #17160F; border-color: #17160F; }
 .chip.warn { background: var(--apricot); color: #17160F; border-color: #17160F; }
 .top .grow { flex: 1 1 140px; min-width: 0; }
+.sites { display: flex; flex-wrap: wrap; gap: 4px; }
+.sites a { font-size: 12px; font-weight: 700; border: 2px solid var(--soft); border-radius: 999px; padding: 0 9px; white-space: nowrap; text-decoration: none; }
+.sites a:hover { border-color: var(--rule); background: var(--card); }
+.sites a.on { background: var(--star); color: #17160F; border-color: #17160F; }
 #q { width: 100%; max-width: 320px; border: 2px solid var(--rule); border-radius: 999px; background: var(--card); padding: 2px 12px; }
 
 /* ---------- 骨組み ---------- */
@@ -152,6 +156,7 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
   <div class="wrap">
     <a class="brand" href="#home"><img src="__LOGO__" alt=""><span id="brand-name">HIKARI 制作ハブ</span></a>
     <span class="chip" id="conn">…</span>
+    <nav class="sites" id="sites" aria-label="切り替え" hidden></nav>
     <div class="grow"><input id="q" type="text" autocomplete="off" aria-label="検索"></div>
     <span class="chip" id="me-chip"></span>
     <button class="btn ghost mini" type="button" data-act="lang" id="lang-btn">中文</button>
@@ -208,7 +213,9 @@ const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) ||
 const CONFIG = JSON.parse(document.getElementById("hub-config").textContent);
 const PID = (() => { const p = new URLSearchParams(location.search).get("p") || ""; return /^[a-z0-9_-]{1,40}$/.test(p) ? p : ""; })();
 // signed: null = まだ分からない。denied: この作品に招待されていない。
-const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true } };
+// 上の帯の切り替え先：エンジンの中枢（docs/engine/）と各作品。reach は読める（招待されている）ものの id。
+const SITES = [{ id: "engine", ja: "エンジン中枢", zh: "引擎中枢", href: "engine/" }, ...CONFIG.projects.map((p) => ({ id: p.id, ja: p.name, zh: p.name, href: "?p=" + p.id }))];
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true }, reach: new Set() };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
 
@@ -702,6 +709,9 @@ function render() {
   conn.className = "chip " + (up ? "live" : S.late ? "warn" : "");
   $("#me-chip").textContent = S.me.handle ? S.me.handle + (S.me.owner ? `（${t("owner")}）` : "") : S.me.write === false ? t("readonly") : "";
   $("#me-chip").hidden = !$("#me-chip").textContent;
+  const sites = SITES.filter((s) => s.id === PID || S.reach.has(s.id));
+  $("#sites").hidden = !S.signed || sites.length < 2;
+  $("#sites").innerHTML = sites.map((s) => `<a href="${esc(s.href)}" class="${s.id === PID ? "on" : ""}">${esc(s[S.lang])}</a>`).join("");
   let html;
   if (S.signed == null) html = `<p class="empty">${t(S.late ? "offline" : "connecting")}</p>`;
   else if (!S.signed) html = viewLogin();
@@ -848,13 +858,15 @@ function listen() {
   for (const stop of unsubs) stop();
   unsubs = [];
   for (const key of Object.keys(S.data)) S.data[key] = new Map();
-  Object.assign(S, { db: null, live: null, denied: false, invites: new Map() });
+  Object.assign(S, { db: null, live: null, denied: false, invites: new Map(), reach: new Set() });
   Object.assign(S.me, { handle: "", owner: false, write: null });
   if (!S.me.uid) return;
+  const uid = S.me.uid;
+  // 切り替え先は、その作品の設定が読めるか（招待されているか）で見せる。
+  for (const s of SITES) if (s.id !== PID) BACKEND.db.doc(`projects/${s.id}/settings/project`).get().then(() => { if (S.me.uid === uid) { S.reach.add(s.id); schedule(); } }, () => {});
   const failed = (e) => { if (e && e.code === "permission-denied") S.denied = true; else S.late = true; schedule(); };
   if (PID) S.db = { doc: (p) => BACKEND.db.doc(`projects/${PID}/${p}`), collection: (p) => BACKEND.db.collection(`projects/${PID}/${p}`) };
   // オーナーは、アクセス規則に書いてあるメールの人。hub/owner はオーナーにしか読めないので、読めればオーナー。
-  const uid = S.me.uid;
   BACKEND.db.doc("hub/owner").get().then(() => {
     if (S.me.uid !== uid) return;
     S.me.owner = true;
