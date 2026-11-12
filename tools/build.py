@@ -238,7 +238,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
     seed["invites/kato@example.com"] = {"at": "2026-11-09T09:00:00+09:00"}
     stamp = lambda by, at, agent=None: {"by": by, "at": at, "updated_at": at, "updated_by": by} | ({"by_agent": agent} if agent else {})
     seed |= {
-        "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "main",
+        "settings/project": {"name": "サンプル作品", "summary": "プレビュー用の見本です。", "repo": "example/sample-game", "base_branch": "develop", "release_branch": "main",
                              "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出"], "budget_hours": 3, "max_sessions": 2,
                              "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt"], "skill_source": "example/hikari-hub"},
         "settings/plan": {"ready": ["c-000002", "c-000003"], "assign": {"c-000003": "kato"},

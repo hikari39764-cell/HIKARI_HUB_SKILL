@@ -1,5 +1,5 @@
 {
-  "description": "HIKARI 制作ハブ：ハブに参加したリポジトリで、会話の最初に案内を出し、作業を登録するまでファイルの変更を止める",
+  "description": "HIKARI 制作ハブ：ハブに参加したリポジトリで、会話の最初に案内を出し、作業を登録するまでファイルの変更を止め、develop・main へのマージや push の前に人の確認を出す",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,15 @@
           {
             "type": "command",
             "command": "powershell",
-            "args": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1", "session"],
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1",
+              "session"
+            ],
             "timeout": 20
           }
         ]
@@ -20,7 +28,34 @@
           {
             "type": "command",
             "command": "powershell",
-            "args": ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1", "edit"],
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1",
+              "edit"
+            ],
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell",
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/hub-hook.ps1",
+              "git"
+            ],
             "timeout": 20
           }
         ]

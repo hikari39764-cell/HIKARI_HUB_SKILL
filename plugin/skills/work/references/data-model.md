@@ -33,7 +33,8 @@
 | `summary` | どんな作品か |  |
 | `skill_source` | スキルのリポジトリ | GitHub の owner/name。メンバーがエージェントに頼む文に入る |
 | `repo` | GitHub リポジトリ | owner/name |
-| `base_branch` | 元にするブランチ | 既定 main |
+| `base_branch` | 元にするブランチ | 既定 develop。作業ブランチを切り、PR を向けるブランチ。マージは毎回人に確かめる |
+| `release_branch` | 公開ブランチ | 既定 main。人が「main にマージ」と明言したときだけ、元ブランチから取り込む |
 | `areas` | 領域の一覧 |  |
 | `budget_hours` | カードの既定予算（時間） |  |
 | `max_sessions` | 1 人が同時に進められる作業 |  |

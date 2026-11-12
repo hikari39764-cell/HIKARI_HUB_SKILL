@@ -7,7 +7,9 @@
 #
 #   session : SessionStart - tells the agent this repository is a hub project and what to do first.
 #   edit    : PreToolUse (Edit / Write / MultiEdit / NotebookEdit) - no registered work, no edit;
-#             no edits on the base branch; owner-protected files need the human's OK.
+#             no edits on the base / release branch; owner-protected files need the human's OK.
+#   git     : PreToolUse (Bash / PowerShell) - merging or pushing into the base branch (default
+#             develop) or the release branch (default main) needs the human's OK every time.
 #
 # The guard fails open: if the hook itself breaks, work is not blocked.
 param([string]$Mode = "edit")
@@ -54,6 +56,11 @@ try {
     $file = ""
     if ($Mode -eq "session") {
         if ($event -and $event.cwd) { $start = [string]$event.cwd }
+    } elseif ($Mode -eq "git") {
+        if (-not $event -or -not $event.tool_input) { exit 0 }
+        $command = [string]$event.tool_input.command
+        if (-not $command) { exit 0 }
+        if ($event.cwd) { $start = [string]$event.cwd }
     } else {
         if (-not $event -or -not $event.tool_input) { exit 0 }
         $file = [string]$event.tool_input.file_path
@@ -80,21 +87,45 @@ try {
         exit 0
     }
 
+    $project = Read-Json (Join-Path $root ".hikari-hub/cache/settings/project.json")
+    $base = "develop"
+    if ($project -and $project.base_branch) { $base = [string]$project.base_branch }
+    $release = "main"
+    if ($project -and $project.release_branch) { $release = [string]$project.release_branch }
+    $branch = Get-Branch $gitDir
+
+    if ($Mode -eq "git") {
+        $target = ""
+        if ($command -match '\bgh\s+pr\s+merge\b') { $target = "PR" }
+        foreach ($m in [regex]::Matches($command, '\bgit\s[^;&|\r\n]*?\b(merge|push)(?![-\w])([^;&|\r\n]*)')) {
+            if ($target) { break }
+            $rest = $m.Groups[2].Value
+            if ($m.Groups[1].Value -eq "merge") {
+                if ($branch -eq $base -or $branch -eq $release) { $target = $branch }
+            } else {
+                foreach ($t in @($release, $base)) {
+                    if ($rest -match ('(^|[\s:+]|refs/heads/)' + [regex]::Escape($t) + '(\s|$)')) { $target = $t; break }
+                }
+                if (-not $target -and ($branch -eq $base -or $branch -eq $release) -and $rest -notmatch ':') { $target = $branch }
+            }
+        }
+        if (-not $target) { exit 0 }
+        if ($target -eq "PR") { Send-Decision "ask" ($msg.merge_pr -f $base, $release) }
+        if ($target -eq $release) { Send-Decision "ask" ($msg.merge_release -f $release, $base) }
+        Send-Decision "ask" ($msg.merge_base -f $base)
+    }
+
     $rel = $file.Substring($root.Length).TrimStart('\', '/').Replace("\", "/")
     # The agent's own working files (cache, records to push, active work) are always writable.
     if ($rel.StartsWith(".hikari-hub/", [StringComparison]::OrdinalIgnoreCase)) { exit 0 }
 
-    $project = Read-Json (Join-Path $root ".hikari-hub/cache/settings/project.json")
     if (-not $project) { Send-Decision "deny" $msg.no_sync }
 
     $requireCard = $true
     if ($null -ne $project.require_card) { $requireCard = [bool]$project.require_card }
     if ($requireCard) {
         if (-not $hasWork) { Send-Decision "deny" $msg.no_card }
-        $base = "main"
-        if ($project.base_branch) { $base = [string]$project.base_branch }
-        $branch = Get-Branch $gitDir
-        if ($branch -and $branch -eq $base) { Send-Decision "deny" ($msg.on_base -f $base, [string]$active.branch) }
+        if ($branch -and ($branch -eq $base -or $branch -eq $release)) { Send-Decision "deny" ($msg.on_base -f $branch, [string]$active.branch) }
     }
     if (Test-PathMatch $rel $project.protected_paths) { Send-Decision "ask" ($msg.protected -f $rel) }
     exit 0
