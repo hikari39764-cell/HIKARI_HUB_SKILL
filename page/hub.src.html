@@ -7,15 +7,20 @@
   --paper: #FAF8EE; --paper-2: #F2EFDF; --card: #FFFFFF; --ink: #17160F; --muted: #5E5B4B;
   --rule: #17160F; --shade: #17160F; --star: #F1F977; --apricot: #FFBC7B;
   --bad: #D8453D; --good: #3E8F5C; --soft: #D9D5C2;
+  /* 地図：つながりの種類と、メンバーごとの色 */
+  --e-include: #3B5BDB; --e-asset: #2B8A3E; --e-component: #D9480F; --e-engine: #868E96;
+  --m1: #F59F00; --m2: #7048E8; --m3: #0CA678; --m4: #E64980; --m5: #1C7ED6;
   --display: "Dela Gothic One", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
   --body: "Noto Sans JP", "Noto Sans SC", "Hiragino Sans", "Yu Gothic UI", "Microsoft YaHei", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark;
+    --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 }
-:root[data-theme="dark"] { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark; }
+:root[data-theme="dark"] { --paper: #121109; --paper-2: #191811; --card: #1F1E16; --ink: #F3F1E4; --muted: #ADA993; --rule: #57533D; --shade: #000000; --bad: #F06A5E; --good: #6CC48D; --soft: #3A3828; color-scheme: dark;
+  --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -100,7 +105,7 @@ a.row:hover b { text-decoration: underline; }
 .kc .acts { margin-top: 5px; }
 
 /* ---------- 詳細 ---------- */
-.kv { display: grid; grid-template-columns: minmax(84px, auto) minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.kv { display: grid; grid-template-columns: minmax(84px, min(40%, 220px)) minmax(0, 1fr); gap: 8px 16px; margin: 0; }
 .kv dt { color: var(--muted); font-weight: 700; font-size: 13px; }
 .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .kv ul, .kv ol { margin: 0; padding-left: 1.2em; }
@@ -142,6 +147,47 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
 #toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 6px 14px; font-weight: 700; font-size: 13px; max-width: calc(100vw - 32px); }
 #toast.bad { background: var(--bad); color: #fff; }
 
+/* ---------- 絞り込み・日ごと ---------- */
+.bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.bar label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.bar select { border: 2px solid var(--rule); border-radius: 999px; background: var(--card); padding: 1px 10px; font-size: 13px; max-width: 220px; }
+.day { display: grid; gap: 6px; }
+.day h2 { justify-content: flex-start; margin: 4px 0 0; }
+.day h2 b { font-family: var(--mono); font-size: 14px; color: var(--ink); }
+.ev small .tag { margin-right: 4px; }
+
+/* ---------- 地図 ---------- */
+.branches { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.br { display: grid; gap: 2px; text-align: left; cursor: pointer; background: var(--card); border: 2.5px solid var(--rule); border-left-width: 8px; border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.br.on { box-shadow: 4px 4px 0 var(--shade); background: linear-gradient(var(--star), var(--star)) right top / 10px 100% no-repeat, var(--card); }
+.br b { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+.br small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.br.ghost { border-style: dashed; cursor: default; }
+.mapwrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+.mapwrap > aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: calc(100dvh - 90px); overflow: auto; }
+.atlas { position: relative; isolation: isolate; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); align-items: start; }
+.district { background: var(--paper-2); border: 2px dashed var(--soft); border-radius: 14px; padding: 8px 10px 10px; min-width: 0; }
+.district h3 { font-size: 13px; margin: 0 0 6px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.tiles { display: flex; flex-wrap: wrap; gap: 7px; }
+.tile { position: relative; z-index: 2; flex: 1 1 96px; min-width: 0; text-align: left; cursor: pointer; background: var(--card); border: 2px solid var(--rule); border-radius: 10px; padding: 4px 8px; font-size: 12.5px; line-height: 1.4; }
+.tile b { display: block; overflow-wrap: anywhere; }
+.tile small { display: block; color: var(--muted); font-size: 11px; }
+.tile.on { background: var(--star); color: #17160F; border-color: #17160F; box-shadow: 3px 3px 0 var(--shade); }
+.tile.on small { color: #3F3D30; }
+.tile.dim { opacity: .38; }
+.tile.hot { border-color: var(--bad); box-shadow: inset 0 0 0 2px var(--bad); }
+.tile.new { border-style: dashed; }
+.dots { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 2px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #17160F; display: inline-block; }
+#links { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; overflow: visible; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); align-items: center; }
+.legend .ln { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 4px; }
+.files { margin: 4px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
+.files li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 6px; padding: 2px 0; border-top: 1px solid var(--paper-2); }
+.files code { background: none; border: 0; padding: 0; }
+.plus { color: var(--good); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+.minus { color: var(--bad); }
+
 @media (max-width: 820px) {
   .shell { grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 10px 32px; }
   #nav { position: static; flex-direction: row; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
@@ -149,6 +195,8 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
   #nav a { white-space: nowrap; }
   .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .kv dd { margin-bottom: 8px; }
+  .mapwrap { grid-template-columns: minmax(0, 1fr); }
+  .mapwrap > aside { position: static; max-height: none; }
 }
 </style>
 
@@ -215,7 +263,8 @@ const PID = (() => { const p = new URLSearchParams(location.search).get("p") || 
 // signed: null = まだ分からない。denied: この作品に招待されていない。
 // 上の帯の切り替え先：エンジンの中枢（docs/engine/）と各作品。reach は読める（招待されている）ものの id。
 const SITES = [{ id: "engine", ja: "エンジン中枢", zh: "引擎中枢", href: "engine/" }, ...CONFIG.projects.map((p) => ({ id: p.id, ja: p.name, zh: p.name, href: "?p=" + p.id }))];
-const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true }, reach: new Set() };
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true }, reach: new Set(),
+  f: {}, days: 14, mapBranch: "", mapNode: "" };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
 
@@ -245,11 +294,31 @@ const T = {
   invites: ["招待", "邀请名单"], inviteAdd: ["招待する", "邀请"], inviteHelp: ["招待する人の Google アカウントのメール。この一覧はオーナーにしか見えません。", "填被邀请者的 Google 账号邮箱。这份名单只有所有者看得到。"], inviteBad: ["メールの形になっていません", "不是邮箱的格式"], remove: ["外す", "移除"], removeSure: ["本当に外す", "确认移除"],
   askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
   gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："],
+  // 絞り込み・タイムライン
+  timeline: ["タイムライン", "时间线"], tlWhy: ["いつ、だれが、何をしたか。記録を日ごとに並べる。", "谁在哪天做了什么，按日期排列所有记录。"],
+  fKind: ["種類", "种类"], fPerson: ["人", "人"], fArea: ["領域", "领域"], fGroup: ["まとめ方", "分组"], fAll: ["すべて", "全部"],
+  gDay: ["日ごと", "按天"], gPerson: ["人ごと", "按人"], gNone: ["まとめない", "不分组"], more: ["さらに前の {n} 日", "再往前 {n} 天"], items: ["{n} 件", "{n} 件"],
+  evNew: ["作成", "新建"], evProgress: ["進捗", "进度"],
+  // ブランチと地図
+  map: ["地図", "地图"], branch: ["ブランチ", "分支"], branchSet: ["ブランチを決める", "定分支"], branchNone: ["未設定", "未设"],
+  branchBad: ["ブランチ名は半角英数字と . _ - 。公開ブランチ・ほかの人と同じ名前は使えない", "分支名只能用半角英数字和 . _ -，不能和公开分支或别人的重名"],
+  mapWhy: ["ブランチごとに、ファイルのまとまり（区画）とそのつながりを描く。区画を押すと、だれが変えているか・何を使い何に使われているかが出る。", "按分支画出文件分区和它们之间的依赖。点一个分区，能看到谁在改、它用了什么、被谁用。"],
+  mapEmpty: ["まだ地図がありません。エージェントに「地図を更新して」と頼む（hub map）と作られます。", "还没有地图。让智能体“更新地图”（hub map）就会生成。"],
+  mapStale: ["地図の更新：{n}", "地图更新于：{n}"], mapAsk: ["新しくするには、エージェントに「地図を更新して」と頼む。", "要刷新就让智能体“更新地图”。"],
+  mapAll: ["全体", "全部"], roleBase: ["元ブランチ", "主干"], roleRelease: ["公開ブランチ", "公开分支"], roleOf: ["{n} のブランチ", "{n} 的分支"],
+  notMerged: ["{n} にまだ入っていない", "还没进 {n}"], notReleased: ["{n} に未公開", "还没发布到 {n}"], behind: ["{n} から遅れ", "落后于 {n}"], commits: ["{n} コミット", "{n} 个提交"],
+  changedFiles: ["変わったファイル {n}", "改动文件 {n}"], notPushed: ["まだ地図に無い（push していないか、地図を更新していない）", "地图上还没有（没 push 或没更新地图）"],
+  overlap: ["同じファイルを複数のブランチで変えている", "多个分支改了同一个文件"], overlapNone: ["ブランチどうしの重なりはありません", "分支之间没有重叠"],
+  sdk: ["エンジン SDK", "引擎 SDK"], direct: ["（直下）", "（直接放的）"], rootFiles: ["いちばん上のファイル", "根目录的文件"], outside: ["リポジトリの外", "仓库之外"], scenes: ["シーン", "场景"],
+  kInclude: ["#include", "#include"], kAsset: ["素材の参照", "素材引用"], kComponent: ["コンポーネント", "组件"], kEngine: ["エンジン SDK", "引擎 SDK"],
+  uses: ["使っているもの", "它用到的"], usedBy: ["使っているところ", "用到它的"], touching: ["変えているブランチ", "在改它的分支"], headers: ["よく使うヘッダ", "常用头文件"],
+  pickTile: ["区画を押すと、ここに詳しく出ます。", "点一个分区，这里会显示详情。"], notInBase: ["{n} にまだ無い", "{n} 里还没有"], fileCount: ["{n} ファイル", "{n} 个文件"],
+  mergeQueue: ["ブランチ（{n} への取り込み待ち）", "分支（等着并进 {n}）"],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
 const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
 const VIEWS = [
-  { key: "home" }, { key: "board" }, { key: "reports", coll: "reports" }, { key: "guides", coll: "guides" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
+  { key: "home" }, { key: "board" }, { key: "map" }, { key: "timeline" }, { key: "reports", coll: "reports" }, { key: "guides", coll: "guides" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
   { key: "decisions", coll: "decisions" }, { key: "knowledge", coll: "knowledge" }, { key: "engine" }, { key: "mistakes", coll: "mistakes" },
   { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
 ];
@@ -284,6 +353,34 @@ function daysTo(date) {
   b.setHours(0, 0, 0, 0);
   return Math.round((a - b) / 86400000);
 }
+// 記録の時刻は書いた人の時刻（+09:00 など）付き。日付はその先頭 10 文字。
+const dayOf = (iso) => String(iso || "").slice(0, 10);
+const weekday = (day) => (S.lang === "zh" ? "日一二三四五六" : "日月火水木金土")[new Date(day + "T00:00:00").getDay()] || "";
+
+// ---------- 絞り込み（人・領域・種類）と、まとめ方 ----------
+const filt = (key) => (S.f[key] ||= {});
+const peopleOf = (d) => [d.by, d.assignee, d.updated_by].filter(Boolean);
+// 報告には領域が無いので、カードの領域を使う。
+const areasOf = (d) => d.areas || (d.card && (S.data.cards.get(d.card) || {}).areas) || [];
+const passes = (d, f) => (!f.person || peopleOf(d).includes(f.person)) && (!f.area || areasOf(d).includes(f.area)) && (!f.kind || d.kind === f.kind) && matchQ(d);
+function filterBar(key, { kinds = null, group = null } = {}) {
+  const f = filt(key), sel = (field, items, cur) => `<select data-filter="${esc(key)}" data-field="${field}"><option value="">${t("fAll")}</option>${items.map((o) => `<option value="${esc(o.v ?? o)}" ${String(o.v ?? o) === String(cur ?? "") ? "selected" : ""}>${esc(o.l ?? o)}</option>`).join("")}</select>`;
+  const people = docs("members").map((m) => m.handle).filter(Boolean).sort();
+  const parts = [`<label>${t("fPerson")}${sel("person", people, f.person)}</label>`, `<label>${t("fArea")}${sel("area", project().areas || [], f.area)}</label>`];
+  if (kinds) parts.unshift(`<label>${t("fKind")}${sel("kind", kinds, f.kind)}</label>`);
+  if (group) parts.push(`<label>${t("fGroup")}<select data-filter="${esc(key)}" data-field="group">${[["day", t("gDay")], ["person", t("gPerson")], ["none", t("gNone")]].map(([v, l]) => `<option value="${v}" ${(f.group || group) === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>`);
+  return `<div class="bar">${parts.join("")}</div>`;
+}
+// [見出し, 記録の配列] の並び。日ごとは新しい日から。
+function groupRows(rows, how) {
+  if (how === "none") return [["", rows]];
+  const key = how === "person" ? (d) => d.by || d.assignee || "—" : (d) => dayOf(d.updated_at || d.at) || "—";
+  const groups = new Map();
+  for (const d of rows) { const k = key(d); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(d); }
+  const out = [...groups];
+  return how === "person" ? out.sort((a, b) => a[0].localeCompare(b[0])) : out.sort((a, b) => b[0].localeCompare(a[0]));
+}
+const dayHead = (day, n) => `<h2><b>${esc(day.slice(5))}</b><span>${esc(weekday(day))} · ${t("items", n)}</span></h2>`;
 
 // ---------- Markdown（先に全部エスケープしてから、決まった記法だけ戻す） ----------
 function inline(s) {
@@ -538,6 +635,12 @@ function viewHome() {
   const bugs = docs("bugs").filter((b) => isOpen("bugs", b)).sort((a, b) => (sev[a.severity] ?? 3) - (sev[b.severity] ?? 3)).slice(0, 6).map((b) => row("bugs", b));
   const qs = docs("questions").filter((q) => q.state === "未回答").slice(0, 6).map((q) => row("questions", q, `→ ${esc(q.to || "エージェント")} · ${byText(q)}`));
   const recent = reports.sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at))).slice(0, 6).map((r) => row("reports", r, `${byText(r)}${r.conclusion ? " — " + esc(String(r.conclusion).slice(0, 80)) : ""}`));
+  // 自分のブランチごとの、元ブランチへまだ入っていないコミット（オーナーにとっては取り込み待ちの一覧）。
+  const set = branchSet();
+  const branches = set.personal.map((b) => {
+    const d = set.maps.get(b);
+    return `<a class="row" href="#map"><span><b class="mono">${esc(b)}</b><small>${esc(set.owners.get(b) || "")}${d ? ` · ${esc(String((d.head || {}).subject || "").slice(0, 60))}` : ` · ${t("notPushed")}`}</small></span><span class="side">${d ? `<span class="st ${d.ahead ? "wait" : ""}">${t("commits", d.ahead || 0)}</span>${d.behind ? `<span class="when">${t("behind", set.base)} ${d.behind}</span>` : ""}` : ""}</span></a>`;
+  });
   const hints = [];
   if (S.live && !project().name) hints.push(`<div class="note">${t("setup")} ${S.me.owner ? btn("project", t("editProject")) : ""}</div>`);
   if (S.live && S.me.write !== false && !S.me.handle) hints.push(`<div class="note">${t("registerWhy")} ${btn("profile", t("register"))}</div>`);
@@ -549,7 +652,8 @@ function viewHome() {
       <section class="card"><h2>${t("next")}</h2>${list(next)}</section>
       <section class="card"><h2>${t("deadlines")}</h2>${list(ms)}</section>
       <section class="card"><h2>${t("editing")}</h2>${list(locks)}</section>
-      <section class="card"><h2>${t("recent")}</h2>${list(recent)}</section>
+      <section class="card"><h2>${t("mergeQueue", set.base)}</h2>${list(branches)}</section>
+      <section class="card"><h2>${t("recent")} <a class="muted" href="#timeline">${t("timeline")}</a></h2>${list(recent)}</section>
       <section class="card"><h2>${t("openBugs")}</h2>${list(bugs)}</section>
       <section class="card"><h2>${t("openQs")}</h2>${list(qs)}</section>
     </div>`;
@@ -572,10 +676,165 @@ function viewBoard() {
 }
 
 function viewList(coll) {
-  const c = COLL[coll], showAll = S.all[coll] || !c.states;
-  const rows = docs(coll).filter((d) => (showAll || isOpen(coll, d)) && matchQ(d)).sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at)));
+  const c = COLL[coll], showAll = S.all[coll] || !c.states, f = filt(coll), how = f.group || "day";
+  const kindField = c.fields.find((x) => x.key === "kind" && x.choices);
+  const rows = docs(coll).filter((d) => (showAll || isOpen(coll, d)) && passes(d, f)).sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at)));
+  const groups = groupRows(rows, how).map(([head, items]) => `<div class="day">${head ? (how === "day" && head !== "—" ? dayHead(head, items.length) : `<h2><b>${esc(head)}</b><span>${t("items", items.length)}</span></h2>`) : ""}<section class="card">${list(items.map((d) => row(coll, d)))}</section></div>`);
   return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}</div></div>
-    <p class="muted">${esc(L(c.summary))}</p><section class="card">${list(rows.map((d) => row(coll, d)))}</section>`;
+    <p class="muted">${esc(L(c.summary))}</p>${filterBar(coll, { kinds: kindField ? kindField.choices : null, group: "day" })}
+    ${rows.length ? groups.join("") : `<section class="card"><p class="empty">${t("none")}</p></section>`}`;
+}
+
+// タイムライン：記録を日ごとに並べる。作成で 1 件、報告の進捗は 1 つずつ、状態が別の日に変わったらもう 1 件。
+function viewTimeline() {
+  const f = filt("timeline"), events = [];
+  const kinds = SCHEMA.collections.filter((c) => !["members", "map"].includes(c.key));
+  for (const c of kinds) {
+    if (f.kind && f.kind !== c.key) continue;
+    for (const d of docs(c.key)) {
+      if (!passes(d, { ...f, kind: "" })) continue;
+      if (d.at) events.push({ at: d.at, coll: c.key, d, what: t("evNew") });
+      for (const p of c.key === "reports" ? d.progress || [] : []) if (p.at) events.push({ at: p.at, coll: c.key, d, what: t("evProgress"), note: p.note });
+      if (d.updated_at && d.state && dayOf(d.updated_at) !== dayOf(d.at)) events.push({ at: d.updated_at, coll: c.key, d, what: (stateDef(c.key, d.state) && S.lang === "zh" ? stateDef(c.key, d.state).zh : d.state) });
+    }
+  }
+  const days = groupRows(events.sort((a, b) => String(b.at).localeCompare(String(a.at))).map((e) => ({ ...e, updated_at: e.at })), "day");
+  const shown = days.slice(0, S.days);
+  const ev = (e) => `<a class="row ev" href="#${esc(e.d.id)}"><span><b>${esc(titleOf(e.d))}</b><small><span class="tag">${esc(L(COLL[e.coll].label))}</span>${esc(e.what)}${e.note ? " — " + esc(e.note) : ""} · ${byText(e.d)} ${tags({ areas: areasOf(e.d) })}</small></span><span class="side">${stPill(e.coll, e.d)}<span class="when">${esc(String(e.at).slice(11, 16))}</span></span></a>`;
+  return `<div class="head"><h1>${t("timeline")}</h1></div><p class="muted">${t("tlWhy")}</p>
+    ${filterBar("timeline", { kinds: kinds.map((c) => ({ v: c.key, l: L(c.label) })) })}
+    ${shown.map(([day, evs]) => `<div class="day">${dayHead(day, evs.length)}<section class="card">${evs.map(ev).join("")}</section></div>`).join("") || `<p class="empty">${t("none")}</p>`}
+    ${days.length > S.days ? `<p>${btn("more-days", t("more", 14), {}, "ghost")}</p>` : ""}`;
+}
+
+// ---------- 地図（hub map が git から作る：ブランチごとの区画・つながり・元ブランチとの違い） ----------
+const EDGE_KINDS = [["include", "kInclude"], ["asset", "kAsset"], ["component", "kComponent"], ["engine", "kEngine"]];
+// 地図に載せるブランチ：元ブランチ、公開ブランチ、メンバーそれぞれの自分のブランチ。色はメンバーの並び順。
+function branchSet() {
+  const pr = project(), base = pr.base_branch || "develop", release = pr.release_branch || "main";
+  const members = docs("members").filter((m) => m.branch).sort((a, b) => String(a.handle).localeCompare(String(b.handle)));
+  const owners = new Map(members.map((m) => [m.branch, m.handle]));
+  const color = new Map([[base, "var(--ink)"], [release, "var(--muted)"]]);
+  members.forEach((m, i) => { if (!color.has(m.branch)) color.set(m.branch, `var(--m${(i % 5) + 1})`); });
+  const names = [...new Set([base, release, ...members.map((m) => m.branch)])];
+  const maps = new Map(docs("map").filter((d) => names.includes(d.id)).map((d) => [d.id, d]));
+  const personal = names.filter((b) => b !== base && b !== release);
+  return { base, release, names, owners, color, maps, personal };
+}
+function nodeName(id) {
+  if (id === "@sdk") return t("sdk");
+  if (id.startsWith("@type:")) return id.slice(6).replace(/^HIKARI\./, "");
+  if (id === ".") return t("rootFiles");
+  if (id.endsWith(".scene.json")) return id.split("/").pop().replace(/\.scene\.json$/, "");
+  return id.includes("/") ? id.slice(id.indexOf("/") + 1) : id;
+}
+const districtOf = (n) => (n.kind === "scene" ? "#scene" : n.id.startsWith("@") ? "#outside" : n.id.split("/")[0]);
+const districtName = (k) => (k === "#scene" ? t("scenes") : k === "#outside" ? t("outside") : k === "." ? t("rootFiles") : k);
+const kb = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
+// 選んだブランチ（無ければ全部の和）の区画とつながり、区画ごとに「どのブランチが何を変えているか」。
+function mapModel(set) {
+  const sel = set.maps.get(S.mapBranch), used = sel ? [sel] : [...set.maps.values()];
+  const nodes = new Map(), edges = new Map(), touch = new Map();
+  for (const d of used) {
+    for (const n of d.nodes || []) if (!nodes.has(n.id)) nodes.set(n.id, n);
+    for (const e of d.edges || []) { const k = e.from + "\u0001" + e.to + "\u0001" + e.kind, old = edges.get(k); if (!old || old.n < e.n) edges.set(k, e); }
+  }
+  for (const d of sel ? [sel] : set.personal.map((b) => set.maps.get(b)).filter(Boolean)) {
+    for (const c of d.changed || []) {
+      if (!c.node) continue;
+      if (!touch.has(c.node)) touch.set(c.node, new Map());
+      const per = touch.get(c.node);
+      if (!per.has(d.id)) per.set(d.id, []);
+      per.get(d.id).push(c);
+    }
+  }
+  const baseIds = new Set(((set.maps.get(set.base) || {}).nodes || []).map((n) => n.id));
+  return { sel, nodes, edges: [...edges.values()], touch, baseIds };
+}
+let mapEdges = [];
+function viewMap() {
+  const set = branchSet(), m = mapModel(set), sel = m.sel;
+  if (S.mapNode && !m.nodes.has(S.mapNode)) S.mapNode = "";
+  const latest = [...set.maps.values()].map((d) => d.mapped_at || "").sort().pop();
+  const card = (b) => {
+    const d = set.maps.get(b), on = S.mapBranch === b, who = set.owners.get(b);
+    const role = b === set.base ? t("roleBase") : b === set.release ? t("roleRelease") : t("roleOf", who || "?");
+    if (!d) return `<div class="br ghost" style="border-left-color:${set.color.get(b)}"><b>${esc(b)}</b><small>${esc(role)}</small><small>${t("notPushed")}</small></div>`;
+    const lines = [];
+    if (d.role === "personal" && d.compare) lines.push(`${t("notMerged", d.compare)}：${t("commits", d.ahead || 0)}${d.behind ? ` · ${t("behind", d.compare)} ${d.behind}` : ""}`);
+    if (d.role === "base" && d.compare) lines.push(`${t("notReleased", d.compare)}：${t("commits", d.ahead || 0)}`);
+    if (d.compare) lines.push(t("changedFiles", d.changed_total || 0));
+    const h = d.head || {};
+    return `<button type="button" class="br ${on ? "on" : ""}" style="border-left-color:${set.color.get(b)}" data-act="map-branch" data-b="${esc(b)}"><b>${esc(b)}</b><small>${esc(role)}</small>${lines.map((l) => `<small>${esc(l)}</small>`).join("")}<small>${esc(String(h.subject || "").slice(0, 70))}</small><small class="when">${esc(fmt(h.at))} ${esc(h.author || "")}</small></button>`;
+  };
+  // 同じファイルを 2 つ以上の自分のブランチで変えているもの（ぶつかりそうなところ）。
+  const byPath = new Map();
+  for (const b of set.personal) for (const c of (set.maps.get(b) || {}).changed || []) { if (!byPath.has(c.path)) byPath.set(c.path, []); byPath.get(c.path).push(b); }
+  const clash = [...byPath].filter(([, bs]) => bs.length > 1).sort((a, b) => a[0].localeCompare(b[0]));
+  const clashNodes = new Set(clash.map(([p]) => ((set.maps.get(byPath.get(p)[0]) || {}).changed || []).find((c) => c.path === p)?.node).filter(Boolean));
+  const dot = (b) => `<i style="background:${set.color.get(b) || "var(--soft)"}" title="${esc(b)}"></i>`;
+  const linked = new Set(S.mapNode ? m.edges.filter((e) => e.from === S.mapNode || e.to === S.mapNode).flatMap((e) => [e.from, e.to]) : []);
+  const groups = new Map();
+  for (const n of m.nodes.values()) { const k = districtOf(n); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(n); }
+  const rank = (k) => (k === "#scene" ? 0 : k === "#outside" ? 3 : k === "." ? 2 : 1);
+  const districts = [...groups].sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0])).map(([k, ns]) => {
+    // 区画の名前は、その地区で共通のフォルダを見出しに回した残り（Source/Runtime/Boss → 見出し Source/Runtime、区画 Boss）。
+    const segs = k.startsWith("#") || k === "." ? [] : ns.map((n) => n.id.split("/"));
+    const common = (a, b) => { let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); };
+    let prefix = segs.length ? segs.reduce(common) : [];
+    if (segs.length === 1) prefix = prefix.slice(0, -1);
+    const label = (n) => (segs.length ? n.id.split("/").slice(prefix.length).join("/") || t("direct") : nodeName(n.id));
+    const tiles = ns.sort((a, b) => a.id.localeCompare(b.id)).map((n) => {
+      const per = m.touch.get(n.id), cls = [S.mapNode === n.id ? "on" : "", S.mapNode && !linked.has(n.id) && S.mapNode !== n.id ? "dim" : "", !sel && clashNodes.has(n.id) ? "hot" : "", !n.id.startsWith("@") && m.baseIds.size && !m.baseIds.has(n.id) ? "new" : ""].join(" ");
+      const info = n.id.startsWith("@") ? "" : t("fileCount", n.files);
+      const changed = per ? [...per.values()].reduce((s, a) => s + a.length, 0) : 0;
+      return `<button type="button" class="tile ${cls}" data-act="map-node" data-id="${esc(n.id)}"><b>${esc(label(n))}</b><small>${esc(info)}${changed ? ` · ±${changed}` : ""}${per ? `<span class="dots">${[...per.keys()].map(dot).join("")}</span>` : ""}</small></button>`;
+    }).join("");
+    return `<section class="district"><h3>${esc(prefix.length ? prefix.join("/") : districtName(k))} <span class="muted mono">${t("items", ns.length)}</span></h3><div class="tiles">${tiles}</div></section>`;
+  });
+  mapEdges = m.edges;
+  const legend = `<div class="legend">${EDGE_KINDS.map(([k, label]) => `<span><i class="ln" style="border-color:var(--e-${k})"></i>${t(label)}</span>`).join("")}${set.personal.filter((b) => set.maps.has(b)).map((b) => `<span><span class="dots">${dot(b)}</span> ${esc(b)}</span>`).join("")}</div>`;
+  const head = `<div class="head"><h1>${t("map")}</h1><div class="acts">${latest ? `<span class="muted">${t("mapStale", fmt(latest))}</span>` : ""}</div></div><p class="muted">${t("mapWhy")} ${t("mapAsk")}</p>`;
+  if (!set.maps.size) return head + `<div class="note">${t("mapEmpty")}</div>`;
+  return `${head}
+    <div class="branches"><button type="button" class="br ${S.mapBranch ? "" : "on"}" data-act="map-branch" data-b=""><b>${t("mapAll")}</b><small>${esc(set.names.filter((b) => set.maps.has(b)).join(" · "))}</small></button>${set.names.map(card).join("")}</div>
+    <section class="card ${clash.length ? "wait" : ""}"><h2>${t("overlap")} <span class="chip">${clash.length}</span></h2>${clash.length ? `<ul class="files">${clash.slice(0, 30).map(([p, bs]) => `<li><span class="dots">${bs.map(dot).join("")}</span><code>${esc(p)}</code><span class="muted">${esc(bs.join(" · "))}</span></li>`).join("")}</ul>` : `<p class="empty">${t("overlapNone")}</p>`}</section>
+    ${legend}
+    <div class="mapwrap"><div class="atlas" id="atlas"><svg id="links" aria-hidden="true"></svg>${districts.join("")}</div><aside class="card">${mapDetail(set, m)}</aside></div>`;
+}
+function mapDetail(set, m) {
+  const id = S.mapNode, n = id && m.nodes.get(id);
+  if (!n) return `<p class="empty">${t("pickTile")}</p>`;
+  const link = (x) => `<a href="#map" data-act="map-node" data-id="${esc(x)}">${esc(nodeName(x))}</a>`;
+  const edgeRow = (e, other) => `<li><span></span><span>${link(other)} <span class="tag" style="border-color:var(--e-${esc(e.kind)})">${t((EDGE_KINDS.find(([k]) => k === e.kind) || ["", e.kind])[1])}</span></span><span class="muted mono">${e.n}</span></li>`;
+  const out = m.edges.filter((e) => e.from === id).sort((a, b) => b.n - a.n), inn = m.edges.filter((e) => e.to === id).sort((a, b) => b.n - a.n);
+  const per = m.touch.get(id);
+  const files = per ? [...per].map(([b, cs]) => `<p style="margin:8px 0 0"><span class="dots"><i style="background:${set.color.get(b)}"></i></span> <b class="mono">${esc(b)}</b> <span class="muted">${esc(set.owners.get(b) || "")}</span></p><ul class="files">${cs.slice(0, 15).map((c) => `<li><span class="mono">${esc(c.status || "")}</span><code>${esc(c.path.slice(id.length + 1) || c.path)}</code><span class="plus">+${c.add}<span class="minus"> −${c.del}</span></span></li>`).join("")}${cs.length > 15 ? `<li><span></span><span class="muted">… ${cs.length - 15}</span><span></span></li>` : ""}</ul>`).join("") : "";
+  const doc = m.sel || set.maps.get(set.base) || [...set.maps.values()][0] || {};
+  const headers = id === "@sdk" ? `<h2 style="margin-top:12px">${t("headers")}</h2><ul class="files">${(doc.sdk || []).slice(0, 20).map((h) => `<li><span></span><code>${esc(h.header)}</code><span class="muted mono">${h.n}</span></li>`).join("")}</ul>` : "";
+  return `<h3>${esc(nodeName(id))}</h3><p class="muted mono" style="margin:0">${esc(id)}</p>
+    ${id.startsWith("@") ? "" : `<p class="muted" style="margin:2px 0 0">${t("fileCount", n.files)} · ${kb(n.bytes || 0)}${m.baseIds.size && !m.baseIds.has(id) ? ` · ${t("notInBase", set.base)}` : ""}</p>`}
+    ${out.length ? `<h2 style="margin-top:12px">${t("uses")}</h2><ul class="files">${out.map((e) => edgeRow(e, e.to)).join("")}</ul>` : ""}
+    ${inn.length ? `<h2 style="margin-top:12px">${t("usedBy")}</h2><ul class="files">${inn.map((e) => edgeRow(e, e.from)).join("")}</ul>` : ""}${headers}
+    ${per ? `<h2 style="margin-top:12px">${t("touching")}</h2>${files}` : ""}`;
+}
+// 区画の位置は描いたあとにしか分からないので、線は描画のあとに引く。何も選んでいなければ全部を薄く、選んだらその区画の線だけ。
+function drawLinks() {
+  const box = $("#atlas"), svg = $("#links");
+  if (!box || !svg) return;
+  const r0 = box.getBoundingClientRect(), pos = new Map();
+  for (const el of box.querySelectorAll(".tile")) { const r = el.getBoundingClientRect(); pos.set(el.dataset.id, [r.left - r0.left + r.width / 2, r.top - r0.top + r.height / 2]); }
+  svg.setAttribute("width", r0.width);
+  svg.setAttribute("height", r0.height);
+  svg.setAttribute("viewBox", `0 0 ${r0.width} ${r0.height}`);
+  const shown = S.mapNode ? mapEdges.filter((e) => e.from === S.mapNode || e.to === S.mapNode) : mapEdges;
+  svg.innerHTML = EDGE_KINDS.map(([k]) => `<marker id="ar-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--e-${k})"/></marker>`).join("") + shown.map((e) => {
+    const a = pos.get(e.from), b = pos.get(e.to);
+    if (!a || !b) return "";
+    const dx = b[0] - a[0], dy = b[1] - a[1], cx = (a[0] + b[0]) / 2 - dy * 0.18, cy = (a[1] + b[1]) / 2 + dx * 0.18;
+    const w = 1.2 + Math.min(3.5, Math.log2(1 + e.n)), op = S.mapNode ? 0.95 : 0.22;
+    return `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" fill="none" style="stroke:var(--e-${e.kind})" stroke-width="${w.toFixed(1)}" stroke-opacity="${op}" ${e.kind === "engine" ? 'stroke-dasharray="5 4"' : ""} ${S.mapNode ? `marker-end="url(#ar-${e.kind})"` : ""}/>`;
+  }).join("");
 }
 
 function fieldView(coll, f, v, d) {
@@ -648,7 +907,7 @@ function askText() {
 }
 function viewMembers() {
   const pr = project(), fields = SCHEMA.settings.project.fields;
-  const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : ""}</span></div>`);
+  const members = docs("members").map((m) => `<div class="row"><span><b>${esc(m.handle || "?")}</b> <span class="tag mono">${t("branch")}：${esc(m.branch || t("branchNone"))}</span><small>${esc([m.role, m.github && "GitHub: " + m.github, m.note].filter(Boolean).join(" · "))}</small></span><span class="side">${m.id === S.me.uid ? btn("profile", t("edit"), {}, "ghost mini") : S.me.owner ? btn("member-branch", t("branchSet"), { uid: m.id }, "ghost mini") : ""}</span></div>`);
   const steps = S.lang === "zh"
     ? ["把自己的 Google 账号邮箱告诉所有者，让他加进邀请名单；然后用那个账号登录这个页面", "让自己的 Claude Code 安装 skill（把下面那段话贴给它，只需一次），装完重开 Claude Code", "在这个页面按“复制钥匙”，然后对智能体说“连上中枢”（每台电脑一次）", "之后照常让智能体干活：它会自己登记要做的事，按规则做，做完写报告"]
     : ["自分の Google アカウントのメールをオーナーに伝えて招待してもらい、そのアカウントでこのページにログインする", "自分の Claude Code にスキルを入れてもらう（下の文を貼る。1 回だけ）。終わったら Claude Code を開き直す", "このページで「鍵をコピー」を押し、エージェントに「ハブにつないで」と言う（パソコンごとに 1 回）", "あとは普段どおりエージェントに頼む：やることを自分で登録し、ルールに沿って作業し、終わりに報告を書く"];
@@ -656,7 +915,7 @@ function viewMembers() {
     ? ["按“复制钥匙”（钥匙进到剪贴板，不会显示在画面上）", "对自己的智能体说“连上中枢”（它会执行 /hub:login，从剪贴板读取）", "之后智能体就能以你的名义读写中枢。换电脑时再做一次"]
     : ["「鍵をコピー」を押す（鍵はクリップボードに入る。画面には出ない）", "自分のエージェントに「ハブにつないで」と言う（/hub:login がクリップボードから読む）", "これでエージェントが、あなたの名前でハブを読み書きできる。別のパソコンではもう 1 回"];
   const invites = [...S.invites.keys()].sort().map((mail) => `<div class="row"><span><b>${esc(mail)}</b></span><span class="side">${btn("invite-del", t("remove"), { mail }, "ghost mini")}</span></div>`);
-  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"]];
+  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"], ["/hub:map", S.lang === "zh" ? "刷新地图" : "地図を新しくする"]];
   return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}${btn("logout", t("logout"), {}, "ghost")}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
@@ -670,7 +929,7 @@ function viewMembers() {
 }
 function viewSearch() {
   const rows = [];
-  for (const c of SCHEMA.collections) if (c.key !== "members") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(c.key === "rules" || c.key === "engine" ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
+  for (const c of SCHEMA.collections) if (c.key !== "members" && c.key !== "map") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(c.key === "rules" || c.key === "engine" ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
   return `<div class="head"><h1>${t("results")}</h1></div><section class="card">${list(rows)}</section>`;
 }
 
@@ -724,9 +983,12 @@ function render() {
   else if (r.view === "rules") html = viewRules();
   else if (r.view === "engine") html = viewGrouped("engine", COLL.engine.areas, "area", "must");
   else if (r.view === "members") html = viewMembers();
+  else if (r.view === "map") html = viewMap();
+  else if (r.view === "timeline") html = viewTimeline();
   else html = viewList(r.coll);
   $("#main").innerHTML = html;
   if (inProject) loadImages();
+  drawLinks();
 }
 let queued = false;
 function schedule() {
@@ -758,6 +1020,18 @@ const ACT = {
   },
   "del-ask"(_, el) { if (el.dataset.sure) { openForm.del().then((ok) => ok && $("#dlg").close()); } else { el.dataset.sure = "1"; el.textContent = t("delSure"); el.className = "btn danger mini"; } },
   "toggle-all"({ coll }) { S.all[coll] = !S.all[coll]; schedule(); },
+  "more-days"() { S.days += 14; schedule(); },
+  "map-branch"({ b }) { S.mapBranch = S.mapBranch === b ? "" : b; schedule(); },
+  "map-node"({ id }) { S.mapNode = S.mapNode === id ? "" : id; schedule(); },
+  // オーナーは、メンバーそれぞれの自分のブランチを決められる（データベースの規則でもオーナーは全員の members を書ける）。
+  "member-branch"({ uid }) {
+    const m = S.data.members.get(uid) || {};
+    openForm({ title: `${m.handle || uid}：${t("branchSet")}`, defs: fieldsOf("members", ["branch"]), values: m,
+      onSave: async ({ branch }) => {
+        if (!branchOk(branch, uid)) { toast(t("branchBad"), true); return false; }
+        try { await S.db.doc("members/" + uid).update({ branch, updated_at: now() }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
+      } });
+  },
   async "copy-ask"() {
     const el = $("#ask-text");
     try { await navigator.clipboard.writeText(el.textContent); toast(t("copied")); } catch { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
@@ -829,10 +1103,17 @@ const ACT = {
       onSave: async (v) => {
         if (!/^[A-Za-z0-9_-]{2,20}$/.test(v.handle)) { toast(t("handleBad"), true); return false; }
         if (docs("members").some((m) => m.id !== S.me.uid && m.handle === v.handle)) { toast(t("handleTaken"), true); return false; }
+        if (!branchOk(v.branch, S.me.uid)) { toast(t("branchBad"), true); return false; }
         try { await S.db.doc("members/" + S.me.uid).set({ ...mineDoc, ...v, updated_at: now() }); S.me.handle = v.handle; toast(t("saved")); schedule(); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
       } });
   },
 };
+// 空（未設定）か、半角英数字と . _ - で、公開ブランチでもほかの人のブランチでもない名前。
+function branchOk(name, uid) {
+  if (!name) return true;
+  if (!/^[A-Za-z0-9._-]{1,60}$/.test(name) || name === (project().release_branch || "main")) return false;
+  return !docs("members").some((m) => m.id !== uid && m.branch === name);
+}
 async function movePlan(id, step) {
   const p = plan(), ready = [...p.ready], i = ready.indexOf(id), j = i + step;
   if (i < 0 || j < 0 || j >= ready.length) return;
@@ -847,6 +1128,14 @@ document.addEventListener("click", (ev) => {
   if (fn) Promise.resolve(fn({ ...el.dataset }, el)).catch(() => toast(t("failed"), true));
 });
 $("#q").addEventListener("input", (ev) => { S.q = ev.target.value.trim().toLowerCase(); schedule(); });
+document.addEventListener("change", (ev) => {
+  const el = ev.target.closest("[data-filter]");
+  if (!el) return;
+  filt(el.dataset.filter)[el.dataset.field] = el.value;
+  schedule();
+});
+let resized = 0;
+window.addEventListener("resize", () => { clearTimeout(resized); resized = setTimeout(drawLinks, 80); });
 window.addEventListener("hashchange", () => { window.scrollTo(0, 0); schedule(); });
 
 // ---------- 接続 ----------

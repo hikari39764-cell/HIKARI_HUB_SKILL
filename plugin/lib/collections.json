@@ -14,12 +14,14 @@
     "engine_requests",
     "rules",
     "engine",
-    "members"
+    "members",
+    "map"
   ],
   "skip": [
     "reports",
     "bugs",
     "proposals",
-    "engine_requests"
+    "engine_requests",
+    "map"
   ]
 }

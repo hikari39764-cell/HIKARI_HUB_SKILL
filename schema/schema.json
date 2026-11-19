@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sync_skip": ["reports", "bugs", "proposals", "engine_requests"],
+  "sync_skip": ["reports", "bugs", "proposals", "engine_requests", "map"],
   "meta_fields": {
     "by": {
       "ja": "書いた人",
@@ -1413,8 +1413,8 @@
         "zh": "成员"
       },
       "summary": {
-        "ja": "ドキュメント id は本人の uid（ログインした Google アカウントごとの id。`hub whoami` で分かる）。本人だけが自分のものを書ける。",
-        "zh": "文档 id 是本人的 uid（按登录的 Google 账号区分，`hub whoami` 可查），只有本人能写自己的。"
+        "ja": "ドキュメント id は本人の uid（ログインした Google アカウントごとの id。`hub whoami` で分かる）。本人が自分のものを書く。オーナーは全員の「自分のブランチ」を決められる。",
+        "zh": "文档 id 是本人的 uid（按登录的 Google 账号区分，`hub whoami` 可查），本人写自己的。所有者可以给每个人定“自己的分支”。"
       },
       "fields": [
         {
@@ -1423,7 +1423,14 @@
           "required": true,
           "ja": "呼び名",
           "zh": "称呼",
-          "help": "半角英数字（例 hikari）。報告・担当・ブランチに使う"
+          "help": "半角英数字（例 hikari）。報告・担当に使う"
+        },
+        {
+          "key": "branch",
+          "type": "text",
+          "ja": "自分のブランチ",
+          "zh": "自己的分支",
+          "help": "その人の develop（例 develop_kou）。作業ブランチはここから切り、ここへ取り込む。元ブランチ（develop）へ入れるのはオーナーだけ。半角英数字と . _ -"
         },
         {
           "key": "role",
@@ -1447,10 +1454,124 @@
       ],
       "create": [
         "handle",
+        "branch",
         "role",
         "github",
         "note"
       ]
+    },
+    {
+      "key": "map",
+      "prefix": "",
+      "writer": "member",
+      "label": {
+        "ja": "地図",
+        "zh": "地图"
+      },
+      "summary": {
+        "ja": "ブランチごとの、ファイルのまとまり（区画）・区画どうしのつながり（#include、素材の GUID、シーンのコンポーネント）・元ブランチとの違い。ドキュメント id はブランチ名。エージェントが `hub map` で git から作って送る（手で書かない）。",
+        "zh": "按分支记下文件的分区、分区之间的依赖（#include、素材 GUID、场景里的组件）以及和主干的差别。文档 id 是分支名。由智能体用 `hub map` 从 git 生成并上传（不手写）。"
+      },
+      "fields": [
+        {
+          "key": "branch",
+          "type": "text",
+          "required": true,
+          "ja": "ブランチ",
+          "zh": "分支"
+        },
+        {
+          "key": "role",
+          "type": "choice",
+          "choices": [
+            "base",
+            "release",
+            "personal"
+          ],
+          "ja": "役割",
+          "zh": "角色",
+          "help": "base = 元ブランチ（develop）、release = 公開ブランチ（main）、personal = だれかの自分のブランチ"
+        },
+        {
+          "key": "member",
+          "type": "member",
+          "ja": "持ち主",
+          "zh": "所属"
+        },
+        {
+          "key": "compare",
+          "type": "text",
+          "ja": "比べた相手",
+          "zh": "对比的分支",
+          "help": "自分のブランチは元ブランチと、元ブランチは公開ブランチと比べる"
+        },
+        {
+          "key": "ahead",
+          "type": "number",
+          "ja": "相手に無いコミット",
+          "zh": "领先的提交"
+        },
+        {
+          "key": "behind",
+          "type": "number",
+          "ja": "取り込んでいないコミット",
+          "zh": "落后的提交"
+        },
+        {
+          "key": "head",
+          "type": "object",
+          "ja": "最新のコミット",
+          "zh": "最新提交",
+          "help": "{commit, subject, author, at}"
+        },
+        {
+          "key": "changed",
+          "type": "objects",
+          "ja": "変わったファイル",
+          "zh": "改动的文件",
+          "help": "比べた相手との分かれ目からの違い。[{path, node, status（A/M/D）, add, del}]。多いときは先頭 500 件"
+        },
+        {
+          "key": "changed_total",
+          "type": "number",
+          "ja": "変わったファイルの数",
+          "zh": "改动文件数"
+        },
+        {
+          "key": "nodes",
+          "type": "objects",
+          "ja": "区画",
+          "zh": "分区",
+          "help": "[{id, kind, files, bytes}]。id はフォルダ（例 Source/Runtime/Boss）かシーンのファイル。@ で始まるものはリポジトリの外（@sdk = エンジンの SDK、@type:<名前> = エンジンや外部モジュールのコンポーネント）"
+        },
+        {
+          "key": "edges",
+          "type": "objects",
+          "ja": "つながり",
+          "zh": "依赖",
+          "help": "[{from, to, kind, n}]。kind：include（#include）、asset（素材の GUID で参照）、component（シーンがコンポーネントの型を使う）、engine（エンジンの SDK を使う）。n は参照の数"
+        },
+        {
+          "key": "sdk",
+          "type": "objects",
+          "ja": "使っているエンジンのヘッダ",
+          "zh": "用到的引擎头文件",
+          "help": "[{header, n}]"
+        },
+        {
+          "key": "mapped_at",
+          "type": "time",
+          "ja": "作った時刻",
+          "zh": "生成时间"
+        },
+        {
+          "key": "mapped_by",
+          "type": "member",
+          "ja": "作った人",
+          "zh": "生成者"
+        }
+      ],
+      "create": []
     }
   ],
   "settings": {

@@ -2,12 +2,16 @@
 # Keep this file ASCII-only (Windows PowerShell 5.1). Records are plain JSON files, UTF-8.
 #
 #   hub login                 take the member's key from the clipboard (copied on the hub site), check it, keep it on this PC
-#   hub whoami                who the key belongs to, the project of this repository, the member's handle
+#   hub whoami                who the key belongs to, the project of this repository, the member's handle and own branch
 #   hub sync [-All]           refresh <repo>/.hikari-hub/cache/<collection>/<id>.json (-All: every collection)
 #   hub list <collection>     refresh one collection in the cache
 #   hub get <collection>/<id> read one record (prints it, refreshes its cache file)
 #   hub find <collection> <field> <value>   records whose field equals the value (prints them)
 #   hub push                  send every <repo>/.hikari-hub/out/<collection>/<id>.json, then remove the sent files
+#   hub map [-NoPush]         map the base, release and every member's own branch from origin (lib/hub-map.ps1) and send it
+#
+# whoami and sync also write <repo>/.hikari-hub/me.json (uid, handle, own branch, owner or not): the guard hook reads it
+# to know whose branch is whose without going online.
 #
 # A pushed file is merged into the record (nested maps are merged, lists are replaced); the record is
 # created when it does not exist. "_if_time": "<the _time read earlier>" makes the write fail when
@@ -24,11 +28,13 @@ param(
     [string]$Key = "",
     [string]$Project = "",
     [string]$Dir = "",
-    [switch]$All
+    [switch]$All,
+    [switch]$NoPush
 )
 
 $ErrorActionPreference = "Stop"
 . (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-common.ps1")
+. (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-map.ps1")
 Add-Type -AssemblyName System.Web.Extensions
 Add-Type -AssemblyName System.Security
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -280,6 +286,75 @@ function Get-CacheFolder($space) {
     return (Join-Path $space.local "cache")
 }
 
+# Only the owner (the e-mail named in the database rules) may read hub/owner; it holds nothing.
+function Test-Owner($session) {
+    $owner = Invoke-Http "GET" ($documents + "/hub/owner") "" $session.token ""
+    if ($owner.status -eq 0) { Fail (Get-Problem $owner) }
+    return ($owner.status -ne 403)
+}
+
+# What the guard hook needs to know about the person, kept in <repo>/.hikari-hub/me.json.
+function Save-Me($space, $session, [bool]$owner, $member) {
+    if (-not $space.local) { return }
+    $me = [ordered]@{ uid = $session.uid; name = $session.name; owner = $owner; handle = ""; branch = "" }
+    if ($member) { $me.handle = [string]$member.handle; $me.branch = [string]$member.branch }
+    [IO.File]::WriteAllText((Join-Path $space.local "me.json"), (Format-Record $me), $utf8)
+}
+
+# Sends every <repo>/.hikari-hub/out/<collection>/<id>.json; returns how many could not be sent.
+function Send-Out($space, $session) {
+    $out = Join-Path $space.local "out"
+    $files = @()
+    if (Test-Path -LiteralPath $out) { $files = @(Get-ChildItem -LiteralPath $out -Recurse -File -Filter "*.json" | Sort-Object FullName) }
+    if (-not $files.Count) { Say "nothing to push"; return 0 }
+    $bad = 0
+    foreach ($file in $files) {
+        $collection = $file.Directory.Name
+        $label = $collection + "/" + $file.BaseName
+        if ($file.Directory.Parent.FullName -ne (Get-Item -LiteralPath $out).FullName -or $label -notmatch '^[a-z_]+/[A-Za-z0-9._@-]+$') {
+            Say ("NG  " + $file.FullName + "  put files in .hikari-hub/out/<collection>/<id>.json"); $bad += 1; continue
+        }
+        $record = $null
+        try { $record = Read-Record $file.FullName } catch { }
+        if (-not ($record -is [Collections.IDictionary])) { Say ("NG  " + $label + "  the file is not a JSON object"); $bad += 1; continue }
+        $query = @(Get-FieldPaths $record "" | ForEach-Object { "updateMask.fieldPaths=" + [Uri]::EscapeDataString($_) })
+        if (-not $query.Count) { Say ("NG  " + $label + "  the file has no fields"); $bad += 1; continue }
+        if ($record.ContainsKey("_if_time") -and $record["_if_time"]) { $query += "currentDocument.updateTime=" + [Uri]::EscapeDataString([string]$record["_if_time"]) }
+        $fields = @{}
+        Add-TypedFields $fields $record
+        $body = $serializer.Serialize(@{ fields = $fields })
+        $result = Invoke-Http "PATCH" ($space.base + "/" + $label + "?" + ($query -join "&")) $body $session.token "application/json; charset=utf-8"
+        if ($result.status -eq 0) { Say (Get-Problem $result); Say "The files stay in .hikari-hub/out; run 'hub push' again later."; exit 1 }
+        if ($result.status -ne 200) { Say ("NG  " + $label + "  " + (Get-Problem $result)); $bad += 1; continue }
+        Save-Record (Join-Path $space.local "cache") $collection ($serializer.DeserializeObject($result.text))
+        Remove-Item -LiteralPath $file.FullName -Force
+        Say ("ok  " + $label)
+    }
+    if ($bad) { Say ($bad.ToString() + " file(s) were not sent. Fix or delete them in .hikari-hub/out, then push again.") }
+    return $bad
+}
+
+# The branches the map covers: base (compared with release), release, then each member's own branch (compared with base).
+function Get-MapTargets([string]$cache) {
+    $project = Read-Json (Join-Path $cache "settings/project.json")
+    $base = "develop"; $release = "main"
+    if ($project -and $project.base_branch) { $base = [string]$project.base_branch }
+    if ($project -and $project.release_branch) { $release = [string]$project.release_branch }
+    $targets = [Collections.ArrayList]@(
+        @{ branch = $base; role = "base"; member = ""; compare = $release },
+        @{ branch = $release; role = "release"; member = ""; compare = "" })
+    $folder = Join-Path $cache "members"
+    if (Test-Path -LiteralPath $folder) {
+        foreach ($file in (Get-ChildItem -LiteralPath $folder -Filter "*.json" | Sort-Object Name)) {
+            $member = Read-Json $file.FullName
+            $branch = [string]$member.branch
+            if (-not $branch -or ($targets | Where-Object { $_.branch -eq $branch })) { continue }
+            [void]$targets.Add(@{ branch = $branch; role = "personal"; member = [string]$member.handle; compare = $base })
+        }
+    }
+    return $targets
+}
+
 # ---------- commands ----------
 switch ($Command) {
     "login" {
@@ -295,17 +370,18 @@ switch ($Command) {
         $session = Get-Session
         Say ("name: " + $session.name)
         Say ("uid: " + $session.uid)
-        # Only the owner (the e-mail named in the database rules) may read hub/owner; it holds nothing.
-        $owner = Invoke-Http "GET" ($documents + "/hub/owner") "" $session.token ""
-        if ($owner.status -eq 0) { Fail (Get-Problem $owner) }
-        Say ("owner: " + ($owner.status -ne 403).ToString().ToLower())
+        $owner = Test-Owner $session
+        Say ("owner: " + $owner.ToString().ToLower())
         $space = Get-Workspace
         Say ("project: " + $space.id)
         Say ("page: " + (Get-ProjectUrl $space.id))
-        $member = Invoke-Http "GET" ($space.base + "/members/" + $session.uid) "" $session.token ""
-        if ($member.status -eq 200) { Say ("handle: " + [string]((ConvertFrom-Document ($serializer.DeserializeObject($member.text)))["handle"])) }
-        elseif ($member.status -eq 404) { Say "handle: (not registered yet)" }
-        else { Say (Get-Problem $member) }
+        $result = Invoke-Http "GET" ($space.base + "/members/" + $session.uid) "" $session.token ""
+        $member = $null
+        if ($result.status -eq 200) { $member = ConvertFrom-Document ($serializer.DeserializeObject($result.text)) }
+        elseif ($result.status -ne 404) { Fail (Get-Problem $result) }
+        if ($member -and $member["handle"]) { Say ("handle: " + [string]$member["handle"]) } else { Say "handle: (not registered yet)" }
+        if ($member -and $member["branch"]) { Say ("branch: " + [string]$member["branch"]) } else { Say "branch: (not set yet)" }
+        Save-Me $space $session $owner $member
     }
     "sync" {
         $session = Get-Session
@@ -314,8 +390,48 @@ switch ($Command) {
         $names = @($collections.all | Where-Object { $All -or ($collections.skip -notcontains $_) })
         if ($All) { $names += "files" }
         $counts = foreach ($name in $names) { $name + " " + (Sync-Collection $space $session $folder $name) }
+        Save-Me $space $session (Test-Owner $session) (Read-Json (Join-Path $folder ("members/" + $session.uid + ".json")))
         Say ("synced " + $space.id + " -> " + $folder)
         Say ($counts -join ", ")
+    }
+    "map" {
+        $space = Get-Workspace
+        if (-not $space.local) { Fail "no_project: run this inside the project's repository." }
+        $root = Find-RepoRoot (Get-Location).Path
+        $cache = Join-Path $space.local "cache"
+        $session = $null
+        $handle = ""
+        if (-not $NoPush) {
+            # The branch list lives in the members' records: read them fresh.
+            $session = Get-Session
+            foreach ($name in @("settings", "members")) { [void](Sync-Collection $space $session $cache $name) }
+            $mine = Read-Json (Join-Path $cache ("members/" + $session.uid + ".json"))
+            if ($mine) { $handle = [string]$mine.handle }
+        }
+        $fetch = Invoke-Git $root @("fetch", "origin", "--prune", "--quiet")
+        if ($fetch.code -ne 0) { Say ("fetch failed (mapping what this PC already has): " + $fetch.errors.Trim()) }
+        $folder = Join-Path $space.local "out/map"
+        [void][IO.Directory]::CreateDirectory($folder)
+        $stamp = [DateTime]::Now.ToString("yyyy-MM-ddTHH:mm:sszzz")
+        foreach ($target in (Get-MapTargets $cache)) {
+            $branch = $target.branch
+            if ($branch -notmatch '^[A-Za-z0-9._-]{1,60}$') { Say ("skip " + $branch + "  (a branch on the map is letters, digits, . _ -)"); continue }
+            if ((Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $branch))).code -ne 0) { Say ("skip " + $branch + "  (not on origin yet)"); continue }
+            $compare = ""
+            if ($target.compare -and (Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $target.compare))).code -eq 0) { $compare = "origin/" + $target.compare }
+            $map = Get-BranchMap $root ("origin/" + $branch) $compare
+            $doc = [ordered]@{ branch = $branch; role = $target.role; member = $target.member }
+            foreach ($key in $map.Keys) { $doc[$key] = $map[$key] }
+            $doc["compare"] = $target.compare
+            if (-not $compare) { $doc["compare"] = "" }
+            $doc["mapped_at"] = $stamp
+            $doc["mapped_by"] = $handle
+            # ConvertTo-Json, not Format-Record: the map's lists come out of pipelines, which the serializer cannot read.
+            [IO.File]::WriteAllText((Join-Path $folder ($branch + ".json")), ($doc | ConvertTo-Json -Depth 8 -Compress), $utf8)
+            Say ("mapped " + $branch + "  nodes " + $doc["nodes"].Count + ", edges " + $doc["edges"].Count + ", changed " + $doc["changed_total"] + ", ahead " + $doc["ahead"] + ", behind " + $doc["behind"])
+        }
+        if ($NoPush) { Say "written to .hikari-hub/out/map (not sent: run 'hub push' to send)"; exit 0 }
+        if (Send-Out $space $session) { exit 1 }
     }
     "list" {
         if (-not $A) { Fail "usage: hub list <collection>" }
@@ -356,37 +472,10 @@ switch ($Command) {
         $session = Get-Session
         $space = Get-Workspace
         if (-not $space.local) { Fail "no_project: run this inside the project's repository." }
-        $out = Join-Path $space.local "out"
-        $files = @()
-        if (Test-Path -LiteralPath $out) { $files = @(Get-ChildItem -LiteralPath $out -Recurse -File -Filter "*.json" | Sort-Object FullName) }
-        if (-not $files.Count) { Say "nothing to push"; exit 0 }
-        $bad = 0
-        foreach ($file in $files) {
-            $collection = $file.Directory.Name
-            $label = $collection + "/" + $file.BaseName
-            if ($file.Directory.Parent.FullName -ne (Get-Item -LiteralPath $out).FullName -or $label -notmatch '^[a-z_]+/[A-Za-z0-9._@-]+$') {
-                Say ("NG  " + $file.FullName + "  put files in .hikari-hub/out/<collection>/<id>.json"); $bad += 1; continue
-            }
-            $record = $null
-            try { $record = Read-Record $file.FullName } catch { }
-            if (-not ($record -is [Collections.IDictionary])) { Say ("NG  " + $label + "  the file is not a JSON object"); $bad += 1; continue }
-            $query = @(Get-FieldPaths $record "" | ForEach-Object { "updateMask.fieldPaths=" + [Uri]::EscapeDataString($_) })
-            if (-not $query.Count) { Say ("NG  " + $label + "  the file has no fields"); $bad += 1; continue }
-            if ($record.ContainsKey("_if_time") -and $record["_if_time"]) { $query += "currentDocument.updateTime=" + [Uri]::EscapeDataString([string]$record["_if_time"]) }
-            $fields = @{}
-            Add-TypedFields $fields $record
-            $body = $serializer.Serialize(@{ fields = $fields })
-            $result = Invoke-Http "PATCH" ($space.base + "/" + $label + "?" + ($query -join "&")) $body $session.token "application/json; charset=utf-8"
-            if ($result.status -eq 0) { Say (Get-Problem $result); Say "The files stay in .hikari-hub/out; run 'hub push' again later."; exit 1 }
-            if ($result.status -ne 200) { Say ("NG  " + $label + "  " + (Get-Problem $result)); $bad += 1; continue }
-            Save-Record (Join-Path $space.local "cache") $collection ($serializer.DeserializeObject($result.text))
-            Remove-Item -LiteralPath $file.FullName -Force
-            Say ("ok  " + $label)
-        }
-        if ($bad) { Say ($bad.ToString() + " file(s) were not sent. Fix or delete them in .hikari-hub/out, then push again."); exit 1 }
+        if (Send-Out $space $session) { exit 1 }
     }
     default {
-        Say "usage: hub login | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push   (options: -Project <id>, -Dir <folder>)"
+        Say "usage: hub login | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush]   (options: -Project <id>, -Dir <folder>)"
         if ($Command) { exit 1 }
     }
 }

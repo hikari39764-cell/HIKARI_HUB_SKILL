@@ -38,7 +38,31 @@ hub sync
 - `settings`・`rules`・`engine`・`members`・`cards`・`locks`・`guides`・`decisions`・`questions`・`knowledge`・`mistakes` が `.hikari-hub/cache` に入る（消された記録は消える）。例：`Grep "敵" .hikari-hub/cache/knowledge`。
 - `reports` は多くなるので全部は読まない。カードの前回の報告だけ読む：`hub find reports card <カード id>`。
 - `bugs`・`engine_requests`・`proposals` は、同じものを出していないか確かめるときに読む：`hub list bugs`。
+- `map`（地図）はページで人が見るもの。エージェントは git を直接読めばよいので同期しない。
+- `hub sync` は `.hikari-hub/me.json`（自分の uid・呼び名・自分のブランチ・オーナーかどうか）も書き直す。フックがこれを読む。
 - `settings/plan` の `ready` は、オーナーがおすすめするカードの順番（参考）。入っていないカードも、自分で作ったカードも、そのまま始めてよい。
+
+## 自分のブランチを登録する
+
+`hub whoami` が `branch: (not set yet)` のとき。名前は人に 1 回だけ聞く。`.hikari-hub/out/members/<自分の uid>.json`：
+
+```json
+{"branch": "develop_kato", "updated_at": "2026-11-10T13:05:00+09:00"}
+```
+
+`hub push` のあと、もう一度 `hub whoami`（`me.json` が書き直され、フックが自分のブランチを知る）。origin にまだ無ければ `git push origin origin/<元ブランチ>:refs/heads/develop_kato`。
+
+## 地図を新しくする（`hub map`）
+
+```bash
+hub map
+```
+
+- 元ブランチ・公開ブランチ・メンバーそれぞれの自分のブランチ（origin にあるもの）を、チェックアウトせずに git から読んで、`map/<ブランチ名>` に送る。数秒かかる。
+- 中身：区画（フォルダかシーン）ごとのファイル数、区画どうしのつながり（`#include`、素材の GUID、シーンが使うコンポーネント、エンジン SDK）、比べた相手（自分のブランチは元ブランチ、元ブランチは公開ブランチ）との違い（ファイル、+/- 行、先にあるコミット・遅れているコミット）。
+- 作業の始め（作業ツリーの分析）と終わり（自分のブランチに取り込んだあと）に実行する。人に「地図を更新して」と頼まれたときも。
+- `skip <ブランチ>  (not on origin yet)` は、まだ push されていない自分のブランチ。
+- ネットに届かないとき：`hub map -NoPush` で `.hikari-hub/out/map` に書くだけにして、あとで `hub push`。
 
 ## カードを作って始める・既にあるカードを始める
 
@@ -110,7 +134,7 @@ hub sync
  "updated_at": "2026-11-10T15:10:00+09:00", "updated_by": "kato"}
 ```
 
-カードも同じ `hub push` で更新する。`.hikari-hub/out/cards/c-3fa9c1.json`：`{"state": "確認待ち", "waiting": "レビュー", "pr": "...", "updated_at": "…", "updated_by": "kato"}`。完了条件を満たしていなければ `{"state": "あとで", "assignee": "", …}`。
+カードも同じ `hub push` で更新する。`.hikari-hub/out/cards/c-3fa9c1.json`：自分のブランチに取り込んだら `{"state": "完了", "branch": "develop_kato", "updated_at": "…", "updated_by": "kato"}`（人に見てほしいなら `"state": "確認待ち", "waiting": "検収"`）。完了条件を満たしていなければ `{"state": "あとで", "assignee": "", …}`。
 
 ## まとめて作る（調整ガイド・学んだこと・ミス・質問・不具合など）
 

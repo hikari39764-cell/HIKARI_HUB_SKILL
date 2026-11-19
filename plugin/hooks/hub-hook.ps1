@@ -7,9 +7,17 @@
 #
 #   session : SessionStart - tells the agent this repository is a hub project and what to do first.
 #   edit    : PreToolUse (Edit / Write / MultiEdit / NotebookEdit) - no registered work, no edit;
-#             no edits on the base / release branch; owner-protected files need the human's OK.
-#   git     : PreToolUse (Bash / PowerShell) - merging or pushing into the base branch (default
-#             develop) or the release branch (default main) needs the human's OK every time.
+#             no edits on the base / release branch or on anybody's own branch (work happens on work
+#             branches); owner-protected files need the human's OK.
+#   git     : PreToolUse (Bash / PowerShell) - merging or pushing into:
+#               the person's own branch (members/<uid>.branch) - free;
+#               somebody else's own branch                   - refused;
+#               the base (default develop) or release branch (default main) - the owner only, and
+#               the human's OK every time (refused for the others).
+#
+# Whose branch is whose comes from the synced members (.hikari-hub/cache/members) and from
+# .hikari-hub/me.json, which "hub whoami" / "hub sync" write. Without me.json the base and release
+# branches fall back to asking.
 #
 # The guard fails open: if the hook itself breaks, work is not blocked.
 param([string]$Mode = "edit")
@@ -93,6 +101,20 @@ try {
     $release = "main"
     if ($project -and $project.release_branch) { $release = [string]$project.release_branch }
     $branch = Get-Branch $gitDir
+    $me = Read-Json (Join-Path $root ".hikari-hub/me.json")
+    $mine = ""
+    if ($me -and $me.branch) { $mine = [string]$me.branch }
+    # Everybody's own branch -> whose it is.
+    $personal = @{}
+    $folder = Join-Path $root ".hikari-hub/cache/members"
+    if (Test-Path -LiteralPath $folder) {
+        foreach ($item in (Get-ChildItem -LiteralPath $folder -Filter "*.json")) {
+            $member = Read-Json $item.FullName
+            if ($member -and $member.branch) { $personal[[string]$member.branch] = [string]$member.handle }
+        }
+    }
+    if ($mine) { $personal[$mine] = [string]$me.handle }
+    $guarded = @($release, $base) + @($personal.Keys | Where-Object { $_ -ne $base -and $_ -ne $release })
 
     if ($Mode -eq "git") {
         $target = ""
@@ -101,18 +123,23 @@ try {
             if ($target) { break }
             $rest = $m.Groups[2].Value
             if ($m.Groups[1].Value -eq "merge") {
-                if ($branch -eq $base -or $branch -eq $release) { $target = $branch }
+                if ($guarded -contains $branch) { $target = $branch }
             } else {
-                foreach ($t in @($release, $base)) {
+                foreach ($t in $guarded) {
                     if ($rest -match ('(^|[\s:+]|refs/heads/)' + [regex]::Escape($t) + '(\s|$)')) { $target = $t; break }
                 }
-                if (-not $target -and ($branch -eq $base -or $branch -eq $release) -and $rest -notmatch ':') { $target = $branch }
+                if (-not $target -and ($guarded -contains $branch) -and $rest -notmatch ':') { $target = $branch }
             }
         }
         if (-not $target) { exit 0 }
         if ($target -eq "PR") { Send-Decision "ask" ($msg.merge_pr -f $base, $release) }
-        if ($target -eq $release) { Send-Decision "ask" ($msg.merge_release -f $release, $base) }
-        Send-Decision "ask" ($msg.merge_base -f $base)
+        if ($target -eq $release -or $target -eq $base) {
+            if ($me -and -not [bool]$me.owner) { Send-Decision "deny" ($msg.not_owner -f $target, $mine) }
+            if ($target -eq $release) { Send-Decision "ask" ($msg.merge_release -f $release, $base) }
+            Send-Decision "ask" ($msg.merge_base -f $base)
+        }
+        if ($target -eq $mine) { exit 0 }
+        Send-Decision "deny" ($msg.others_branch -f $target, $personal[$target])
     }
 
     $rel = $file.Substring($root.Length).TrimStart('\', '/').Replace("\", "/")
@@ -125,7 +152,7 @@ try {
     if ($null -ne $project.require_card) { $requireCard = [bool]$project.require_card }
     if ($requireCard) {
         if (-not $hasWork) { Send-Decision "deny" $msg.no_card }
-        if ($branch -and ($branch -eq $base -or $branch -eq $release)) { Send-Decision "deny" ($msg.on_base -f $branch, [string]$active.branch) }
+        if ($branch -and ($guarded -contains $branch)) { Send-Decision "deny" ($msg.on_base -f $branch, [string]$active.branch) }
     }
     if (Test-PathMatch $rel $project.protected_paths) { Send-Decision "ask" ($msg.protected -f $rel) }
     exit 0

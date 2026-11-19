@@ -21,7 +21,8 @@
 
 - **メンバー**：オーナーに招待された人と、その人の鍵を使うエージェント。記録を作る・直すことができる（消せるのはオーナーだけ）。
 - **オーナーだけ**：`settings`、`rules`、`engine`。ほかの人が書こうとすると拒否される（エージェントは書かない）。
-- **本人だけ**：`members/<自分の uid>`（呼び名。ページで本人が登録する。まだ無ければエージェントが `git config user.name` で登録する）。
+- **本人だけ**：`members/<自分の uid>`（呼び名と自分のブランチ。ページで本人が登録する。まだ無ければエージェントが登録する）。オーナーは全員の `branch` を決められる。
+- **エージェントが作るだけ**：`map`（`hub map` が git から作って送る。手で書かない）。
 
 ## settings（オーナーだけが書く）
 
@@ -313,17 +314,42 @@ HIKARI エンジンでゲームを作るときの考え方と進め方。API の
 
 ## `members` — メンバー
 
-ドキュメント id は本人の uid（ログインした Google アカウントごとの id。`hub whoami` で分かる）。本人だけが自分のものを書ける。
+ドキュメント id は本人の uid（ログインした Google アカウントごとの id。`hub whoami` で分かる）。本人が自分のものを書く。オーナーは全員の「自分のブランチ」を決められる。
 
 - 書ける人：本人だけ
-- 作るときに書く項目：`handle`、`role`、`github`、`note`
+- 作るときに書く項目：`handle`、`branch`、`role`、`github`、`note`
 
 | 項目 | 型 | 意味 | 補足 |
 |---|---|---|---|
-| `handle` | text（必須） | 呼び名 | 半角英数字（例 hikari）。報告・担当・ブランチに使う |
+| `handle` | text（必須） | 呼び名 | 半角英数字（例 hikari）。報告・担当に使う |
+| `branch` | text | 自分のブランチ | その人の develop（例 develop_kou）。作業ブランチはここから切り、ここへ取り込む。元ブランチ（develop）へ入れるのはオーナーだけ。半角英数字と . _ - |
 | `role` | text | 担当 | 例 プログラマー、デザイナー、プランナー |
 | `github` | text | GitHub |  |
 | `note` | text | ひとこと |  |
+
+## `map` — 地図
+
+ブランチごとの、ファイルのまとまり（区画）・区画どうしのつながり（#include、素材の GUID、シーンのコンポーネント）・元ブランチとの違い。ドキュメント id はブランチ名。エージェントが `hub map` で git から作って送る（手で書かない）。
+
+- 書ける人：メンバー
+- 作るときに書く項目：
+
+| 項目 | 型 | 意味 | 補足 |
+|---|---|---|---|
+| `branch` | text（必須） | ブランチ |  |
+| `role` | choice：base／release／personal | 役割 | base = 元ブランチ（develop）、release = 公開ブランチ（main）、personal = だれかの自分のブランチ |
+| `member` | member | 持ち主 |  |
+| `compare` | text | 比べた相手 | 自分のブランチは元ブランチと、元ブランチは公開ブランチと比べる |
+| `ahead` | number | 相手に無いコミット |  |
+| `behind` | number | 取り込んでいないコミット |  |
+| `head` | object | 最新のコミット | {commit, subject, author, at} |
+| `changed` | objects | 変わったファイル | 比べた相手との分かれ目からの違い。[{path, node, status（A/M/D）, add, del}]。多いときは先頭 500 件 |
+| `changed_total` | number | 変わったファイルの数 |  |
+| `nodes` | objects | 区画 | [{id, kind, files, bytes}]。id はフォルダ（例 Source/Runtime/Boss）かシーンのファイル。@ で始まるものはリポジトリの外（@sdk = エンジンの SDK、@type:<名前> = エンジンや外部モジュールのコンポーネント） |
+| `edges` | objects | つながり | [{from, to, kind, n}]。kind：include（#include）、asset（素材の GUID で参照）、component（シーンがコンポーネントの型を使う）、engine（エンジンの SDK を使う）。n は参照の数 |
+| `sdk` | objects | 使っているエンジンのヘッダ | [{header, n}] |
+| `mapped_at` | time | 作った時刻 |  |
+| `mapped_by` | member | 作った人 |  |
 
 ## 型の意味
 
@@ -333,3 +359,4 @@ HIKARI エンジンでゲームを作るときの考え方と進め方。API の
 - `member`：メンバーの呼び名　`ref`：ほかの記録の id　`milestone`：`settings/plan` の milestones の id
 - `time`：ISO 8601 の日時　`log`：`[{at, note}]` の配列　`options`：`[{text, recommended}]` の配列
 - `answers`：`{回答 id: {by, by_agent, at, text, evidence}}` のマップ　`assets`：ページで上げた画像の id の配列（エージェントは書かない）
+- `object`・`objects`：形が決まったオブジェクトと、その配列（形は補足に書いてある）

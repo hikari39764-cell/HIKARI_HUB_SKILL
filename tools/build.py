@@ -10,7 +10,8 @@ plugin/projects.json（作品の一覧）から、次のものを作る：
   plugin/lib/collections.json           hub コマンドが同期するコレクションの一覧（skip は必要なときだけ読むもの）
   plugin/skills/work/references/data-model.md  エージェント向けのデータの書き方
   plugin/skills/work/references/engine.md      エンジン知識（ハブに届かないときの控え）
-  dist/preview-owner.html, preview-member.html 手元で見るためのプレビュー（コミットしない）
+  dist/preview-owner.html, preview-member.html 手元で見るためのプレビュー（見本のデータ。コミットしない）
+  dist/index.html                       公開前のサイトを手元で本物のデータにつないで見るための写し（コミットしない）
 
 使い方： python -I -X utf8 tools/build.py
 """
@@ -179,7 +180,8 @@ def data_model() -> str:
         "",
         "- **メンバー**：オーナーに招待された人と、その人の鍵を使うエージェント。記録を作る・直すことができる（消せるのはオーナーだけ）。",
         "- **オーナーだけ**：" + "、".join(f"`{k}`" for k in OWNER_ONLY) + "。ほかの人が書こうとすると拒否される（エージェントは書かない）。",
-        "- **本人だけ**：`members/<自分の uid>`（呼び名。ページで本人が登録する。まだ無ければエージェントが `git config user.name` で登録する）。",
+        "- **本人だけ**：`members/<自分の uid>`（呼び名と自分のブランチ。ページで本人が登録する。まだ無ければエージェントが登録する）。オーナーは全員の `branch` を決められる。",
+        "- **エージェントが作るだけ**：`map`（`hub map` が git から作って送る。手で書かない）。",
         "",
         "## settings（オーナーだけが書く）",
         "",
@@ -214,9 +216,38 @@ def data_model() -> str:
         "- `member`：メンバーの呼び名　`ref`：ほかの記録の id　`milestone`：`settings/plan` の milestones の id",
         "- `time`：ISO 8601 の日時　`log`：`[{at, note}]` の配列　`options`：`[{text, recommended}]` の配列",
         "- `answers`：`{回答 id: {by, by_agent, at, text, evidence}}` のマップ　`assets`：ページで上げた画像の id の配列（エージェントは書かない）",
+        "- `object`・`objects`：形が決まったオブジェクトと、その配列（形は補足に書いてある）",
         "",
     ]
     return "\n".join(lines)
+
+
+def sample_map() -> dict:
+    """プレビューの地図。dist/preview-map/*.json（手元で hub map -NoPush の結果を置いたもの）があればそれを使う。"""
+    local = sorted((ROOT / "dist" / "preview-map").glob("*.json"))
+    if local:
+        return {f"map/{p.stem}": json.loads(p.read_text(encoding="utf-8-sig")) for p in local}
+    nodes = [{"id": i, "kind": k, "files": f, "bytes": f * 4000} for i, k, f in (
+        ("Assets/Scenes/Stage1.scene.json", "scene", 1), ("Assets/Vfx", "asset", 6), ("Source/Runtime/Common", "code", 4),
+        ("Source/Runtime/Enemy", "code", 8), ("Source/Runtime/Player", "code", 10), ("@sdk", "outside", 0))]
+    edges = [{"from": a, "to": b, "kind": k, "n": n} for a, b, k, n in (
+        ("Assets/Scenes/Stage1.scene.json", "Source/Runtime/Player", "component", 1), ("Assets/Scenes/Stage1.scene.json", "Source/Runtime/Enemy", "component", 3),
+        ("Assets/Scenes/Stage1.scene.json", "Assets/Vfx", "asset", 2), ("Source/Runtime/Enemy", "Assets/Vfx", "asset", 2),
+        ("Source/Runtime/Player", "Source/Runtime/Common", "include", 5), ("Source/Runtime/Enemy", "Source/Runtime/Common", "include", 3),
+        ("Source/Runtime/Player", "@sdk", "engine", 9), ("Source/Runtime/Enemy", "@sdk", "engine", 6))]
+    change = lambda path, node, status, add, rm: {"path": path, "node": node, "status": status, "add": add, "del": rm}
+    doc = lambda branch, role, member, compare, ahead, behind, subject, changed: {
+        "branch": branch, "role": role, "member": member, "compare": compare, "ahead": ahead, "behind": behind, "nodes": nodes, "edges": edges, "sdk": [{"header": "HIKARI/Project/WorldView.h", "n": 7}],
+        "head": {"commit": "0" * 40, "subject": subject, "author": member or "hikari", "at": "2026-11-10T11:00:00+09:00"},
+        "changed": changed, "changed_total": len(changed), "mapped_at": "2026-11-10T11:30:00+09:00", "mapped_by": "hikari"}
+    return {
+        "map/develop": doc("develop", "base", "", "main", 4, 0, "敵のノックバックを取り込む", [change("Source/Runtime/Enemy/EnemyHit.cpp", "Source/Runtime/Enemy", "M", 40, 3)]),
+        "map/main": doc("main", "release", "", "", 0, 0, "試遊会 第1回", []),
+        "map/develop_kou": doc("develop_kou", "personal", "hikari", "develop", 3, 0, "被弾時の画面揺れを弱める",
+                               [change("Source/Runtime/Player/PlayerHit.cpp", "Source/Runtime/Player", "M", 12, 4), change("Assets/Vfx/Hit.hvfx", "Assets/Vfx", "A", 80, 0)]),
+        "map/develop_kato": doc("develop_kato", "personal", "kato", "develop", 2, 1, "空中で被弾したときの動き",
+                                [change("Source/Runtime/Enemy/EnemyHit.cpp", "Source/Runtime/Enemy", "M", 22, 6), change("Source/Runtime/Player/PlayerHit.cpp", "Source/Runtime/Player", "M", 3, 1)]),
+    }
 
 
 def engine_reference(docs: list[dict]) -> str:
@@ -243,8 +274,8 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
                              "require_card": True, "protected_paths": ["ProjectSettings/", "CMakeLists.txt"], "skill_source": "example/hikari-hub"},
         "settings/plan": {"ready": ["c-000002", "c-000003"], "assign": {"c-000003": "kato"},
                           "milestones": [{"id": "ms-000001", "date": "2026-11-19", "title": "試遊会 第2回"}, {"id": "ms-000002", "date": "2026-12-03", "title": "中間提出"}]},
-        "members/u_owner" if not owner else "members/u_me": {"handle": "hikari", "role": "ディレクター・プログラマー"},
-        "members/u_me" if not owner else "members/u_kato": {"handle": "kato", "role": "プログラマー"},
+        "members/u_owner" if not owner else "members/u_me": {"handle": "hikari", "role": "ディレクター・プログラマー", "branch": "develop_kou"},
+        "members/u_me" if not owner else "members/u_kato": {"handle": "kato", "role": "プログラマー", "branch": "develop_kato"},
         "members/u_ko": {"handle": "ko", "role": "デザイナー"},
         "cards/c-000001": {"title": "敵のノックバック", "kind": "機能", "summary": "被弾した敵を後ろへ押し出す。", "acceptance": ["距離と時間をエディタで調整できる", "壁を抜けない"],
                            "paths": ["Source/Runtime/Enemy/"], "areas": ["敵"], "state": "作業中", "assignee": "kato", "milestone": "ms-000001",
@@ -256,8 +287,12 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "cards/c-000005": {"title": "ボスの第2形態", "kind": "機能", "areas": ["敵"], "state": "あとで", **stamp("ko", "2026-11-10T09:00:00+09:00")},
         "cards/c-000006": {"title": "タイトル BGM の差し替え", "kind": "素材", "state": "完了", "assignee": "hikari", "milestone": "ms-000001", **stamp("hikari", "2026-11-07T15:00:00+09:00")},
         "reports/r-000001": {"kind": "作業", "card": "c-000001", "title": "敵のノックバック", "state": "作業中", "model": "claude-fable-5-2", "started_at": "2026-11-10T10:20:00+09:00",
-                             "progress": [{"at": "2026-11-10T11:02:00+09:00", "note": "距離をフィールドにした。次は空中で当たったときの動き"}],
+                             "branch": "feat/c-000001-enemy-knockback",
+                             "progress": [{"at": "2026-11-10T11:02:00+09:00", "note": "距離をフィールドにした。次は空中で当たったときの動き"},
+                                          {"at": "2026-11-11T09:40:00+09:00", "note": "空中で当たったときは距離を半分にした。壁際の確認が残り"}],
                              **stamp("kato", "2026-11-10T10:20:00+09:00", "claude-code")},
+        "reports/r-000004": {"kind": "日報", "title": "2026-11-11", "state": "終了", "today": "ボス第2形態の見た目案を 2 つ作った。", "next": "決めることの結果を待って作り込む。",
+                             **stamp("ko", "2026-11-11T18:10:00+09:00")},
         "reports/r-000002": {"kind": "作業", "card": "c-000004", "title": "被弾時の画面揺れを弱める", "state": "終了", "conclusion": "揺れの強さと時間をカメラ効果アセットの値にした。",
                              "changes": ["Assets/Camera/HitShake.hcamfx"], "evidence": ["テスト用シーンで 10 回被弾して確認"], "unverified": ["ボス戦"], "remaining": [],
                              "tuning": ["g-000001"], "learned": ["k-000001"], "mistakes": [], "questions": [], "cost_hours": 0.8, "pr": "11", **stamp("kato", "2026-11-09T16:40:00+09:00", "claude-code")},
@@ -284,7 +319,7 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "proposals/p-000001": {"title": "PR にはプレイ動画を付ける", "category": "Git 規約", "body": "見た目や手触りが変わる PR には 10 秒ほどの動画を付ける。",
                                "reason": "スクリーンショットでは揺れの強さが伝わらなかった。", "state": "提案", **stamp("ko", "2026-11-10T09:40:00+09:00")},
         "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
-    }
+    } | sample_map()
     return {f"projects/sample/{k}": v for k, v in seed.items()}
 
 
@@ -301,6 +336,7 @@ def main() -> None:
     site = page({"firebase": HUB["firebase"], "projects": PROJECTS})
     write(ROOT / "docs" / "index.html", site)
     write(ROOT / "docs" / ".nojekyll", "")
+    write(ROOT / "dist" / "index.html", site)
     write(ROOT / "firebase" / "firestore.rules", firestore_rules())
     shutil.rmtree(owner / "seed", ignore_errors=True)
     for folder, docs in (("rules", rules), ("engine", engine)):
