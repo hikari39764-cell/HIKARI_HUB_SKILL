@@ -1538,6 +1538,13 @@
           "zh": "改动文件数"
         },
         {
+          "key": "last",
+          "type": "object",
+          "ja": "最後の変更",
+          "zh": "最后一次改动",
+          "help": "ページで強調する。自分のブランチは、比べた相手にまだ無い自分のコミットのうち最新（develop に追いつくためのマージは除く。カード 1 枚 = squash 1 つ）、develop・main は最新のコミット。{commit, subject, author, at, changed_total, changed: [{path, node, status, add, del}]}（先頭 200 件）"
+        },
+        {
           "key": "nodes",
           "type": "objects",
           "ja": "区画",

@@ -7,7 +7,8 @@
 #   hub list <collection>     refresh one collection in the cache
 #   hub get <collection>/<id> read one record (prints it, refreshes its cache file)
 #   hub find <collection> <field> <value>   records whose field equals the value (prints them)
-#   hub push                  send every <repo>/.hikari-hub/out/<collection>/<id>.json, then remove the sent files
+#   hub push                  send every <repo>/.hikari-hub/out/<collection>/<id>.json, then remove the sent files;
+#                             when a finished report was among them, refresh the map too (as "hub map")
 #   hub map [-NoPush]         map the base, release and every member's own branch from origin (lib/hub-map.ps1) and send it
 #
 # whoami and sync also write <repo>/.hikari-hub/me.json (uid, handle, own branch, owner or not): the guard hook reads it
@@ -355,6 +356,55 @@ function Get-MapTargets([string]$cache) {
     return $targets
 }
 
+# Maps every branch of Get-MapTargets into <repo>/.hikari-hub/out/map/<branch>.json. With a session, the branch list
+# (settings and members) is read fresh first; without one (offline), the cache is used.
+function Write-Maps($space, $session) {
+    $root = Find-RepoRoot (Get-Location).Path
+    $cache = Join-Path $space.local "cache"
+    $handle = ""
+    if ($session) {
+        foreach ($name in @("settings", "members")) { [void](Sync-Collection $space $session $cache $name) }
+        $mine = Read-Json (Join-Path $cache ("members/" + $session.uid + ".json"))
+        if ($mine) { $handle = [string]$mine.handle }
+    }
+    $fetch = Invoke-Git $root @("fetch", "origin", "--prune", "--quiet")
+    if ($fetch.code -ne 0) { Say ("fetch failed (mapping what this PC already has): " + $fetch.errors.Trim()) }
+    $folder = Join-Path $space.local "out/map"
+    [void][IO.Directory]::CreateDirectory($folder)
+    $stamp = [DateTime]::Now.ToString("yyyy-MM-ddTHH:mm:sszzz")
+    foreach ($target in (Get-MapTargets $cache)) {
+        $branch = $target.branch
+        if ($branch -notmatch '^[A-Za-z0-9._-]{1,60}$') { Say ("skip " + $branch + "  (a branch on the map is letters, digits, . _ -)"); continue }
+        if ((Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $branch))).code -ne 0) { Say ("skip " + $branch + "  (not on origin yet)"); continue }
+        $compare = ""
+        if ($target.compare -and (Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $target.compare))).code -eq 0) { $compare = "origin/" + $target.compare }
+        $map = Get-BranchMap $root ("origin/" + $branch) $compare ($target.role -eq "personal")
+        $doc = [ordered]@{ branch = $branch; role = $target.role; member = $target.member; compare = "" }
+        foreach ($key in $map.Keys) { $doc[$key] = $map[$key] }
+        if ($compare) { $doc["compare"] = $target.compare }
+        $doc["mapped_at"] = $stamp
+        $doc["mapped_by"] = $handle
+        # ConvertTo-Json, not Format-Record: the map's lists come out of pipelines, which the serializer cannot read.
+        [IO.File]::WriteAllText((Join-Path $folder ($branch + ".json")), ($doc | ConvertTo-Json -Depth 8 -Compress), $utf8)
+        $last = ""
+        if ($doc["last"]) { $last = ", last " + $doc["last"]["changed_total"] + " files" }
+        Say ("mapped " + $branch + "  nodes " + $doc["nodes"].Count + ", edges " + $doc["edges"].Count + ", changed " + $doc["changed_total"] + ", ahead " + $doc["ahead"] + ", behind " + $doc["behind"] + $last)
+    }
+}
+
+# True when a report about to be sent is finished (the state U+7D42 U+4E86, written as char codes to keep this file ASCII).
+function Test-FinishedReport($space) {
+    $folder = Join-Path $space.local "out/reports"
+    if (-not (Test-Path -LiteralPath $folder)) { return $false }
+    $done = [string][char]0x7D42 + [char]0x4E86
+    foreach ($file in (Get-ChildItem -LiteralPath $folder -Filter "*.json")) {
+        $report = $null
+        try { $report = Read-Json $file.FullName } catch { }
+        if ($report -and [string]$report.state -eq $done) { return $true }
+    }
+    return $false
+}
+
 # ---------- commands ----------
 switch ($Command) {
     "login" {
@@ -397,39 +447,9 @@ switch ($Command) {
     "map" {
         $space = Get-Workspace
         if (-not $space.local) { Fail "no_project: run this inside the project's repository." }
-        $root = Find-RepoRoot (Get-Location).Path
-        $cache = Join-Path $space.local "cache"
         $session = $null
-        $handle = ""
-        if (-not $NoPush) {
-            # The branch list lives in the members' records: read them fresh.
-            $session = Get-Session
-            foreach ($name in @("settings", "members")) { [void](Sync-Collection $space $session $cache $name) }
-            $mine = Read-Json (Join-Path $cache ("members/" + $session.uid + ".json"))
-            if ($mine) { $handle = [string]$mine.handle }
-        }
-        $fetch = Invoke-Git $root @("fetch", "origin", "--prune", "--quiet")
-        if ($fetch.code -ne 0) { Say ("fetch failed (mapping what this PC already has): " + $fetch.errors.Trim()) }
-        $folder = Join-Path $space.local "out/map"
-        [void][IO.Directory]::CreateDirectory($folder)
-        $stamp = [DateTime]::Now.ToString("yyyy-MM-ddTHH:mm:sszzz")
-        foreach ($target in (Get-MapTargets $cache)) {
-            $branch = $target.branch
-            if ($branch -notmatch '^[A-Za-z0-9._-]{1,60}$') { Say ("skip " + $branch + "  (a branch on the map is letters, digits, . _ -)"); continue }
-            if ((Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $branch))).code -ne 0) { Say ("skip " + $branch + "  (not on origin yet)"); continue }
-            $compare = ""
-            if ($target.compare -and (Invoke-Git $root @("rev-parse", "--verify", "--quiet", ("refs/remotes/origin/" + $target.compare))).code -eq 0) { $compare = "origin/" + $target.compare }
-            $map = Get-BranchMap $root ("origin/" + $branch) $compare
-            $doc = [ordered]@{ branch = $branch; role = $target.role; member = $target.member }
-            foreach ($key in $map.Keys) { $doc[$key] = $map[$key] }
-            $doc["compare"] = $target.compare
-            if (-not $compare) { $doc["compare"] = "" }
-            $doc["mapped_at"] = $stamp
-            $doc["mapped_by"] = $handle
-            # ConvertTo-Json, not Format-Record: the map's lists come out of pipelines, which the serializer cannot read.
-            [IO.File]::WriteAllText((Join-Path $folder ($branch + ".json")), ($doc | ConvertTo-Json -Depth 8 -Compress), $utf8)
-            Say ("mapped " + $branch + "  nodes " + $doc["nodes"].Count + ", edges " + $doc["edges"].Count + ", changed " + $doc["changed_total"] + ", ahead " + $doc["ahead"] + ", behind " + $doc["behind"])
-        }
+        if (-not $NoPush) { $session = Get-Session }
+        Write-Maps $space $session
         if ($NoPush) { Say "written to .hikari-hub/out/map (not sent: run 'hub push' to send)"; exit 0 }
         if (Send-Out $space $session) { exit 1 }
     }
@@ -472,7 +492,14 @@ switch ($Command) {
         $session = Get-Session
         $space = Get-Workspace
         if (-not $space.local) { Fail "no_project: run this inside the project's repository." }
+        $finished = Test-FinishedReport $space
         if (Send-Out $space $session) { exit 1 }
+        # A card was finished: the work is in the person's own branch by now, so the map shows it (and highlights it).
+        if ($finished) {
+            Say "a finished report was sent: refreshing the map"
+            Write-Maps $space $session
+            if (Send-Out $space $session) { exit 1 }
+        }
     }
     default {
         Say "usage: hub login | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush]   (options: -Project <id>, -Dir <folder>)"

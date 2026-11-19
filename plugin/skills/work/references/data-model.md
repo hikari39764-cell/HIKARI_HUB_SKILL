@@ -345,6 +345,7 @@ HIKARI エンジンでゲームを作るときの考え方と進め方。API の
 | `head` | object | 最新のコミット | {commit, subject, author, at} |
 | `changed` | objects | 変わったファイル | 比べた相手との分かれ目からの違い。[{path, node, status（A/M/D）, add, del}]。多いときは先頭 500 件 |
 | `changed_total` | number | 変わったファイルの数 |  |
+| `last` | object | 最後の変更 | ページで強調する。自分のブランチは、比べた相手にまだ無い自分のコミットのうち最新（develop に追いつくためのマージは除く。カード 1 枚 = squash 1 つ）、develop・main は最新のコミット。{commit, subject, author, at, changed_total, changed: [{path, node, status, add, del}]}（先頭 200 件） |
 | `nodes` | objects | 区画 | [{id, kind, files, bytes}]。id はフォルダ（例 Source/Runtime/Boss）かシーンのファイル。@ で始まるものはリポジトリの外（@sdk = エンジンの SDK、@type:<名前> = エンジンや外部モジュールのコンポーネント） |
 | `edges` | objects | つながり | [{from, to, kind, n}]。kind：include（#include）、asset（素材の GUID で参照）、component（シーンがコンポーネントの型を使う）、engine（エンジンの SDK を使う）。n は参照の数 |
 | `sdk` | objects | 使っているエンジンのヘッダ | [{header, n}] |

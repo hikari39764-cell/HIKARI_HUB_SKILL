@@ -8,10 +8,12 @@
 #   edge : include   - a #include between two nodes, or "engine" for #include "HIKARI/..."
 #          asset     - a file that names an asset GUID (the meta files map GUIDs to paths)
 #          component - a scene or prefab that uses a component type a source file declares ("Project_X.Boss")
+#   last : the newest change of the branch (one finished card is one squashed commit), for the page to highlight.
 
 $script:MetaRoot = "ProjectSettings/AssetMeta/"
 $script:CodeFile = '\.(h|hh|hpp|hxx|inl|ipp|c|cc|cpp|cxx|hlsl|hlsli)$'
 $script:MaxChanged = 500
+$script:MaxLast = 200
 $script:MaxHeaders = 60
 
 # Quotes one argument for the Windows command line (CommandLineToArgvW rules).
@@ -85,8 +87,33 @@ function Read-GrepLines([string]$text, [string]$ref, [scriptblock]$each) {
     }
 }
 
-# The map of $ref; $compare (may be empty) is the branch it is measured against.
-function Get-BranchMap([string]$root, [string]$ref, [string]$compare) {
+function Get-CommitInfo([string]$root, [string]$rev) {
+    $log = (Invoke-Git $root @("log", "-1", "-z", "--format=%H%x1f%s%x1f%an%x1f%cI", $rev)).text.Trim([char]0, [char]10).Split([char]0x1f)
+    return [ordered]@{ commit = $log[0]; subject = $log[1]; author = $log[2]; at = $log[3] }
+}
+
+# Files that differ between revisions ($revs: "a...b", or "a", "b"), most changed lines first: [{path, node, status, add, del}].
+function Get-Changes([string]$root, [string[]]$revs, $nodeOf, $scenes) {
+    $status = @{}
+    $parts = (Invoke-Git $root (@("diff", "-z", "--no-renames", "--name-status") + $revs)).text.Split([char]0)
+    for ($i = 0; $i + 1 -lt $parts.Length; $i += 2) { if ($parts[$i]) { $status[$parts[$i + 1]] = $parts[$i] } }
+    $changed = New-Object Collections.ArrayList
+    foreach ($entry in (Invoke-Git $root (@("diff", "-z", "--no-renames", "--numstat") + $revs)).text.Split([char]0)) {
+        $cols = $entry.Split("`t")
+        if ($cols.Length -lt 3) { continue }
+        $path = $cols[2]
+        $add = 0; $del = 0
+        [void][int]::TryParse($cols[0], [ref]$add)
+        [void][int]::TryParse($cols[1], [ref]$del)
+        $node = $nodeOf[$path]
+        if ($null -eq $node) { $node = Get-NodeId $path $scenes }
+        [void]$changed.Add([ordered]@{ path = $path; node = $node; status = [string]$status[$path]; add = $add; del = $del })
+    }
+    return ($changed | Sort-Object -Property @{ Expression = { $_["add"] + $_["del"] }; Descending = $true }, @{ Expression = { $_["path"] } })
+}
+
+# The map of $ref; $compare (may be empty) is the branch it is measured against; $personal: someone's own branch.
+function Get-BranchMap([string]$root, [string]$ref, [string]$compare, [bool]$personal) {
     $files = @{}
     $scenes = New-Object 'Collections.Generic.HashSet[string]'
     $byName = @{}
@@ -205,32 +232,32 @@ function Get-BranchMap([string]$root, [string]$ref, [string]$compare) {
     }
 
     $map = [Collections.Specialized.OrderedDictionary]::new()
-    $log = (Invoke-Git $root @("log", "-1", "-z", "--format=%H%x1f%s%x1f%an%x1f%cI", $ref)).text.Trim([char]0, [char]10).Split([char]0x1f)
-    $map["head"] = [ordered]@{ commit = $log[0]; subject = $log[1]; author = $log[2]; at = $log[3] }
+    $map["head"] = Get-CommitInfo $root $ref
     $map["ahead"] = 0
     $map["behind"] = 0
-    $changed = New-Object Collections.ArrayList
+    $changed = @()
     if ($compare) {
         $counts = (Invoke-Git $root @("rev-list", "--left-right", "--count", ($compare + "..." + $ref))).text.Trim() -split '\s+'
         $map["behind"] = [int]$counts[0]
         $map["ahead"] = [int]$counts[1]
-        $status = @{}
-        $parts = (Invoke-Git $root @("diff", "-z", "--no-renames", "--name-status", ($compare + "..." + $ref))).text.Split([char]0)
-        for ($i = 0; $i + 1 -lt $parts.Length; $i += 2) { if ($parts[$i]) { $status[$parts[$i + 1]] = $parts[$i] } }
-        foreach ($entry in (Invoke-Git $root @("diff", "-z", "--no-renames", "--numstat", ($compare + "..." + $ref))).text.Split([char]0)) {
-            $cols = $entry.Split("`t")
-            if ($cols.Length -lt 3) { continue }
-            $path = $cols[2]
-            $add = 0; $del = 0
-            [void][int]::TryParse($cols[0], [ref]$add)
-            [void][int]::TryParse($cols[1], [ref]$del)
-            $node = $nodeOf[$path]
-            if ($null -eq $node) { $node = Get-NodeId $path $scenes }
-            [void]$changed.Add([ordered]@{ path = $path; node = $node; status = [string]$status[$path]; add = $add; del = $del })
-        }
+        $changed = @(Get-Changes $root @($compare + "..." + $ref) $nodeOf $scenes)
     }
     $map["changed_total"] = $changed.Count
-    $map["changed"] = @($changed | Sort-Object -Property @{ Expression = { $_["add"] + $_["del"] }; Descending = $true }, @{ Expression = { $_["path"] } } | Select-Object -First $script:MaxChanged)
+    $map["changed"] = @($changed | Select-Object -First $script:MaxChanged)
+
+    # The last change: on someone's own branch, the newest own commit not yet in the compared branch (merges that only
+    # caught up with develop are skipped); on develop and main, the newest commit against its first parent.
+    $pick = @("log", "-1", "--first-parent", "--format=%H")
+    if ($personal -and $compare) { $pick += @("--no-merges", ($compare + ".." + $ref)) } else { $pick += $ref }
+    $commit = (Invoke-Git $root $pick).text.Trim()
+    $map["last"] = $null
+    if ($commit -and (Invoke-Git $root @("rev-parse", "--verify", "--quiet", ($commit + "^1"))).code -eq 0) {
+        $files = @(Get-Changes $root @(($commit + "^1"), $commit) $nodeOf $scenes)
+        $last = Get-CommitInfo $root $commit
+        $last["changed_total"] = $files.Count
+        $last["changed"] = @($files | Select-Object -First $script:MaxLast)
+        $map["last"] = $last
+    }
     $map["nodes"] = @($nodes.Keys | Sort-Object | ForEach-Object {
             $n = $nodes[$_]
             $kind = "other"

@@ -236,10 +236,12 @@ def sample_map() -> dict:
         ("Source/Runtime/Player", "Source/Runtime/Common", "include", 5), ("Source/Runtime/Enemy", "Source/Runtime/Common", "include", 3),
         ("Source/Runtime/Player", "@sdk", "engine", 9), ("Source/Runtime/Enemy", "@sdk", "engine", 6))]
     change = lambda path, node, status, add, rm: {"path": path, "node": node, "status": status, "add": add, "del": rm}
-    doc = lambda branch, role, member, compare, ahead, behind, subject, changed: {
-        "branch": branch, "role": role, "member": member, "compare": compare, "ahead": ahead, "behind": behind, "nodes": nodes, "edges": edges, "sdk": [{"header": "HIKARI/Project/WorldView.h", "n": 7}],
-        "head": {"commit": "0" * 40, "subject": subject, "author": member or "hikari", "at": "2026-11-10T11:00:00+09:00"},
-        "changed": changed, "changed_total": len(changed), "mapped_at": "2026-11-10T11:30:00+09:00", "mapped_by": "hikari"}
+    def doc(branch, role, member, compare, ahead, behind, subject, changed):
+        head = {"commit": "0" * 40, "subject": subject, "author": member or "hikari", "at": f"2026-11-10T1{len(changed)}:00:00+09:00"}
+        return {"branch": branch, "role": role, "member": member, "compare": compare, "ahead": ahead, "behind": behind, "nodes": nodes, "edges": edges,
+                "sdk": [{"header": "HIKARI/Project/WorldView.h", "n": 7}], "head": head, "changed": changed, "changed_total": len(changed),
+                "last": head | {"changed": changed[:1], "changed_total": min(1, len(changed))} if changed else None,
+                "mapped_at": "2026-11-10T11:30:00+09:00", "mapped_by": "hikari"}
     return {
         "map/develop": doc("develop", "base", "", "main", 4, 0, "敵のノックバックを取り込む", [change("Source/Runtime/Enemy/EnemyHit.cpp", "Source/Runtime/Enemy", "M", 40, 3)]),
         "map/main": doc("main", "release", "", "", 0, 0, "試遊会 第1回", []),
