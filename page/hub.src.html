@@ -23,6 +23,7 @@
   --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 
 * { box-sizing: border-box; }
+.row .side .acts { justify-content: flex-end; margin-top: 2px; }
 [hidden] { display: none !important; }  /* #nav などの display より強く：ログイン前・作品を選ぶ画面で目次を隠す */
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; }
@@ -306,6 +307,8 @@ const T = {
   invites: ["招待", "邀请名单"], inviteAdd: ["招待する", "邀请"], inviteHelp: ["招待する人の Google アカウントのメール。この一覧はオーナーにしか見えません。", "填被邀请者的 Google 账号邮箱。这份名单只有所有者看得到。"], inviteBad: ["メールの形になっていません", "不是邮箱的格式"], remove: ["外す", "移除"], removeSure: ["本当に外す", "确认移除"],
   askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
   gap: ["不足", "缺项"], gapNote: ["終了報告に書かれていない項目：", "终了报告里没写的项："],
+  doneIt: ["完了にする", "标为完成"], doneTip: ["確かめた：カードを完了にする", "确认过：卡改成完成"], backIt: ["作業に戻す", "退回"], backTip: ["まだ足りない：作業中に戻す（理由は質問板かカードのコメントで伝える）", "还不够：退回进行中（理由在疑问板或卡的评论里说明）"],
+  pickRec: ["推奨に決める", "选推荐"], hintWait: ["右のボタンでその場で片づけられる。詳しく見るときは題名を押す", "右边的按钮可以当场处理；要细看就点标题"],
   // 絞り込み・タイムライン
   timeline: ["タイムライン", "时间线"], tlWhy: ["いつ、だれが、何をしたか。記録を日ごとに並べる。", "谁在哪天做了什么，按日期排列所有记录。"],
   fKind: ["種類", "种类"], fPerson: ["人", "人"], fArea: ["領域", "领域"], fGroup: ["まとめ方", "分组"], fAll: ["すべて", "全部"],
@@ -461,11 +464,13 @@ function gaps(coll, d) {
   return req.filter((k) => d[k] == null || (k === "conclusion" && !String(d[k]).trim()));
 }
 const gapPill = (coll, d) => { const n = gaps(coll, d).length; return n ? `<span class="st bad">${t("gap")} ${n}</span>` : ""; };
-function row(coll, d, sub) {
-  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span></a>`;
+// acts：行の右に置くボタン（ホームの「確認待ち」をその場で片づける）。
+function row(coll, d, sub, acts = []) {
+  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span>${acts.length ? `<span class="acts">${acts.join("")}</span>` : ""}</span></a>`;
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
-const btn = (act, label, data = {}, cls = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
+// tip：ボタンにマウスを置いたときの説明（押すと何が起きるか）。
+const btn = (act, label, data = {}, cls = "", tip = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
 function toast(text, bad) {
   const el = $("#toast");
   el.textContent = text;
@@ -631,11 +636,15 @@ function viewHome() {
     const r = reports.find((x) => x.card === c.id && x.state === "作業中"), last = r && (r.progress || []).slice(-1)[0];
     return row("cards", c, `${esc(c.assignee || "")}${r && r.by_agent ? " · " + esc(r.by_agent) : ""}${last ? " — " + esc(last.note) : ""}`);
   });
+  // 確認待ちは、その場で片づけるボタン付き。
+  const rec = (d) => (d.options || []).findIndex((o) => o.recommended);
   const waits = [
-    ...docs("decisions").filter((d) => d.state === "未決定" && mine(d.decider)).map((d) => row("decisions", d, `${L(COLL.decisions.label)} · ${byText(d)}`)),
-    ...cards.filter((c) => c.state === "確認待ち" && (c.waiting === "レビュー" || !c.waiting ? c.assignee !== S.me.handle : S.me.owner)).map((c) => row("cards", c, `${esc(c.waiting || "レビュー")} · ${esc(c.assignee || "")}${c.pr ? " · PR " + esc(c.pr) : ""}`)),
-    ...docs("questions").filter((d) => d.state === "未回答" && mine(d.to)).map((d) => row("questions", d, `${L(COLL.questions.label)} · ${byText(d)}`)),
-    ...(S.me.owner ? docs("proposals").filter((d) => d.state === "提案").map((d) => row("proposals", d, `${t("proposals")} · ${byText(d)}`)) : []),
+    ...docs("decisions").filter((d) => d.state === "未決定" && mine(d.decider)).map((d) => row("decisions", d, `${L(COLL.decisions.label)} · ${byText(d)}`,
+      rec(d) >= 0 && canWrite("decisions") ? [btn("decide", t("pickRec"), { id: d.id, i: rec(d) }, "mini star", d.options[rec(d)].text)] : [])),
+    ...cards.filter((c) => c.state === "確認待ち" && (c.waiting === "レビュー" || !c.waiting ? c.assignee !== S.me.handle : S.me.owner)).map((c) => row("cards", c, `${esc(c.waiting || "レビュー")} · ${esc(c.assignee || "")}${c.pr ? " · PR " + esc(c.pr) : ""}`,
+      canWrite("cards") ? [btn("state", t("doneIt"), { coll: "cards", id: c.id, to: "完了" }, "mini star", t("doneTip")), btn("card-back", t("backIt"), { id: c.id }, "mini ghost", t("backTip"))] : [])),
+    ...docs("questions").filter((d) => d.state === "未回答" && mine(d.to)).map((d) => row("questions", d, `${L(COLL.questions.label)} · ${byText(d)}`, canWrite("questions") ? [btn("answer", t("answer"), { id: d.id }, "mini star")] : [])),
+    ...(S.me.owner ? docs("proposals").filter((d) => d.state === "提案").map((d) => row("proposals", d, `${t("proposals")} · ${byText(d)}`, [btn("adopt", t("adopt"), { id: d.id }, "mini star"), btn("reject", t("reject"), { id: d.id }, "mini ghost")])) : []),
     ...(S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").map((d) => row("engine_requests", d, `${t("requests")} · ${byText(d)}`)) : []),
   ];
   const next = p.ready.map((id) => cards.find((c) => c.id === id)).filter((c) => c && c.state === "あとで").slice(0, 6)
@@ -662,7 +671,7 @@ function viewHome() {
     <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
       <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
-      <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${list(waits)}</section>
+      <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${waits.length ? `<p class="muted" style="font-size:12px;margin:0 0 4px">${t("hintWait")}</p>` : ""}${list(waits)}</section>
       <section class="card"><h2>${t("next")}</h2>${list(next)}</section>
       <section class="card"><h2>${t("deadlines")}</h2>${list(ms)}</section>
       <section class="card"><h2>${t("editing")}</h2>${list(locks)}</section>
@@ -1093,6 +1102,7 @@ const ACT = {
   },
   async "plan-add"({ id }) { const p = plan(); if (!p.ready.includes(id)) await writePlan({ ...p, ready: [...p.ready, id] }); },
   async "plan-remove"({ id }) { const p = plan(), assign = { ...p.assign }; delete assign[id]; await writePlan({ ...p, ready: p.ready.filter((x) => x !== id), assign }); },
+  async "card-back"({ id }) { await write("cards", id, { state: "作業中" }, false); },
   async "plan-up"({ id }) { await movePlan(id, -1); },
   async "plan-down"({ id }) { await movePlan(id, 1); },
   "plan-assign"({ id }) {
