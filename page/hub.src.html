@@ -23,7 +23,6 @@
   --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 
 * { box-sizing: border-box; }
-.row .side .acts { justify-content: flex-end; margin-top: 2px; }
 [hidden] { display: none !important; }  /* #nav などの display より強く：ログイン前・作品を選ぶ画面で目次を隠す */
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; }
@@ -253,7 +252,7 @@ window.hubBackend = {
 window.dispatchEvent(new Event("hub-backend"));
 </script>
 <!--/backend-->
-<script>__TRANSLATE__</script>
+<script>__SHARED_JS__</script>
 <script>
 (() => {
 "use strict";
@@ -474,7 +473,7 @@ function gaps(coll, d) {
 const gapPill = (coll, d) => { const n = gaps(coll, d).length; return n ? `<span class="st bad">${t("gap")} ${n}</span>` : ""; };
 // acts：行の右に置くボタン（ホームの「確認待ち」をその場で片づける）。
 function row(coll, d, sub, acts = []) {
-  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span>${acts.length ? `<span class="acts">${acts.join("")}</span>` : ""}</span></a>`;
+  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span>${acts.length ? `<span class="row-acts">${acts.join("")}</span>` : ""}</a>`;
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
 // tip：ボタンにマウスを置いたときの説明（押すと何が起きるか）。
@@ -679,8 +678,8 @@ function viewHome() {
   return `${hints.join("")}
     <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label), { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label), { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
-      <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${waits.length ? `<p class="muted" style="font-size:12px;margin:0 0 4px">${t("hintWait")}</p>` : ""}${list(waits)}</section>
+      <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card"><h2>${t("next")}</h2>${list(next)}</section>
       <section class="card"><h2>${t("deadlines")}</h2>${list(ms)}</section>
       <section class="card"><h2>${t("editing")}</h2>${list(locks)}</section>
@@ -1042,6 +1041,7 @@ function render() {
   if (inProject) loadImages();
   drawLinks();
   TR.apply();
+  hikariEnter($("#main"), location.search + (location.hash || "#home"));
 }
 const TR = window.HikariTranslate({ onChange: () => schedule(), onFail: () => toast(t("trFail"), true), key: "hub-tr" });
 TR.setTarget(S.lang);

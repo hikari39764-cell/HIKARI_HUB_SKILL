@@ -23,7 +23,6 @@
   --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 
 * { box-sizing: border-box; }
-.row .side .acts { justify-content: flex-end; margin-top: 2px; }
 [hidden] { display: none !important; }  /* #nav などの display より強く：ログイン前・作品を選ぶ画面で目次を隠す */
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; }
@@ -242,6 +241,39 @@ h2 > .ic { color: var(--muted); margin-right: -2px; }
 h2 { justify-content: flex-start; }
 h2 > a.muted, h2 > .btn, h2 > .hint { margin-left: auto; }
 
+/* 行里的按钮放在标题下面单独一行、靠右，不再把标题挤成一字一行；要处理的那一块占满整行 */
+.row-acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 2px; }
+.grid > .card.wait { grid-column: 1 / -1; }
+
+/* 作业台的纸：很淡的点阵 */
+body { background-image: radial-gradient(color-mix(in srgb, var(--rule) 13%, transparent) 1px, transparent 1.3px); background-size: 22px 22px; background-attachment: fixed; }
+
+/* ---------- 动效（系统设置了“减少动态效果”就全部关掉） ---------- */
+@keyframes hk-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes hk-slide { from { opacity: 0; transform: translateX(28px) rotate(.4deg); } to { opacity: 1; transform: none; } }
+@keyframes hk-pop { 0% { opacity: 0; transform: scale(.5) rotate(-10deg); } 70% { opacity: 1; transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(3deg); } }
+@keyframes hk-toast { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes hk-pulse { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--apricot) 45%, transparent); } }
+#main.enter > * { animation: hk-rise .38s cubic-bezier(.2, .8, .2, 1) both; }
+#main.enter > *:nth-child(2) { animation-delay: .04s; }
+#main.enter > *:nth-child(3) { animation-delay: .08s; }
+#main.enter > *:nth-child(4) { animation-delay: .12s; }
+#main.enter > *:nth-child(5) { animation-delay: .16s; }
+#main.enter > *:nth-child(n+6) { animation-delay: .2s; }
+#toast:not([hidden]) { animation: hk-toast .22s ease-out both; }
+.card { transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease; }
+a.row { border-radius: 8px; transition: background-color .15s ease; }
+a.row:hover { background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
+.kc { transition: transform .15s ease, box-shadow .15s ease; }
+.kc:hover { transform: translate(-1px, -2px); box-shadow: 3px 4px 0 var(--shade); }
+.meter i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+#nav a { transition: background-color .15s ease, border-color .15s ease, transform .15s ease; }
+#nav a:not(.on):hover { transform: translateX(2px); }
+#nav a[href="#review"] .badge { animation: hk-pulse 2.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
 </style>
 <!-- HIKARI 两个网站共用的线条图标（路径取自 Tabler Icons，MIT 许可）。页面里用 ic(名字) 引用。 -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 13h3l3 3h4l3-3h3"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/></symbol><symbol id="i-columns" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="10" rx="1"/></symbol><symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M3 12h1m8-9v1m8 8h1M5.6 5.6l.7.7m12.1-.7-.7.7"/><path d="M9 16a5 5 0 1 1 6 0 3.5 3.5 0 0 0-1 3 2 2 0 0 1-4 0 3.5 3.5 0 0 0-1-3"/><path d="M9.7 17h4.6"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="m3.5 5.5 1.5 1.5 2.5-2.5M3.5 11.5 5 13l2.5-2.5M3.5 17.5 5 19l2.5-2.5M11 6h9M11 12h9M11 18h9"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol><symbol id="i-notebook" viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1m3 0v16M13 8h2M13 12h2"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M4 7h3a1 1 0 0 0 1-1V5a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1a2 2 0 0 0-4 0v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a2 2 0 0 0 0-4H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path d="M7 20h10M6 6l6-1 6 1M12 3v17M9 12 6 6l-3 6a3 3 0 0 0 6 0M21 12l-3-6-3 6a3 3 0 0 0 6 0"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 13.5a1.5 1.5 0 0 1 1-1.5 2.6 2.6 0 1 0-3-4"/></symbol><symbol id="i-bug" viewBox="0 0 24 24"><path d="M9 9V8a3 3 0 0 1 6 0v1M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1-10 0v-3a6 6 0 0 1 1-3M3 13h4M17 13h4M12 20v-6M4 19l3.4-2M20 19l-3.4-2M4 7l3.8 2.4M20 7l-3.8 2.4"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6v13M12 6v13M21 6v13"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3a12 12 0 0 0 8.5 3A12 12 0 0 1 12 21 12 12 0 0 1 3.5 6 12 12 0 0 0 12 3"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M22 9 12 5 2 9l10 4 10-4v6"/><path d="M6 10.6V16a6 3 0 0 0 12 0v-5.4"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4M12 16h.01"/><path d="M10.4 3.6 2.3 17.1A1.9 1.9 0 0 0 3.9 20h16.2a1.9 1.9 0 0 0 1.6-2.9L13.6 3.6a1.9 1.9 0 0 0-3.2 0z"/></symbol><symbol id="i-adjust" viewBox="0 0 24 24"><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="17" cy="18" r="2"/><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h11M19 18h1"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="m9 14-4-4 4-4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 1 0-4-4L4 16v4M13.5 6.5l4 4"/></symbol><symbol id="i-wand" viewBox="0 0 24 24"><path d="m6 21 15-15-3-3L3 18l3 3M15 6l3 3M9 3a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2M19 13a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-merge" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="7" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><path d="M7 8v8M7 8a4 4 0 0 0 4 4h4"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M8 9h8M8 13h6M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></symbol><symbol id="i-language" viewBox="0 0 24 24"><path d="M4 5h7M9 3v2c0 4.4-2.2 8-5 8M5 9c0 2.1 3 3.9 6.7 4M12 20l4-9 4 9M19.1 18h-6.2"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M21 12c-2.4 4-5.4 6-9 6s-6.6-2-9-6c2.4-4 5.4-6 9-6s6.6 2 9 6"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="m7 8-4 4 4 4M17 8l4 4-4 4M14 4l-4 16"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 5.5v-2a1.5 1.5 0 1 1 3 0V12M14 5.5a1.5 1.5 0 0 1 3 0V12M17 7.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-2.7l-3.5-6a1.5 1.5 0 0 1 2.8-1.7L8 13"/></symbol><symbol id="i-photo" viewBox="0 0 24 24"><path d="M15 8h.01"/><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m3 16 5-5c.9-.9 2.1-.9 3 0l5 5M14 14l1-1c.9-.9 2.1-.9 3 0l3 3"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0 5 5 0 0 0 7 0v9a5 5 0 0 1-7 0 5 5 0 0 0-7 0zM5 21v-7"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 18l6-6M13 6l6 6"/></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6M11 6l-6 6"/></symbol><symbol id="i-login" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M20 12H7l3-3M10 15l-3-3"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 17.8-6.2 3.2 1.2-6.9-5-4.8 6.9-1L12 2l3.1 6.3 6.9 1-5 4.8 1.2 6.9z"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h.01M11 15h2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="m3 7 6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></symbol></defs></svg>
@@ -454,6 +486,22 @@ window.HikariTranslate = function ({ onChange, onFail, key = "hikari-tr" }) {
     },
   };
 };
+
+// HIKARI 两个网站共用的小工具（制作ハブ page/hub.src.html とエンジン中枢 D:/PJ/HIKARI-HQ/cloud/page.src.html の両方がビルドで埋め込む）。
+"use strict";
+// 换页时让内容依次浮现一次：key（页面的位置）变了才动，数据更新引起的重画不动。动效本身在 shared.css。
+window.hikariEnter = (() => {
+  let last = null, timer = 0;
+  return (el, key) => {
+    if (key === last) return;
+    last = key;
+    el.classList.remove("enter");
+    void el.offsetWidth;
+    el.classList.add("enter");
+    clearTimeout(timer);
+    timer = setTimeout(() => el.classList.remove("enter"), 600);
+  };
+})();
 </script>
 <script>
 (() => {
@@ -675,7 +723,7 @@ function gaps(coll, d) {
 const gapPill = (coll, d) => { const n = gaps(coll, d).length; return n ? `<span class="st bad">${t("gap")} ${n}</span>` : ""; };
 // acts：行の右に置くボタン（ホームの「確認待ち」をその場で片づける）。
 function row(coll, d, sub, acts = []) {
-  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span>${acts.length ? `<span class="acts">${acts.join("")}</span>` : ""}</span></a>`;
+  return `<a class="row" href="#${esc(d.id)}"><span><b>${esc(titleOf(d))}</b><small>${sub ?? `${byText(d)} ${tags(d)}`}</small></span><span class="side">${stPill(coll, d)}${gapPill(coll, d)}<span class="when">${esc(fmt(d.updated_at || d.at))}</span></span>${acts.length ? `<span class="row-acts">${acts.join("")}</span>` : ""}</a>`;
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
 // tip：ボタンにマウスを置いたときの説明（押すと何が起きるか）。
@@ -880,8 +928,8 @@ function viewHome() {
   return `${hints.join("")}
     <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label), { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label), { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
-      <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${waits.length ? `<p class="muted" style="font-size:12px;margin:0 0 4px">${t("hintWait")}</p>` : ""}${list(waits)}</section>
+      <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card"><h2>${t("next")}</h2>${list(next)}</section>
       <section class="card"><h2>${t("deadlines")}</h2>${list(ms)}</section>
       <section class="card"><h2>${t("editing")}</h2>${list(locks)}</section>
@@ -1243,6 +1291,7 @@ function render() {
   if (inProject) loadImages();
   drawLinks();
   TR.apply();
+  hikariEnter($("#main"), location.search + (location.hash || "#home"));
 }
 const TR = window.HikariTranslate({ onChange: () => schedule(), onFail: () => toast(t("trFail"), true), key: "hub-tr" });
 TR.setTarget(S.lang);

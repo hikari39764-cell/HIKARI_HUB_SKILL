@@ -37,3 +37,36 @@ h2 > .ic { color: var(--muted); margin-right: -2px; }
 /* 小标题：图标和字挨着，计数紧跟其后；“全部”链接和按钮靠右 */
 h2 { justify-content: flex-start; }
 h2 > a.muted, h2 > .btn, h2 > .hint { margin-left: auto; }
+
+/* 行里的按钮放在标题下面单独一行、靠右，不再把标题挤成一字一行；要处理的那一块占满整行 */
+.row-acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 2px; }
+.grid > .card.wait { grid-column: 1 / -1; }
+
+/* 作业台的纸：很淡的点阵 */
+body { background-image: radial-gradient(color-mix(in srgb, var(--rule) 13%, transparent) 1px, transparent 1.3px); background-size: 22px 22px; background-attachment: fixed; }
+
+/* ---------- 动效（系统设置了“减少动态效果”就全部关掉） ---------- */
+@keyframes hk-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes hk-slide { from { opacity: 0; transform: translateX(28px) rotate(.4deg); } to { opacity: 1; transform: none; } }
+@keyframes hk-pop { 0% { opacity: 0; transform: scale(.5) rotate(-10deg); } 70% { opacity: 1; transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(3deg); } }
+@keyframes hk-toast { from { opacity: 0; transform: translate(-50%, 14px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes hk-pulse { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--apricot) 45%, transparent); } }
+#main.enter > * { animation: hk-rise .38s cubic-bezier(.2, .8, .2, 1) both; }
+#main.enter > *:nth-child(2) { animation-delay: .04s; }
+#main.enter > *:nth-child(3) { animation-delay: .08s; }
+#main.enter > *:nth-child(4) { animation-delay: .12s; }
+#main.enter > *:nth-child(5) { animation-delay: .16s; }
+#main.enter > *:nth-child(n+6) { animation-delay: .2s; }
+#toast:not([hidden]) { animation: hk-toast .22s ease-out both; }
+.card { transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease; }
+a.row { border-radius: 8px; transition: background-color .15s ease; }
+a.row:hover { background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
+.kc { transition: transform .15s ease, box-shadow .15s ease; }
+.kc:hover { transform: translate(-1px, -2px); box-shadow: 3px 4px 0 var(--shade); }
+.meter i { transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+#nav a { transition: background-color .15s ease, border-color .15s ease, transform .15s ease; }
+#nav a:not(.on):hover { transform: translateX(2px); }
+#nav a[href="#review"] .badge { animation: hk-pulse 2.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
