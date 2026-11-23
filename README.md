@@ -32,7 +32,7 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
    エージェントが `claude plugin marketplace add hikari39764-cell/HIKARI_HUB_SKILL` と `claude plugin install hub@hikari-hub` を実行する（確認が出たら許可する）。終わったら Claude Code を開き直す。自分で入れるなら、Claude Code で `/plugin marketplace add hikari39764-cell/HIKARI_HUB_SKILL` と `/plugin install hub@hikari-hub`。
 3. サイトの「メンバー」で **「鍵をコピー」** を押し、エージェントに「ハブにつないで」と言う（パソコンごとに 1 回）。
 
-あとは普段どおりエージェントに頼むだけ。ハブのプロジェクトになっているリポジトリで会話を始めると、エージェントは自動でハブの手順に入る（どのリポジトリがどの作品かは、スキルの中の `projects.json` が `origin` の `owner/name` で見分ける）。
+あとは普段どおりエージェントに頼むだけ。ハブのプロジェクトになっているリポジトリで会話を始めると、エージェントは自動でハブの手順に入る（どのリポジトリがどの作品かは、ハブの**作品目録**（その人が招待されている作品の一覧）にある作品のリポジトリと `origin` の `owner/name` で見分ける。エージェントは鍵でつないだときに目録を読み、手元に控えを持つ）。新しい作品に招待されても、スキルの更新は要らない。
 
 スキルを新しくするとき：`claude plugin marketplace update hikari-hub` のあと `claude plugin update hub@hikari-hub`（またはエージェントに「ハブのスキルを更新して」と頼む）。
 
@@ -79,7 +79,7 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
 
 ## 道から外れないための仕組み
 
-プラグインのフックは、ハブのプロジェクトのリポジトリ（`plugin/projects.json` に載っているもの）でだけ働く。
+プラグインのフックは、ハブのプロジェクトのリポジトリ（その人の作品目録にある作品のリポジトリ）でだけ働く。鍵がまだ無いパソコンで HIKARI のゲームのリポジトリ（`Project.hikari` がある）を開くと、つなぎ方だけを案内する。
 
 | 仕組み | 何をするか |
 |---|---|
@@ -94,8 +94,9 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
 
 ## オーナーがすること
 
-- **新しい作品**：ゲームのリポジトリの直下で `/hub:new <作品名>`。`plugin/projects.json` への登録、初期のルール・エンジン知識の投入まで行う。
-- **招待**：作品のページの「メンバー」→「招待する」に、メンバーの **Google アカウントのメール**を足す。外すと、その人とそのエージェントは読み書きできなくなる。招待の一覧はオーナーにしか見えない。
+- **新しい作品**：サイトを `?p=` なしで開き（作品を選ぶ画面）、**「新しい作品を作る」**。作品名・作品 id・GitHub リポジトリを入れるだけで、設定の既定値と初期のルール・エンジン知識が入り、作品目録に載る。スキルの更新や push は要らない。リポジトリ側の準備（`develop` ブランチ、整形の設定）はエージェントに `/hub:new` で頼める。
+- **招待**：作品のページの「メンバー」→「招待する」に、メンバーの **Google アカウントのメール**を足す（その人の作品目録にも載る）。外すと、その人とそのエージェントは読み書きできなくなる。招待の一覧はオーナーにしか見えない。
+- **翻訳**：上の帯の「訳」で、記録の中身を画面の言語（日本語 / 中文）に訳す。Chrome（138 以降のパソコン版）に入っている翻訳を使い、文はこの端末の外に出ない。使えないブラウザでは、ブラウザ自身の「翻訳」を案内する。コード・パス・id は訳さない。エンジン中枢のページも同じ（「日本語」で全体を日本語に）。
 - **ルール**：ページの「ルール」で直接書き換える。メンバーとエージェントは「ルール提案」を出せる。
 - **エンジン知識**：ページの「エンジン知識」で直す。スキルを更新したあと `/hub:upgrade` で、新しい既定の内容を選んで取り込める。
 - **SDK を更新したとき**：ページを直す必要はない。エンジン知識は考え方と進め方だけで、API と版はエージェントが入っている SDK のヘッダを自分で読む。知識やコード例が実際と食い違っていたら、エージェントが「エンジンへの要望」に「知識の訂正」として出すので、それを見て直す。
@@ -106,7 +107,7 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
 
 | | 読む | 記録を作る・直す | 設定・ルール・エンジン知識を書く、招待、削除 |
 |---|---|---|---|
-| オーナー（規則に書いたメールの Google アカウント） | ○ | ○ | ○ |
+| オーナー（規則に書いたメールの Google アカウント） | ○ | ○ | ○（作品を作る、作品目録も） |
 | メンバー（その作品に招待された人と、そのエージェント） | ○ | ○ | × |
 | それ以外 | × | × | × |
 
@@ -123,7 +124,8 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
 python -I -X utf8 tools/build.py
 ```
 
-- `schema/schema.json`・`content/`・`page/hub.src.html`・`plugin/hub.json`・`plugin/projects.json` を変えたら必ずビルドして、生成物（`docs/`、`plugin/owner/seed/`、`plugin/lib/collections.json`、`plugin/skills/work/references/data-model.md`・`engine.md`）も一緒にコミットする。
+- `schema/schema.json`・`content/`・`page/hub.src.html`・`page/translate.js`・`plugin/hub.json` を変えたら必ずビルドして、生成物（`docs/`、`plugin/owner/seed/`、`plugin/lib/collections.json`、`plugin/skills/work/references/data-model.md`・`engine.md`）も一緒にコミットする。
 - `dist/preview-owner.html` と `dist/preview-member.html` は、見本データで動く手元の確認用（`python -m http.server --directory dist` で開き、`?p=sample` を付ける。`?out=1` でログイン前の画面）。
 - PowerShell のスクリプト（`plugin/hooks/hub-hook.ps1`、`plugin/tools/hub.ps1`、`plugin/lib/hub-common.ps1`）は ASCII だけで書く。フックの文言は `hub-messages.json` に置く。
+- `page/translate.js` はエンジン中枢（`D:/PJ/HIKARI-HQ/cloud`）のページもビルドで埋め込む。変えたら両方ビルドする。
 - コミットメッセージは `<種別>(<範囲>): <日本語> / <中文>`。

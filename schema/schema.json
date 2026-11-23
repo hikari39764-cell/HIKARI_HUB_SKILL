@@ -1657,10 +1657,21 @@
           "zh": "受保护的路径",
           "help": "ここにあるファイルをエージェントが変えるときは、人の確認が要る。フォルダは末尾に /、ワイルドカードは *（例 ProjectSettings/、CMakeLists.txt、*.hikari）"
         }
-      ]
+      ],
+      "defaults": {
+        "summary": "",
+        "base_branch": "develop",
+        "release_branch": "main",
+        "areas": ["プレイヤー", "敵", "ステージ", "UI", "演出", "音"],
+        "budget_hours": 3,
+        "max_sessions": 2,
+        "require_card": true,
+        "protected_paths": ["ProjectSettings/", "CMakeLists.txt", "Project.hikari", ".github/", ".clang-format", ".gitattributes"]
+      }
     },
     "plan": {
-      "help": "ready: オーナーがおすすめするカード id の配列（上から順。入っていなくても誰でも始められる）。assign: {カード id: 呼び名}（おすすめの担当）。milestones: [{id, title, date}]"
+      "help": "ready: オーナーがおすすめするカード id の配列（上から順。入っていなくても誰でも始められる）。assign: {カード id: 呼び名}（おすすめの担当）。milestones: [{id, title, date}]",
+      "defaults": {"ready": [], "assign": {}, "milestones": []}
     }
   }
 }

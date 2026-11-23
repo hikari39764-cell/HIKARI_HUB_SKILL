@@ -1,10 +1,13 @@
 # Shared by the guard hook (hooks/hub-hook.ps1) and the agent tool (tools/hub.ps1).
 # Keep this file ASCII-only: Windows PowerShell 5.1 reads BOM-less scripts in the system code page.
 #
-# A repository belongs to the hub when its "origin" remote (owner/name) is listed in ../projects.json.
+# A repository belongs to the hub when its "origin" remote (owner/name) is the repository of a project
+# in the person's project directory on the hub (directory/<e-mail>/projects). "hub projects" (also run by
+# login, whoami and sync) keeps a copy in %USERPROFILE%\.hikari-hub\projects.json, which is all this reads.
 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 $pluginRoot = Split-Path -Path $PSScriptRoot -Parent
+$directoryPath = Join-Path $env:USERPROFILE ".hikari-hub\projects.json"
 
 function Write-Out([string]$text) {
     $bytes = $utf8.GetBytes($text)
@@ -62,17 +65,25 @@ function Get-RepoKey([string]$gitDir) {
     return ""
 }
 
-# The projects.json entry ({repo, name, id}) of this repository, or $null.
+# The project directory entry ({id, name, repo}) of this repository, or $null.
 function Find-Project([string]$gitDir) {
     $key = Get-RepoKey $gitDir
     if (-not $key) { return $null }
-    # Assign before looping: Windows PowerShell 5.1 emits a JSON array as one object, so @(Read-Json ...) holds the
-    # whole list as a single item and no entry matches once projects.json lists two or more projects.
-    $projects = Read-Json (Join-Path $pluginRoot "projects.json")
+    $directory = Read-Json $directoryPath
+    if (-not $directory) { return $null }
+    # Assign before looping: Windows PowerShell 5.1 emits a JSON array as one object, so @(...) would hold the
+    # whole list as a single item.
+    $projects = $directory.projects
     foreach ($project in $projects) {
         if ($project -and ([string]$project.repo).ToLowerInvariant() -eq $key) { return $project }
     }
     return $null
+}
+
+# How old the directory copy is, in hours (a large number when there is none).
+function Get-DirectoryAge {
+    if (-not (Test-Path -LiteralPath $directoryPath)) { return 100000 }
+    return ([DateTime]::UtcNow - (Get-Item -LiteralPath $directoryPath).LastWriteTimeUtc).TotalHours
 }
 
 # How the agent calls the tool, and where the project's page is (hub.json holds the site address).

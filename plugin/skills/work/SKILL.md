@@ -40,7 +40,7 @@ description: HIKARI エンジンのゲームプロジェクトでチーム作業
 
 ## 見張り（フック）について
 
-このプラグインのフックは、ハブのプロジェクトのリポジトリ（`origin` の `owner/name` が `${CLAUDE_PLUGIN_ROOT}/projects.json` に載っている）でだけ働く。
+このプラグインのフックは、ハブのプロジェクトのリポジトリ（`origin` の `owner/name` が、その人の作品目録にある作品のリポジトリ。`hub projects` で一覧と控え `%USERPROFILE%\.hikari-hub\projects.json` を新しくする）でだけ働く。
 
 | 状況 | どうなるか |
 |---|---|

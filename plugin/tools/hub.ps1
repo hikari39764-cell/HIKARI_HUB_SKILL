@@ -2,6 +2,8 @@
 # Keep this file ASCII-only (Windows PowerShell 5.1). Records are plain JSON files, UTF-8.
 #
 #   hub login                 take the member's key from the clipboard (copied on the hub site), check it, keep it on this PC
+#   hub projects              the projects this person may enter (the hub's project directory), kept in
+#                             %USERPROFILE%\.hikari-hub\projects.json: which repository is which project (login, whoami and sync refresh it too)
 #   hub whoami                who the key belongs to, the project of this repository, the member's handle and own branch
 #   hub sync [-All]           refresh <repo>/.hikari-hub/cache/<collection>/<id>.json (-All: every collection)
 #   hub list <collection>     refresh one collection in the cache
@@ -213,8 +215,9 @@ function Update-Session([string]$refresh) {
     $answer = $serializer.DeserializeObject($result.text)
     $claims = [string]$answer["id_token"].Split(".")[1].Replace("-", "+").Replace("_", "/")
     $claims = $serializer.DeserializeObject($utf8.GetString([Convert]::FromBase64String($claims.PadRight($claims.Length + (4 - $claims.Length % 4) % 4, "="))))
-    $session = @{ uid = [string]$answer["user_id"]; name = [string]$claims["name"]; token = [string]$answer["id_token"]; expires_at = (Get-Now) + [long]$answer["expires_in"] }
-    $saved = @{ uid = $session.uid; name = $session.name; expires_at = $session.expires_at; key = (Protect-Text ([string]$answer["refresh_token"])); token = (Protect-Text $session.token) }
+    $session = @{ uid = [string]$answer["user_id"]; name = [string]$claims["name"]; email = ([string]$claims["email"]).ToLowerInvariant(); token = [string]$answer["id_token"]; expires_at = (Get-Now) + [long]$answer["expires_in"] }
+    # The same file and fields as the engine hub's hq command (D:/PJ/HIKARI-HQ/cloud/hq.py) writes.
+    $saved = @{ uid = $session.uid; name = $session.name; email = $session.email; expires_at = $session.expires_at; key = (Protect-Text ([string]$answer["refresh_token"])); token = (Protect-Text $session.token) }
     [void][IO.Directory]::CreateDirectory((Split-Path -Path $keyPath -Parent))
     [IO.File]::WriteAllText($keyPath, $serializer.Serialize($saved), $utf8)
     return $session
@@ -224,20 +227,48 @@ function Get-Session {
     $saved = $null
     if (Test-Path -LiteralPath $keyPath) { $saved = Read-Record $keyPath }
     if (-not $saved -or -not $saved["key"]) { Fail "no_key: this PC has no hub key yet. Ask the person to press 'copy key' on the hub site (Members page), then run 'hub login'." }
-    if ([long]$saved["expires_at"] -gt ((Get-Now) + 120)) {
-        return @{ uid = [string]$saved["uid"]; name = [string]$saved["name"]; token = (Unprotect-Text ([string]$saved["token"])) }
+    # A key saved before the e-mail was kept: sign in again once to learn it (the project directory is per e-mail).
+    if ([long]$saved["expires_at"] -gt ((Get-Now) + 120) -and $saved["email"]) {
+        return @{ uid = [string]$saved["uid"]; name = [string]$saved["name"]; email = [string]$saved["email"]; token = (Unprotect-Text ([string]$saved["token"])) }
     }
     return (Update-Session (Unprotect-Text ([string]$saved["key"])))
+}
+
+# ---------- the project directory ----------
+# Reads directory/<e-mail>/projects (the owner writes it when inviting) and each project's settings for its
+# name and repository; keeps the list in %USERPROFILE%\.hikari-hub\projects.json for Find-Project and the hook.
+function Update-Directory($session) {
+    $result = Invoke-Http "GET" ($documents + "/directory/" + [Uri]::EscapeDataString($session.email) + "/projects?pageSize=300") "" $session.token ""
+    if ($result.status -ne 200) { return $null }
+    $projects = [Collections.ArrayList]::new()
+    $answer = $serializer.DeserializeObject($result.text)
+    if ($answer.ContainsKey("documents")) {
+        foreach ($doc in $answer["documents"]) {
+            $id = Get-DocumentId $doc
+            $settings = Invoke-Http "GET" ($documents + "/projects/" + $id + "/settings/project") "" $session.token ""
+            if ($settings.status -ne 200) { continue }
+            $fields = ConvertFrom-Document ($serializer.DeserializeObject($settings.text))
+            [void]$projects.Add([ordered]@{ id = $id; name = [string]$fields["name"]; repo = ([string]$fields["repo"]).ToLowerInvariant() })
+        }
+    }
+    $directory = [ordered]@{ email = $session.email; at = [DateTime]::UtcNow.ToString("s") + "Z"; projects = $projects }
+    [void][IO.Directory]::CreateDirectory((Split-Path -Path $directoryPath -Parent))
+    [IO.File]::WriteAllText($directoryPath, (ConvertTo-JsonText $directory), $utf8)
+    return $projects
 }
 
 # ---------- the project of this repository ----------
 function Get-Workspace {
     $root = Find-RepoRoot (Get-Location).Path
     $entry = $null
-    if ($root) { $entry = Find-Project (Get-GitDir $root) }
+    if ($root) {
+        $entry = Find-Project (Get-GitDir $root)
+        # Not in the copy: the owner may have invited this person since. Read the directory again once.
+        if (-not $entry -and -not $Project -and (Update-Directory (Get-Session))) { $entry = Find-Project (Get-GitDir $root) }
+    }
     $id = $Project
     if (-not $id -and $entry) { $id = [string]$entry.id }
-    if (-not $id) { Fail "no_project: this folder is not a repository of a hub project (see projects.json), and -Project was not given." }
+    if (-not $id) { Fail "no_project: this repository is not in any hub project this person was invited to (hub projects lists them), and -Project was not given." }
     if ($id -notmatch '^[a-z0-9_-]{1,40}$') { Fail "no_project: a project id is lower-case letters, digits, - and _." }
     $local = ""
     if ($root -and ($entry -or $Project)) {
@@ -415,9 +446,19 @@ switch ($Command) {
         $session = Update-Session $Matches[1]
         if (-not $Key) { cmd /c "echo off | clip" }
         Say ("connected: " + $session.name + " (uid " + $session.uid + ")")
+        $projects = Update-Directory $session
+        if ($null -eq $projects) { Say "projects: could not read the project directory yet (try 'hub projects' later)" }
+        else { Say ("projects: " + (@($projects | ForEach-Object { $_.name + " (" + $_.repo + ")" }) -join ", ")) }
+    }
+    "projects" {
+        $projects = Update-Directory (Get-Session)
+        if ($null -eq $projects) { Fail "failed: could not read the project directory (offline, or the hub's access rules are older than this tool)." }
+        if (-not $projects.Count) { Say "no projects yet: ask the owner to invite this Google account on the hub site" }
+        foreach ($p in $projects) { Say ($p.id + "  " + $p.name + "  " + $p.repo) }
     }
     "whoami" {
         $session = Get-Session
+        [void](Update-Directory $session)
         Say ("name: " + $session.name)
         Say ("uid: " + $session.uid)
         $owner = Test-Owner $session
@@ -441,6 +482,7 @@ switch ($Command) {
         if ($All) { $names += "files" }
         $counts = foreach ($name in $names) { $name + " " + (Sync-Collection $space $session $folder $name) }
         Save-Me $space $session (Test-Owner $session) (Read-Json (Join-Path $folder ("members/" + $session.uid + ".json")))
+        [void](Update-Directory $session)
         Say ("synced " + $space.id + " -> " + $folder)
         Say ($counts -join ", ")
     }
@@ -502,7 +544,7 @@ switch ($Command) {
         }
     }
     default {
-        Say "usage: hub login | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush]   (options: -Project <id>, -Dir <folder>)"
+        Say "usage: hub login | projects | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush]   (options: -Project <id>, -Dir <folder>)"
         if ($Command) { exit 1 }
     }
 }

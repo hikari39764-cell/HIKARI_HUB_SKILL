@@ -1,7 +1,10 @@
 """HIKARI 制作ハブのビルド。
 
-schema/schema.json（項目の宣言）、content/（既定のルール・エンジン知識）、plugin/hub.json（接続先）、
-plugin/projects.json（作品の一覧）から、次のものを作る：
+schema/schema.json（項目の宣言）、content/（既定のルール・エンジン知識）、plugin/hub.json（接続先とスキルのリポジトリ）、
+page/（サイトの元と、エンジン中枢と共用の翻訳 translate.js）から、次のものを作る。
+作品の一覧はデータベースの作品目録（directory/<メール>/projects/<作品 id>）にあり、ビルドには入らない：
+
+  新しい作品はオーナーがサイトの「新しい作品を作る」で作る（初期のルール・エンジン知識はページに埋め込んだものを入れる）。
 
   docs/index.html                       ハブのサイト（GitHub Pages が配る。全作品で 1 ページ、?p=<作品 id>）
   firebase/firestore.rules              データベースのアクセス規則（オーナーが Firebase コンソールに貼る。コミットしない）
@@ -29,7 +32,6 @@ SCHEMA = json.loads((ROOT / "schema" / "schema.json").read_text(encoding="utf-8"
 COLLECTIONS = {c["key"]: c for c in SCHEMA["collections"]}
 OWNER_ONLY = ["settings"] + [c["key"] for c in SCHEMA["collections"] if c["writer"] == "owner"]
 HUB = json.loads((ROOT / "plugin" / "hub.json").read_text(encoding="utf-8"))
-PROJECTS = json.loads((ROOT / "plugin" / "projects.json").read_text(encoding="utf-8"))
 # 招待された人が読むだけの作品（書けるのはオーナーだけ）：エンジンの中枢（D:/PJ/HIKARI-HQ/cloud が docs/engine/ に置くページ）。
 READ_ONLY_PROJECTS = ["engine"]
 HEAD = ('<!doctype html><html lang="ja"><head><meta charset="utf-8">'
@@ -41,8 +43,8 @@ RULES = """rules_version = '2';
 //   オーナー    ：下の isOwner() に書いたメールの Google アカウント。すべての作品を読み書きでき、招待の一覧を管理する。
 //   メンバー    ：作品の invites/<Google アカウントのメール（小文字）> がある人。その作品を読み、記録を作る・直す。
 //                 ただし __READ_ONLY_TEXT__ は招待された人も読むだけ（書けるのはオーナーだけ）。
-//   オーナーだけ：__OWNER_ONLY_TEXT__ への書き込み、招待の一覧、記録の削除。
-//   本人だけ    ：members/<自分の uid>。
+//   オーナーだけ：__OWNER_ONLY_TEXT__ への書き込み、招待の一覧、作品目録への書き込み、記録の削除。
+//   本人だけ    ：members/<自分の uid>。作品目録 directory/<自分のメール>/projects（入れる作品の一覧）は本人とオーナーが読める。
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -65,6 +67,12 @@ service cloud.firestore {
     }
     match /projects/{pid}/invites/{email} {
       allow read, write: if isOwner();
+    }
+    // 作品目録：この人が入れる作品。オーナーが招待するとき（と作品を作るとき）にページが書く。
+    // ページの切り替えと hub コマンドが、これで「どのリポジトリがどの作品か」を知る。
+    match /directory/{email}/projects/{pid} {
+      allow read: if isOwner() || (signedIn() && request.auth.token.email_verified == true && request.auth.token.email.lower() == email);
+      allow write: if isOwner();
     }
     match /projects/{pid}/members/{uid} {
       allow read: if isMember(pid);
@@ -154,7 +162,8 @@ def page(config: dict, backend: str | None = None) -> str:
     if backend is not None:
         head, _, rest = html.partition("<!--backend-->")
         html = head + f"<script>{backend}</script>" + rest.partition("<!--/backend-->")[2]
-    return HEAD + html.replace("__SCHEMA__", embed(SCHEMA)).replace("__CONFIG__", embed(config)).replace("__LOGO__", logo)
+    translate = (ROOT / "page" / "translate.js").read_text(encoding="utf-8").replace("</", "<\\/")
+    return HEAD + html.replace("__SCHEMA__", embed(SCHEMA)).replace("__CONFIG__", embed(config)).replace("__LOGO__", logo).replace("__TRANSLATE__", translate)
 
 
 def data_model() -> str:
@@ -322,7 +331,8 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
                                "reason": "スクリーンショットでは揺れの強さが伝わらなかった。", "state": "提案", **stamp("ko", "2026-11-10T09:40:00+09:00")},
         "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
     } | sample_map()
-    return {f"projects/sample/{k}": v for k, v in seed.items()}
+    me_mail = "owner@example.com" if owner else "member@example.com"
+    return {f"projects/sample/{k}": v for k, v in seed.items()} | {f"directory/{me_mail}/projects/sample": {"at": "2026-11-09T09:00:00+09:00"}}
 
 
 def main() -> None:
@@ -335,7 +345,10 @@ def main() -> None:
         raise SystemExit(f"分類が schema にありません：{bad}")
 
     owner = ROOT / "plugin" / "owner"
-    site = page({"firebase": HUB["firebase"], "projects": PROJECTS})
+    # 新しい作品に入れる初期データ（サイトの「新しい作品を作る」が使う）。設定の既定値は schema の settings.*.defaults。
+    seed = {folder: {d["id"]: d["data"] for d in docs} for folder, docs in (("rules", rules), ("engine", engine))}
+    config = {"firebase": HUB["firebase"], "skill": HUB["skill"], "seed": seed}
+    site = page(config)
     write(ROOT / "docs" / "index.html", site)
     write(ROOT / "docs" / ".nojekyll", "")
     write(ROOT / "dist" / "index.html", site)
@@ -353,11 +366,11 @@ def main() -> None:
     write(refs / "engine.md", engine_reference(engine))
 
     mock = (ROOT / "tools" / "preview_mock.js").read_text(encoding="utf-8")
-    sample = {"firebase": {}, "projects": [{"repo": "example/sample-game", "name": "サンプル作品", "id": "sample"}]}
+    sample = config | {"firebase": {}}
     for name, is_owner in (("owner", True), ("member", False)):
         script = mock.replace("__SEED__", embed(preview_seed(rules, engine, is_owner))).replace("__OWNER__", "true" if is_owner else "false")
         write(ROOT / "dist" / f"preview-{name}.html", page(sample, script))
-    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、作品 {len(PROJECTS)} 件、サイト {len(site.encode('utf-8')) // 1024} KB")
+    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、サイト {len(site.encode('utf-8')) // 1024} KB")
 
 
 if __name__ == "__main__":

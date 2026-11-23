@@ -1,8 +1,10 @@
 # HIKARI Production Hub guard hook (keep this file ASCII-only: Windows PowerShell 5.1 reads
 # BOM-less scripts in the system code page; all user-facing text lives in hub-messages.json).
 #
-# A repository belongs to a hub when its "origin" remote (owner/name) is listed in ../projects.json.
-# Everywhere else this hook does nothing. Nothing is ever committed to the game repository: the
+# A repository belongs to a hub when its "origin" remote (owner/name) is a project in the person's project
+# directory (the copy "hub projects" keeps in %USERPROFILE%\.hikari-hub\projects.json). Everywhere else this hook
+# does nothing, except at the start of a session in a HIKARI game repository (Project.hikari) on a PC that has no
+# hub key yet: then it says how to connect. Nothing is ever committed to the game repository: the
 # agent's working files live in <repo>/.hikari-hub/, which the hub tool lists in .git/info/exclude.
 #
 #   session : SessionStart - tells the agent this repository is a hub project and what to do first.
@@ -81,6 +83,23 @@ try {
     $gitDir = Get-GitDir $root
     if (-not $gitDir) { exit 0 }
     $hub = Find-Project $gitDir
+    if (-not $hub -and $Mode -eq "session") {
+        $keyFile = Join-Path $env:USERPROFILE ".hikari-hub\key.json"
+        $age = Get-DirectoryAge
+        if (-not (Test-Path -LiteralPath $keyFile)) {
+            if (Test-Path -LiteralPath (Join-Path $root "Project.hikari")) { Write-Out ($msg.session_nokey -f (Get-ToolPath)) }
+            exit 0
+        }
+        # Refresh the copy of the project directory: wait for it when there is none, in the background when it is old.
+        $tool = Join-Path $pluginRoot "tools/hub.ps1"
+        $refresh = @("-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", ('"' + $tool + '"'), "projects")
+        if ($age -gt 99999) {
+            $child = Start-Process -FilePath "powershell" -ArgumentList $refresh -WindowStyle Hidden -PassThru
+            if ($child.WaitForExit(12000)) { $hub = Find-Project $gitDir }
+        } elseif ($age -gt 12) {
+            Start-Process -FilePath "powershell" -ArgumentList $refresh -WindowStyle Hidden | Out-Null
+        }
+    }
     if (-not $hub) { exit 0 }
     $active = Read-Json (Join-Path $root ".hikari-hub/active.json")
     $hasWork = [bool]($active -and $active.card)

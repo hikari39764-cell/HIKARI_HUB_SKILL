@@ -23,6 +23,7 @@
   --e-include: #748FFC; --e-asset: #69DB7C; --e-component: #FF922B; --e-engine: #ADB5BD; --m1: #FFC078; --m2: #B197FC; --m3: #63E6BE; --m4: #F783AC; --m5: #74C0FC; }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }  /* #nav などの display より強く：ログイン前・作品を選ぶ画面で目次を隠す */
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.7; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--paper); z-index: 20; }
@@ -210,6 +211,7 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
     <div class="grow"><input id="q" type="text" autocomplete="off" aria-label="検索"></div>
     <span class="chip" id="me-chip"></span>
     <button class="btn ghost mini" type="button" data-act="lang" id="lang-btn">中文</button>
+    <button class="btn ghost mini" type="button" data-act="tr" id="tr-btn"></button>
   </div>
 </header>
 <div class="wrap shell">
@@ -249,6 +251,7 @@ window.hubBackend = {
 window.dispatchEvent(new Event("hub-backend"));
 </script>
 <!--/backend-->
+<script>__TRANSLATE__</script>
 <script>
 (() => {
 "use strict";
@@ -259,13 +262,13 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
 
-// ハブの設定（Firebase の接続先と、作品の一覧）。plugin/hub.json と plugin/projects.json からビルドで入る。
+// ハブの設定（Firebase の接続先、スキルのリポジトリ、新しい作品に入れる初期のルール・エンジン知識）。ビルドで入る。
 const CONFIG = JSON.parse(document.getElementById("hub-config").textContent);
 const PID = (() => { const p = new URLSearchParams(location.search).get("p") || ""; return /^[a-z0-9_-]{1,40}$/.test(p) ? p : ""; })();
 // signed: null = まだ分からない。denied: この作品に招待されていない。
-// 上の帯の切り替え先：エンジンの中枢（docs/engine/）と各作品。reach は読める（招待されている）ものの id。
-const SITES = [{ id: "engine", ja: "エンジン中枢", zh: "引擎中枢", href: "engine/" }, ...CONFIG.projects.map((p) => ({ id: p.id, ja: p.name, zh: p.name, href: "?p=" + p.id }))];
-const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true }, reach: new Set(),
+// sites：この人が入れる作品（作品目録 directory/<メール>/projects にあり、設定が読めるもの）。id → {name, repo}。
+// engine：エンジンの中枢（docs/engine/）が読めるか。
+const S = { lang: "ja", data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false, write: null }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", all: { reports: true }, sites: new Map(), engine: false,
   f: {}, days: 14, mapBranch: "", mapNode: "", mapLast: false };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.lang = localStorage.getItem("hub-lang") === "zh" ? "zh" : "ja"; } catch { /* 保存できない環境でもそのまま動く */ }
@@ -291,7 +294,14 @@ const T = {
   optHelp: ["1 行に 1 つ。推奨には先頭に ★（ちょうど 1 つ）", "一行一个，推荐项前面加 ★（恰好一个）"], optBad: ["選択肢は 2 つ以上、★ はちょうど 1 つ", "至少两个选项，★ 恰好一个"], listHelp: ["1 行に 1 つ", "一行一个"],
   uploadFail: ["画像を入れられませんでした（大きすぎるか、画像ではありません）", "图片放不进去（太大或不是图片）"], conclusion: ["結論", "结论"], reply: ["返事", "回复"], results: ["検索結果", "搜索结果"],
   hubName: ["HIKARI 制作ハブ", "HIKARI 制作中枢"], login: ["Google でログイン", "用 Google 登录"], logout: ["ログアウト", "退出登录"], loginWhy: ["チームのハブです。オーナーに招待された Google アカウントでログインしてください。", "这是团队的中枢。请用所有者邀请过的 Google 账号登录。"],
-  pick: ["作品を選ぶ", "选择作品"], notInvited: ["この作品にはまだ招待されていません。オーナーに、下の Google アカウントのメールを伝えて招待してもらってください。", "你还没被邀请进这个作品。请把下面这个 Google 账号的邮箱告诉所有者，让他加进邀请名单。"],
+  pick: ["作品を選ぶ", "选择作品"], engineHq: ["エンジン中枢", "引擎中枢"], engineHqWhy: ["HIKARI エンジンの開発の記録（読むだけ）", "HIKARI 引擎的开发记录（只读）"], noProjects: ["入れる作品はまだありません。オーナーに、下のメールで招待してもらってください。", "还没有能进的作品。请把下面的邮箱告诉所有者，让他邀请你。"],
+  npNew: ["新しい作品を作る", "新建作品"], npWhy: ["ゲームのリポジトリをハブの作品にします。初期のルールとエンジン知識が入り、すぐメンバーを招待できます。スキルの更新や push は要りません。", "把一个游戏仓库开成中枢里的作品：自动放进初期的规则和引擎知识，马上就能邀请成员。不用更新 skill，也不用推送。"],
+  npName: ["作品名", "作品名"], npId: ["作品 id", "作品 id"], npIdHelp: ["URL に使う。半角の小文字・数字・- _（例 td2_2）。あとから変えられない", "用在网址里：半角小写字母、数字、- _（例 td2_2），之后不能改"],
+  npRepo: ["GitHub リポジトリ", "GitHub 仓库"], npRepoHelp: ["owner/name（https://github.com/ からでもよい）。エージェントはこれでリポジトリを見分ける", "owner/name（贴整个 GitHub 网址也行）。智能体靠它认出是哪个作品"],
+  npIdBad: ["作品 id は半角の小文字・数字・- _ で 40 文字まで（engine は使えない）", "作品 id 只能用半角小写字母、数字、- _，最多 40 个字（不能用 engine）"], npRepoBad: ["リポジトリは owner/name の形で", "仓库要写成 owner/name"],
+  npExists: ["その作品 id はもう使われています", "这个作品 id 已经有了"], npMaking: ["作っています…", "正在建…"], npMade: ["作りました。メンバーを招待してください", "建好了，接着邀请成员吧"],
+  trOn: ["訳", "译"], trOff: ["原文", "原文"], trBusy: ["翻訳中…", "翻译中…"], trClick: ["訳（もう一度押す）", "译（再按一次）"], trLoad: ["翻訳の準備 {n}%", "准备翻译 {n}%"],
+  trFail: ["このブラウザでは内蔵の翻訳が使えません。ブラウザの「翻訳」を使ってください（Chrome：右クリック →「日本語に翻訳」）。", "这个浏览器的内置翻译用不了，请用浏览器菜单里的“翻译”（Chrome：右键 →“翻译成中文”）。"], notInvited: ["この作品にはまだ招待されていません。オーナーに、下の Google アカウントのメールを伝えて招待してもらってください。", "你还没被邀请进这个作品。请把下面这个 Google 账号的邮箱告诉所有者，让他加进邀请名单。"],
   key: ["エージェントの鍵", "智能体的钥匙"], keyCopy: ["鍵をコピー", "复制钥匙"], keyWarn: ["鍵は、あなた本人としてハブに読み書きできるものです。人に渡したり、チャットに貼ったりしないでください。", "钥匙能以你本人的身份读写中枢。不要给别人，也不要贴到聊天里。"],
   invites: ["招待", "邀请名单"], inviteAdd: ["招待する", "邀请"], inviteHelp: ["招待する人の Google アカウントのメール。この一覧はオーナーにしか見えません。", "填被邀请者的 Google 账号邮箱。这份名单只有所有者看得到。"], inviteBad: ["メールの形になっていません", "不是邮箱的格式"], remove: ["外す", "移除"], removeSure: ["本当に外す", "确认移除"],
   askAgent: ["エージェントに頼む文（コピーして貼る）", "交给智能体的话（复制后粘贴）"], copy: ["コピー", "复制"], copied: ["コピーしました", "已复制"],
@@ -331,7 +341,7 @@ const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
 // ---------- データの読み出し ----------
 const docs = (coll) => [...S.data[coll]].map(([id, d]) => ({ id, ...d }));
 const project = () => S.data.settings.get("project") || {};
-const projectName = () => project().name || (CONFIG.projects.find((p) => p.id === PID) || {}).name || t("hubName");
+const projectName = () => project().name || (S.sites.get(PID) || {}).name || t("hubName");
 const plan = () => ({ ready: [], assign: {}, milestones: [], ...S.data.settings.get("plan") });
 const stateDef = (coll, name) => (COLL[coll].states || []).find((s) => s.name === name);
 const isOpen = (coll, d) => !COLL[coll].states || (stateDef(coll, d.state) || { open: true }).open;
@@ -462,7 +472,7 @@ function toast(text, bad) {
   el.className = bad ? "bad" : "";
   el.hidden = false;
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => { el.hidden = true; }, 2600);
+  toast.timer = setTimeout(() => { el.hidden = true; }, bad && text.length > 40 ? 9000 : 2600);
 }
 const matchQ = (d) => !S.q || JSON.stringify(d).toLowerCase().includes(S.q);
 
@@ -958,8 +968,10 @@ function viewLogin() {
   return `<div class="head"><h1>${t("hubName")}</h1></div><section class="card"><p>${t("loginWhy")}</p><p>${btn("login", t("login"))}</p></section>`;
 }
 function viewPick() {
-  const rows = CONFIG.projects.map((p) => `<a class="row" href="?p=${esc(p.id)}"><span><b>${esc(p.name)}</b><small>${esc(p.repo)}</small></span></a>`);
-  return `<div class="head"><h1>${t("hubName")}</h1></div>${whoami()}<section class="card"><h2>${t("pick")}</h2>${list(rows)}</section>`;
+  const rows = [...S.sites].map(([id, p]) => `<a class="row" href="?p=${esc(id)}"><span><b>${esc(p.name)}</b><small class="mono">${esc(p.repo || "")}</small></span></a>`);
+  if (S.engine) rows.push(`<a class="row" href="engine/"><span><b>${t("engineHq")}</b><small>${t("engineHqWhy")}</small></span></a>`);
+  return `<div class="head"><h1>${t("hubName")}</h1><div class="acts">${S.me.owner ? btn("project-new", t("npNew") + " +") : ""}</div></div>${whoami()}
+    <section class="card"><h2>${t("pick")}</h2>${rows.length ? rows.join("") : `<p class="empty">${t("noProjects")}</p><p><b>${esc(S.me.email)}</b></p>`}</section>`;
 }
 function viewDenied() {
   return `<div class="head"><h1>${esc(projectName())}</h1></div><div class="note">${t("notInvited")}<br><b>${esc(S.me.email)}</b></div>${whoami()}`;
@@ -977,6 +989,8 @@ function render() {
   renderNav(r.view);
   document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "ja";
   $("#lang-btn").textContent = S.lang === "zh" ? "日本語" : "中文";
+  // 記録の中身の翻訳（画面の言語へ）。ボタンは押したときにすること：訳す ⇄ 原文に戻す。
+  $("#tr-btn").textContent = !TR.on ? t("trOn") : TR.status === "click" ? t("trClick") : TR.download >= 0 ? t("trLoad", TR.download) : TR.status === "busy" ? t("trBusy") : t("trOff");
   $("#q").placeholder = t("search");
   const inProject = !!(S.signed && PID && !S.denied);
   $("#brand-name").textContent = projectName();
@@ -988,9 +1002,9 @@ function render() {
   conn.className = "chip " + (up ? "live" : S.late ? "warn" : "");
   $("#me-chip").textContent = S.me.handle ? S.me.handle + (S.me.owner ? `（${t("owner")}）` : "") : S.me.write === false ? t("readonly") : "";
   $("#me-chip").hidden = !$("#me-chip").textContent;
-  const sites = SITES.filter((s) => s.id === PID || S.reach.has(s.id));
-  $("#sites").hidden = !S.signed || sites.length < 2;
-  $("#sites").innerHTML = sites.map((s) => `<a href="${esc(s.href)}" class="${s.id === PID ? "on" : ""}">${esc(s[S.lang])}</a>`).join("");
+  const sites = [...(S.engine ? [["engine", { name: t("engineHq") }]] : []), ...S.sites];
+  $("#sites").hidden = !S.signed || sites.length + (PID && !S.sites.has(PID) ? 1 : 0) < 2;
+  $("#sites").innerHTML = sites.map(([id, s]) => `<a href="${id === "engine" ? "engine/" : "?p=" + esc(id)}" class="${id === PID ? "on" : ""}">${esc(s.name)}</a>`).join("");
   let html;
   if (S.signed == null) html = `<p class="empty">${t(S.late ? "offline" : "connecting")}</p>`;
   else if (!S.signed) html = viewLogin();
@@ -1009,7 +1023,10 @@ function render() {
   $("#main").innerHTML = html;
   if (inProject) loadImages();
   drawLinks();
+  TR.apply();
 }
+const TR = window.HikariTranslate({ onChange: () => schedule(), onFail: () => toast(t("trFail"), true), key: "hub-tr" });
+TR.setTarget(S.lang);
 let queued = false;
 function schedule() {
   if (queued) return;
@@ -1020,7 +1037,15 @@ function schedule() {
 
 // ---------- 操作 ----------
 const ACT = {
-  lang() { S.lang = S.lang === "zh" ? "ja" : "zh"; try { localStorage.setItem("hub-lang", S.lang); } catch { /* 保存できなくても切り替わる */ } schedule(); },
+  lang() { S.lang = S.lang === "zh" ? "ja" : "zh"; try { localStorage.setItem("hub-lang", S.lang); } catch { /* 保存できなくても切り替わる */ } TR.setTarget(S.lang); schedule(); },
+  tr() { TR.toggle(S.lang); },
+  "project-new"() {
+    const d = SCHEMA.settings.project.defaults, f = (key, ja, zh, more = {}) => ({ key, ja, zh, ...more });
+    openForm({ title: t("npNew"), note: t("npWhy"), values: { base_branch: d.base_branch, release_branch: d.release_branch, areas: d.areas },
+      defs: [f("name", t("npName"), t("npName"), { type: "text", required: true }), f("id", t("npId"), t("npId"), { type: "text", required: true, help: t("npIdHelp") }),
+        f("repo", t("npRepo"), t("npRepo"), { type: "text", required: true, help: t("npRepoHelp") }), ...SCHEMA.settings.project.fields.filter((x) => ["base_branch", "release_branch", "areas"].includes(x.key))],
+      onSave: createProject });
+  },
   close() { $("#dlg").close(); },
   login() { return BACKEND.signIn().catch((e) => toast(`${t("failed")}（${(e && e.code) || "?"}）`, true)); },
   logout() { return BACKEND.signOut(); },
@@ -1031,12 +1056,12 @@ const ACT = {
       onSave: async ({ mail }) => {
         const id = mail.toLowerCase();
         if (!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(id)) { toast(t("inviteBad"), true); return false; }
-        try { await S.db.doc("invites/" + id).set({ at: now() }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
+        try { await S.db.doc("invites/" + id).set({ at: now() }); await dirDoc(id, PID).set({ at: now() }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
       } });
   },
   async "invite-del"({ mail }, el) {
     if (!el.dataset.sure) { el.dataset.sure = "1"; el.textContent = t("removeSure"); el.className = "btn danger mini"; return; }
-    try { await S.db.doc("invites/" + mail).delete(); toast(t("saved")); } catch { toast(t("failed"), true); }
+    try { await S.db.doc("invites/" + mail).delete(); await dirDoc(mail, PID).delete(); toast(t("saved")); } catch { toast(t("failed"), true); }
   },
   "del-ask"(_, el) { if (el.dataset.sure) { openForm.del().then((ok) => ok && $("#dlg").close()); } else { el.dataset.sure = "1"; el.textContent = t("delSure"); el.className = "btn danger mini"; } },
   "toggle-all"({ coll }) { S.all[coll] = !S.all[coll]; schedule(); },
@@ -1129,6 +1154,26 @@ const ACT = {
       } });
   },
 };
+// 作品目録の 1 件：この人（メール）はこの作品に入れる。招待の一覧と一緒に書き、一緒に消す。
+const dirDoc = (mail, pid) => BACKEND.db.doc(`directory/${mail.toLowerCase()}/projects/${pid}`);
+// オーナーが新しい作品を作る：設定（schema の既定値）、予定、初期のルールとエンジン知識、オーナー自身の作品目録。
+async function createProject(v) {
+  const id = v.id.trim().toLowerCase(), repo = v.repo.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").replace(/\/+$/, "");
+  if (!/^[a-z0-9_-]{1,40}$/.test(id) || id === "engine") { toast(t("npIdBad"), true); return false; }
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { toast(t("npRepoBad"), true); return false; }
+  const base = `projects/${id}/`;
+  if ((await BACKEND.db.doc(base + "settings/project").get()).exists) { toast(t("npExists"), true); return false; }
+  toast(t("npMaking"));
+  const d = SCHEMA.settings.project.defaults, at = now();
+  await BACKEND.db.doc(base + "settings/project").set({ ...d, name: v.name.trim(), repo, skill_source: CONFIG.skill, base_branch: v.base_branch || d.base_branch,
+    release_branch: v.release_branch || d.release_branch, areas: v.areas.length ? v.areas : d.areas, updated_at: at });
+  await BACKEND.db.doc(base + "settings/plan").set({ ...SCHEMA.settings.plan.defaults });
+  await Promise.all(Object.entries(CONFIG.seed).flatMap(([coll, docs]) => Object.entries(docs).map(([docId, data]) => BACKEND.db.doc(`${base}${coll}/${docId}`).set(data))));
+  await dirDoc(S.me.email, id).set({ at });
+  toast(t("npMade"));
+  location.href = `?p=${encodeURIComponent(id)}#members`;
+  return true;
+}
 // 空（未設定）か、半角英数字と . _ - で、公開ブランチでもほかの人のブランチでもない名前。
 function branchOk(name, uid) {
   if (!name) return true;
@@ -1168,12 +1213,16 @@ function listen() {
   for (const stop of unsubs) stop();
   unsubs = [];
   for (const key of Object.keys(S.data)) S.data[key] = new Map();
-  Object.assign(S, { db: null, live: null, denied: false, invites: new Map(), reach: new Set() });
+  Object.assign(S, { db: null, live: null, denied: false, invites: new Map(), sites: new Map(), engine: false });
   Object.assign(S.me, { handle: "", owner: false, write: null });
   if (!S.me.uid) return;
   const uid = S.me.uid;
-  // 切り替え先は、その作品の設定が読めるか（招待されているか）で見せる。
-  for (const s of SITES) if (s.id !== PID) BACKEND.db.doc(`projects/${s.id}/settings/project`).get().then(() => { if (S.me.uid === uid) { S.reach.add(s.id); schedule(); } }, () => {});
+  // 切り替え先：作品目録にあって設定が読める（まだ招待されている）作品と、読めればエンジン中枢。
+  const reach = (id, then) => BACKEND.db.doc(`projects/${id}/settings/project`).get().then((s) => { if (S.me.uid === uid) { then(s.data() || {}); schedule(); } }, () => {});
+  reach("engine", () => { S.engine = true; });
+  unsubs.push(BACKEND.db.collection(`directory/${S.me.email.toLowerCase()}/projects`).onSnapshot((snap) => {
+    for (const d of snap.docs) if (!S.sites.has(d.id)) reach(d.id, (pr) => S.sites.set(d.id, { name: pr.name || d.id, repo: pr.repo || "" }));
+  }, () => {}));
   const failed = (e) => { if (e && e.code === "permission-denied") S.denied = true; else S.late = true; schedule(); };
   if (PID) S.db = { doc: (p) => BACKEND.db.doc(`projects/${PID}/${p}`), collection: (p) => BACKEND.db.collection(`projects/${PID}/${p}`) };
   // オーナーは、アクセス規則に書いてあるメールの人。hub/owner はオーナーにしか読めないので、読めればオーナー。
