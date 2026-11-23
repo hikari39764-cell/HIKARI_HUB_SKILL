@@ -217,7 +217,81 @@ ul.log li { margin: 3px 0; }
   h2 .hint { display: none; }
 }
 
+/* ---------- 第三版：审阅卡（图标、按钮、字号在制作ハブ仓库的 page/shared.css） ---------- */
+/* 审阅 */
+.rv-progress { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.rv { position: relative; display: grid; gap: 12px; border-width: 3px; border-color: #17160F; box-shadow: 6px 6px 0 var(--shade); padding: 18px 20px; }
+.rv .stamp { position: absolute; top: -14px; right: 18px; font-family: var(--display); font-size: 15px; background: var(--apricot); color: #17160F; border: 2.5px solid #17160F; border-radius: 10px; padding: 2px 12px; transform: rotate(3deg); box-shadow: 2px 2px 0 #17160F; }
+.rv-title { font-family: var(--display); font-weight: 400; font-size: clamp(20px, 2.6vw, 26px); line-height: 1.35; letter-spacing: 0; color: var(--ink); margin: 0; display: block; }
+.rv-title a { text-decoration: none; }
+.rv-title a:hover { text-decoration: underline; }
+.rv-ask { margin: 0; font-size: 16px; font-weight: 700; display: flex; gap: 8px; align-items: center; background: var(--paper-2); border-radius: 10px; padding: 8px 12px; }
+.rv-acts { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 12px; border-top: 2px dashed var(--soft); }
+.rv-empty { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 16px; }
+.rv-cta .head { margin-bottom: 4px; }
+.more-hint { font-size: 13px; margin: 6px 0 0; }
+.keys { font-size: 12.5px; margin: 0; }
+.headline { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.6; }
+.accept { background: var(--paper-2); border-radius: 10px; padding: 8px 12px; }
+.accept ul { margin: 4px 0 0; padding-left: 1.2em; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.shots img { width: 100%; min-height: 90px; display: block; border: 2px solid var(--rule); border-radius: 10px; background: var(--paper-2); cursor: zoom-in; }
+details.more > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+details.more[open] > summary { margin-bottom: 6px; }
+.self-list, .merge-list { display: grid; gap: 10px; }
+.self-item { border: 2px solid var(--soft); border-radius: 12px; padding: 10px 12px; background: var(--paper); }
+.self-item .headline { font-size: 15px; }
+.self-item ul.proof { margin: 4px 0 0; padding-left: 1.2em; font-size: 14px; }
+.opts { display: grid; gap: 8px; }
+@media (max-width: 640px) {
+  .rv { padding: 16px 14px; }
+  .btn.big { flex: 1 1 auto; justify-content: center; }
+}
+
+/* HIKARI 两个网站共用的样式（中枢 D:/PJ/HIKARI-HQ/cloud 和制作ハブ都嵌在自己的样式后面，用来覆盖）。
+   图标、按钮分主次（主：星黄硬影 > 普通：纸色细影 > 次要：透明）、小字放大一号、导航图标、圆角标签。 */
+body { font-size: 15.5px; }
+.ic { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.2em; }
+/* 按钮：主（星黄、硬影）> 普通（纸色、细影）> 次要（透明）。一屏里主按钮尽量只有一个。 */
+.btn { background: var(--card); color: var(--ink); border-color: var(--rule); box-shadow: 2px 2px 0 var(--shade); min-height: 34px; padding: 5px 13px; font-size: 13.5px; text-decoration: none; transition: transform .08s ease, box-shadow .08s ease; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shade); }
+.btn:active { transform: translate(1px, 1px); box-shadow: 0 0 0 var(--shade); }
+.btn.star { background: var(--star); color: #17160F; border-color: #17160F; box-shadow: 3px 3px 0 #17160F; }
+.btn.star:hover { box-shadow: 4px 4px 0 #17160F; }
+.btn.ghost { background: transparent; border-color: var(--soft); box-shadow: none; }
+.btn.ghost:hover { background: var(--card); border-color: var(--rule); transform: none; box-shadow: none; }
+.btn.danger { background: var(--bad); color: #fff; border-color: #17160F; }
+.btn.mini { min-height: 28px; font-size: 12.5px; padding: 2px 9px; border-radius: 8px; box-shadow: 1.5px 1.5px 0 var(--shade); }
+.btn.mini.ghost { box-shadow: none; }
+.btn.big { min-height: 44px; font-size: 15px; padding: 8px 18px; border-radius: 12px; gap: 8px; }
+.btn kbd { font-family: var(--mono); font-size: 11px; line-height: 1.3; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 4px; opacity: .65; }
+/* 字：小字放大一号，标题用墨色 */
+.row small { font-size: 13px; line-height: 1.6; }
+.tag { font-size: 12px; padding: 0 6px; }
+.tag.hot { background: var(--star); color: #17160F; border-color: #17160F; display: inline-flex; align-items: center; gap: 2px; }
+.when { font-size: 12px; }
+.navt { font-size: 12px; }
+h2 { font-size: 14px; color: var(--ink); letter-spacing: .04em; }
+h2 > .ic { color: var(--muted); margin-right: -2px; }
+.kv dt { font-size: 13.5px; display: flex; gap: 5px; align-items: baseline; }
+.kv dt .ic { color: var(--muted); }
+#nav a { justify-content: flex-start; gap: 9px; }
+#nav a > span:first-of-type { flex: 1 1 auto; }
+#nav a .ic { width: 18px; height: 18px; color: var(--muted); }
+#nav a.on .ic { color: #17160F; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; line-height: 1.7; border: 2px solid var(--soft); border-radius: 999px; padding: 0 10px; background: var(--card); color: var(--ink); white-space: nowrap; }
+.pill.k { background: var(--apricot); border-color: #17160F; color: #17160F; }
+.pill.hot { background: var(--star); border-color: #17160F; color: #17160F; }
+.row small .pill { font-size: 11.5px; padding: 0 7px; line-height: 1.6; }
+/* 小标题：图标和字挨着，计数紧跟其后；“全部”链接和按钮靠右 */
+h2 { justify-content: flex-start; }
+h2 > a.muted, h2 > .btn, h2 > .hint { margin-left: auto; }
+
 </style>
+
+<!-- HIKARI 两个网站共用的线条图标（路径取自 Tabler Icons，MIT 许可）。页面里用 ic(名字) 引用。 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 13h3l3 3h4l3-3h3"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/></symbol><symbol id="i-columns" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="10" rx="1"/></symbol><symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M3 12h1m8-9v1m8 8h1M5.6 5.6l.7.7m12.1-.7-.7.7"/><path d="M9 16a5 5 0 1 1 6 0 3.5 3.5 0 0 0-1 3 2 2 0 0 1-4 0 3.5 3.5 0 0 0-1-3"/><path d="M9.7 17h4.6"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="m3.5 5.5 1.5 1.5 2.5-2.5M3.5 11.5 5 13l2.5-2.5M3.5 17.5 5 19l2.5-2.5M11 6h9M11 12h9M11 18h9"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol><symbol id="i-notebook" viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1m3 0v16M13 8h2M13 12h2"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M4 7h3a1 1 0 0 0 1-1V5a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1a2 2 0 0 0-4 0v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a2 2 0 0 0 0-4H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path d="M7 20h10M6 6l6-1 6 1M12 3v17M9 12 6 6l-3 6a3 3 0 0 0 6 0M21 12l-3-6-3 6a3 3 0 0 0 6 0"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 13.5a1.5 1.5 0 0 1 1-1.5 2.6 2.6 0 1 0-3-4"/></symbol><symbol id="i-bug" viewBox="0 0 24 24"><path d="M9 9V8a3 3 0 0 1 6 0v1M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1-10 0v-3a6 6 0 0 1 1-3M3 13h4M17 13h4M12 20v-6M4 19l3.4-2M20 19l-3.4-2M4 7l3.8 2.4M20 7l-3.8 2.4"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6v13M12 6v13M21 6v13"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3a12 12 0 0 0 8.5 3A12 12 0 0 1 12 21 12 12 0 0 1 3.5 6 12 12 0 0 0 12 3"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M22 9 12 5 2 9l10 4 10-4v6"/><path d="M6 10.6V16a6 3 0 0 0 12 0v-5.4"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4M12 16h.01"/><path d="M10.4 3.6 2.3 17.1A1.9 1.9 0 0 0 3.9 20h16.2a1.9 1.9 0 0 0 1.6-2.9L13.6 3.6a1.9 1.9 0 0 0-3.2 0z"/></symbol><symbol id="i-adjust" viewBox="0 0 24 24"><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="17" cy="18" r="2"/><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h11M19 18h1"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="m9 14-4-4 4-4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 1 0-4-4L4 16v4M13.5 6.5l4 4"/></symbol><symbol id="i-wand" viewBox="0 0 24 24"><path d="m6 21 15-15-3-3L3 18l3 3M15 6l3 3M9 3a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2M19 13a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-merge" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="7" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><path d="M7 8v8M7 8a4 4 0 0 0 4 4h4"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M8 9h8M8 13h6M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></symbol><symbol id="i-language" viewBox="0 0 24 24"><path d="M4 5h7M9 3v2c0 4.4-2.2 8-5 8M5 9c0 2.1 3 3.9 6.7 4M12 20l4-9 4 9M19.1 18h-6.2"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M21 12c-2.4 4-5.4 6-9 6s-6.6-2-9-6c2.4-4 5.4-6 9-6s6.6 2 9 6"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="m7 8-4 4 4 4M17 8l4 4-4 4M14 4l-4 16"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 5.5v-2a1.5 1.5 0 1 1 3 0V12M14 5.5a1.5 1.5 0 0 1 3 0V12M17 7.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-2.7l-3.5-6a1.5 1.5 0 0 1 2.8-1.7L8 13"/></symbol><symbol id="i-photo" viewBox="0 0 24 24"><path d="M15 8h.01"/><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m3 16 5-5c.9-.9 2.1-.9 3 0l5 5M14 14l1-1c.9-.9 2.1-.9 3 0l3 3"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0 5 5 0 0 0 7 0v9a5 5 0 0 1-7 0 5 5 0 0 0-7 0zM5 21v-7"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 18l6-6M13 6l6 6"/></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6M11 6l-6 6"/></symbol><symbol id="i-login" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M20 12H7l3-3M10 15l-3-3"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 17.8-6.2 3.2 1.2-6.9-5-4.8 6.9-1L12 2l3.1 6.3 6.9 1-5 4.8 1.2 6.9z"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h.01M11 15h2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="m3 7 6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></symbol></defs></svg>
 
 <header class="top">
   <div class="wrap">
@@ -226,7 +300,7 @@ ul.log li { margin: 3px 0; }
     <nav class="sites" id="sites" aria-label="切换" hidden></nav>
     <div class="grow"><input id="q" type="text" autocomplete="off" aria-label="搜索" placeholder="搜索"></div>
     <span class="chip" id="me-chip"></span>
-    <button class="btn ghost mini" type="button" data-act="tr" id="tr-btn" hidden></button>
+    <button class="btn ghost mini" type="button" data-act="tr" id="tr-btn" hidden title="用浏览器内置的翻译把整页译成日文"></button>
   </div>
 </header>
 <div class="wrap shell">
@@ -235,7 +309,7 @@ ul.log li { margin: 3px 0; }
 </div>
 <dialog id="dlg"><form id="dlg-form" method="dialog"></form></dialog>
 <div id="toast" hidden></div>
-<script type="application/json" id="schema">{"version": 1, "project": "engine", "name": "HIKARI 中枢", "areas": ["渲染管线", "光照与GI", "后处理", "着色器与材质", "地形与世界", "编辑器", "资产与导入", "运行时与模块", "构建与工程", "验证与测试", "性能", "中枢与流程", "游戏项目"], "meta_fields": {"by": "谁写的（成员的称呼）", "by_agent": "智能体写的时候才有，例如 claude-code、codex", "at": "创建时间，UTC 的 ISO 8601（例 2026-11-11T05:20:31Z）", "updated_at": "更新时间，同上；本机镜像靠它做增量同步，每次写入都要更新", "updated_by": "谁更新的"}, "settings": {"project": {"fields": [{"key": "name", "type": "text", "label": "名字", "required": true}, {"key": "summary", "type": "longtext", "label": "说明"}, {"key": "areas", "type": "list", "label": "领域", "help": "一行一个。所有记录都按这里的领域分类"}, {"key": "repos", "type": "list", "label": "仓库", "help": "一行一个：名字 = 本机路径"}, {"key": "base_branch", "type": "text", "label": "主干分支", "help": "功能分支从这里分出，例如 develop"}]}, "plan": {"help": "queue：排队的任务卡 id，从上到下就是先后顺序"}}, "nav": [{"title": "", "views": ["home", "projects", "board", "workflows", "ideas", "plans", "timeline", "sessions", "modules"]}, {"title": "要处理", "views": ["decisions", "questions", "issues"]}, {"title": "积累", "views": ["primers", "policies", "knowledge", "mistakes"]}, {"title": "", "views": ["settings"]}], "collections": [{"key": "ideas", "prefix": "i", "label": "想法箱", "date": "at", "group": "state", "summary": "想到什么先记在这里，不用整理。定下来的再拆成任务卡；搁置或不做的写上原因，以后翻回来知道当时为什么停。", "states": [{"name": "新想法", "open": true, "attention": true}, {"name": "讨论中", "open": true}, {"name": "已定", "open": true, "ask": "outcome"}, {"name": "搁置", "open": false, "ask": "reason"}, {"name": "不做", "open": false, "ask": "reason"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "body", "type": "longtext", "label": "细节"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "project", "type": "ref", "to": "projects", "label": "属于哪个项目"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "outcome", "type": "longtext", "label": "定下来的结论"}, {"key": "reason", "type": "longtext", "label": "搁置或不做的原因"}], "create": ["title", "body", "areas", "project"]}, {"key": "projects", "prefix": "p", "label": "项目", "group": "state", "summary": "一个阶段或一个主题一个项目，任务卡挂在项目下面。标成主线的项目显示在“今天”页最上面。", "states": [{"name": "进行中", "open": true}, {"name": "以后", "open": true}, {"name": "暂停", "open": true, "ask": "note"}, {"name": "完成", "open": false}, {"name": "不做", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "项目名", "required": true}, {"key": "summary", "type": "longtext", "label": "为什么做、做成什么样"}, {"key": "kind", "type": "choice", "label": "种类", "choices": ["引擎", "模块", "工具与流程", "游戏项目"]}, {"key": "focus", "type": "bool", "label": "当前主线"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "module", "type": "ref", "to": "modules", "label": "对应的模块"}, {"key": "repo", "type": "text", "label": "仓库", "help": "设置里登记的仓库名"}, {"key": "branch", "type": "text", "label": "功能分支"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "kind", "focus", "areas", "module", "repo", "branch"]}, {"key": "cards", "prefix": "c", "label": "任务卡", "group": "state", "summary": "一张卡是一次能做完的一件事。排队的顺序在看板上调；智能体开工时领卡，收工时写工作记录。", "states": [{"name": "以后", "open": true}, {"name": "排队", "open": true}, {"name": "进行中", "open": true}, {"name": "等你", "open": true, "attention": true}, {"name": "完成", "open": false}, {"name": "不做", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "卡名", "required": true}, {"key": "summary", "type": "longtext", "label": "做什么"}, {"key": "acceptance", "type": "list", "label": "怎样算完成"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "idea", "type": "ref", "to": "ideas", "label": "来自哪个想法"}, {"key": "module", "type": "ref", "to": "modules", "label": "模块"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录", "help": "一行一个，可用通配。简报按它挑相关的知识和错误"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "waiting", "type": "choice", "label": "等你做什么", "choices": ["看计划", "拍板", "合并", "验收"]}, {"key": "repo", "type": "text", "label": "仓库"}, {"key": "branch", "type": "text", "label": "分支"}, {"key": "started_at", "type": "time", "label": "开工"}, {"key": "done_at", "type": "time", "label": "完成"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "acceptance", "project", "module", "areas", "paths"]}, {"key": "plans", "prefix": "pl", "label": "计划", "group": "state", "summary": "推理强的智能体先把一件事查清楚，写成一步一步的计划；总监看过批准后，交给别的智能体（可以是便宜的模型）照着做。执行的一方不改方案，走不通就停下并写明卡在哪。", "states": [{"name": "草稿", "open": true}, {"name": "等你看", "open": true, "attention": true}, {"name": "可执行", "open": true}, {"name": "执行中", "open": true}, {"name": "卡住", "open": true, "attention": true, "ask": "stuck"}, {"name": "完成", "open": false}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "计划名", "required": true}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "goal", "type": "longtext", "label": "目标与范围", "help": "做成什么样；明确写出不做什么"}, {"key": "findings", "type": "longtext", "label": "查到的情况", "help": "关键文件、现状、为什么选这个做法。执行的一方不用再查一遍"}, {"key": "steps", "type": "list", "label": "步骤", "help": "一行一步：改哪个文件、怎么改、做完怎么确认"}, {"key": "done", "type": "number", "label": "做完了前几步"}, {"key": "checks", "type": "list", "label": "全部做完后怎么验收"}, {"key": "stops", "type": "list", "label": "遇到什么就停手", "help": "执行的一方遇到这些情况不要自己改方案，改成“卡住”并写明"}, {"key": "executor", "type": "text", "label": "建议谁来做", "help": "例如：便宜的模型就够；第 3 步要推理强的"}, {"key": "model", "type": "text", "label": "写计划的模型"}, {"key": "stuck", "type": "longtext", "label": "卡在哪"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "card", "areas", "goal", "findings", "steps", "checks", "stops", "executor"]}, {"key": "workflows", "prefix": "wf", "label": "工作流", "group": "state", "summary": "试过、能反复用的做法。智能体按总监的要求写成工作流（可带参数）交到这里；总监试过、好用就改成“已验证”。以后按“运行”复制指令贴进新会话，智能体照着做并留下工作记录。", "states": [{"name": "草稿", "open": true}, {"name": "等你试", "open": true, "attention": true}, {"name": "已验证", "open": true}, {"name": "停用", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "名字", "required": true}, {"key": "summary", "type": "longtext", "label": "什么时候用、做成什么"}, {"key": "params", "type": "list", "label": "参数", "help": "一行一个：名字：说明。有默认值写成 名字=默认值：说明。步骤里用 {名字} 引用"}, {"key": "steps", "type": "list", "label": "步骤", "help": "一行一步：做什么、用什么命令、做完怎么确认"}, {"key": "checks", "type": "list", "label": "做完怎么验收"}, {"key": "stops", "type": "list", "label": "遇到什么就停手"}, {"key": "model", "type": "text", "label": "建议的模型与推理", "help": "例如：计划用 Fable xhigh，执行用 Sonnet xhigh"}, {"key": "where", "type": "text", "label": "在哪里跑", "help": "仓库或目录；哪里都行就留空"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "runs", "type": "number", "label": "用过几次"}, {"key": "last_run", "type": "time", "label": "上次运行"}, {"key": "fixes", "type": "log", "label": "执行时提的修改建议"}, {"key": "history", "type": "log", "label": "修改记录", "help": "谁在什么时候改了什么。hq flow save --id 带 --note，网站上编辑时自动记"}, {"key": "source", "type": "text", "label": "出处", "help": "从哪次工作记录整理来的"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "params", "steps", "checks", "stops", "model", "where", "areas"]}, {"key": "sessions", "prefix": "s", "label": "工作记录", "date": "started_at", "group": "date", "summary": "智能体每次开工到收工的一条记录：做到哪了、结论、改了什么、证据、没验证的、剩下的。", "states": [{"name": "进行中", "open": true}, {"name": "已收工", "open": true}, {"name": "中断", "open": true}], "required_when_done": ["conclusion", "changes", "evidence", "unverified", "remaining", "learned", "mistakes", "questions"], "fields": [{"key": "title", "type": "text", "label": "做的事"}, {"key": "kind", "type": "choice", "label": "种类", "choices": ["执行", "写计划", "工作流"]}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "plan", "type": "ref", "to": "plans", "label": "计划"}, {"key": "workflow", "type": "ref", "to": "workflows", "label": "工作流"}, {"key": "params", "type": "list", "label": "参数"}, {"key": "done", "type": "number", "label": "做完了前几步", "help": "照工作流做时记在这里"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "model", "type": "text", "label": "模型"}, {"key": "started_at", "type": "time", "label": "开工"}, {"key": "ended_at", "type": "time", "label": "收工"}, {"key": "progress", "type": "log", "label": "进度"}, {"key": "conclusion", "type": "longtext", "label": "结论"}, {"key": "changes", "type": "list", "label": "改了什么"}, {"key": "evidence", "type": "list", "label": "证据"}, {"key": "unverified", "type": "list", "label": "没验证的"}, {"key": "remaining", "type": "list", "label": "剩下的"}, {"key": "learned", "type": "refs", "label": "学到的"}, {"key": "mistakes", "type": "refs", "label": "犯下的错误"}, {"key": "questions", "type": "refs", "label": "新疑问"}, {"key": "repo", "type": "text", "label": "仓库"}, {"key": "branch", "type": "text", "label": "分支"}, {"key": "commits", "type": "list", "label": "提交"}, {"key": "builds", "type": "number", "label": "构建次数"}, {"key": "tokens", "type": "text", "label": "额度"}, {"key": "brief_used", "type": "refs", "label": "简报里用上的"}, {"key": "brief_useless", "type": "refs", "label": "简报里没用的"}], "create": []}, {"key": "modules", "prefix": "mod", "label": "模块", "group": "state", "summary": "引擎仓库外的可装卸模块。每个模块写明仓库、依赖的 SDK 接口和验证项目；SDK 接口一改，就按这里找受影响的模块。", "states": [{"name": "构想", "open": true}, {"name": "开发中", "open": true}, {"name": "可用", "open": true}, {"name": "停用", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "模块名", "required": true}, {"key": "summary", "type": "longtext", "label": "做什么用"}, {"key": "repo", "type": "text", "label": "仓库", "help": "本机路径或 GitHub 的 owner/name"}, {"key": "sdk", "type": "text", "label": "依赖的 SDK 接口版本"}, {"key": "interfaces", "type": "list", "label": "用到的引擎接口", "help": "一行一个公开头文件或接口名"}, {"key": "depends", "type": "list", "label": "依赖的其他模块"}, {"key": "verify", "type": "text", "label": "验证项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "repo", "sdk", "interfaces", "depends", "verify", "areas"]}, {"key": "decisions", "prefix": "d", "label": "决定", "group": "state", "summary": "要总监定的事，和已经定下来的事。方向、取舍、新依赖、对外兼容才放这里。", "states": [{"name": "等你定", "open": true, "attention": true}, {"name": "已定", "open": true}, {"name": "撤回", "open": false}], "fields": [{"key": "title", "type": "text", "label": "要定什么", "required": true}, {"key": "context", "type": "longtext", "label": "背景"}, {"key": "options", "type": "options", "label": "选项"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "choice", "type": "text", "label": "定了哪个"}, {"key": "note", "type": "longtext", "label": "总监的话"}], "create": ["title", "context", "options", "areas", "card", "project"]}, {"key": "questions", "prefix": "q", "label": "疑问", "group": "state", "summary": "查不到答案的事贴在这里。默认问其他智能体；看到能回答的就回答，确认后把结论留成知识。", "states": [{"name": "待回答", "open": true, "attention": true}, {"name": "已回答", "open": true}, {"name": "已解决", "open": false}], "fields": [{"key": "title", "type": "text", "label": "问题", "required": true}, {"key": "context", "type": "longtext", "label": "背景与已经查过的"}, {"key": "to", "type": "choice", "label": "问给谁", "choices": ["智能体", "总监"]}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "answers", "type": "answers", "label": "回答"}, {"key": "conclusion", "type": "longtext", "label": "结论"}], "create": ["title", "context", "to", "areas", "paths"]}, {"key": "issues", "prefix": "b", "label": "问题", "group": "state", "summary": "发现的缺陷和毛病。当场修不了的记在这里，要修的时候转成任务卡。", "states": [{"name": "待处理", "open": true}, {"name": "处理中", "open": true}, {"name": "已修", "open": false}, {"name": "不处理", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "现象", "required": true}, {"key": "detail", "type": "longtext", "label": "细节与重现办法"}, {"key": "severity", "type": "choice", "label": "严重程度", "choices": ["挡路", "影响使用", "小毛病"]}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "evidence", "type": "list", "label": "证据"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "detail", "severity", "areas", "paths", "evidence"]}, {"key": "primers", "prefix": "pr", "label": "领域速查", "group": "area", "sort": "order", "summary": "每个领域一页“必须知道的事”，保持很短。智能体开工时先读自己这张卡的领域的速查。", "fields": [{"key": "title", "type": "text", "label": "标题", "required": true}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "body", "type": "longtext", "label": "内容"}, {"key": "order", "type": "number", "label": "顺序"}], "create": ["title", "areas", "body", "order"]}, {"key": "policies", "prefix": "pol", "label": "方针", "group": "area", "sort": "order", "summary": "总监定的规矩。标成“每次必带”的进每一份开工简报，其余按领域带。能用脚本或提交钩子检查的，写在“怎么检查”里。", "states": [{"name": "有效", "open": true}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "body", "type": "longtext", "label": "内容与原因"}, {"key": "core", "type": "bool", "label": "每次必带"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "check", "type": "text", "label": "怎么检查", "help": "脚本、提交钩子或测试的名字；没有就留空"}, {"key": "order", "type": "number", "label": "顺序"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "body", "core", "areas", "check", "order"]}, {"key": "knowledge", "prefix": "k", "label": "知识", "group": "area", "summary": "做过才知道的事：做法、数字、在哪里。收工时写的先是待复核，核实过改成有效，过时的作废。", "states": [{"name": "待复核", "open": true}, {"name": "有效", "open": true}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "body", "type": "longtext", "label": "细节"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "source", "type": "text", "label": "出处", "help": "工作记录的 id、提交或链接"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "hits", "type": "number", "label": "简报里用上的次数"}, {"key": "misses", "type": "number", "label": "简报里没用的次数"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "body", "areas", "paths", "source"]}, {"key": "mistakes", "prefix": "m", "label": "错误簿", "group": "area", "summary": "犯过的错和怎么防。同一类错再犯就升成方针；能机械检查的再升成脚本或钩子。", "states": [{"name": "已记录", "open": true}, {"name": "已升成方针", "open": true}, {"name": "已防住", "open": false}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "what", "type": "longtext", "label": "发生了什么"}, {"key": "root_cause", "type": "longtext", "label": "根因"}, {"key": "caught_by", "type": "text", "label": "怎么发现的"}, {"key": "fix", "type": "longtext", "label": "怎么改的"}, {"key": "prevention", "type": "longtext", "label": "以后怎么防"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "again", "type": "number", "label": "又犯了几次"}, {"key": "policy", "type": "ref", "to": "policies", "label": "升成的方针"}, {"key": "note", "type": "longtext", "label": "备注", "help": "作废的原因，或合并进了哪一条"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "hits", "type": "number", "label": "简报里用上的次数"}, {"key": "misses", "type": "number", "label": "简报里没用的次数"}], "create": ["title", "what", "root_cause", "caught_by", "fix", "prevention", "areas", "paths"]}, {"key": "members", "prefix": "", "label": "成员", "writer": "self", "summary": "登录过的人的称呼。", "fields": [{"key": "handle", "type": "text", "label": "称呼", "required": true, "help": "2〜20 位半角英数字或 - _"}, {"key": "role", "type": "text", "label": "做什么的"}, {"key": "note", "type": "text", "label": "备注"}], "create": ["handle", "role", "note"]}]}</script>
+<script type="application/json" id="schema">{"version": 1, "project": "engine", "name": "HIKARI 中枢", "areas": ["渲染管线", "光照与GI", "后处理", "着色器与材质", "地形与世界", "编辑器", "资产与导入", "运行时与模块", "构建与工程", "验证与测试", "性能", "中枢与流程", "游戏项目"], "meta_fields": {"by": "谁写的（成员的称呼）", "by_agent": "智能体写的时候才有，例如 claude-code、codex", "at": "创建时间，UTC 的 ISO 8601（例 2026-11-11T05:20:31Z）", "updated_at": "更新时间，同上；本机镜像靠它做增量同步，每次写入都要更新", "updated_by": "谁更新的"}, "settings": {"project": {"fields": [{"key": "name", "type": "text", "label": "名字", "required": true}, {"key": "summary", "type": "longtext", "label": "说明"}, {"key": "areas", "type": "list", "label": "领域", "help": "一行一个。所有记录都按这里的领域分类"}, {"key": "repos", "type": "list", "label": "仓库", "help": "一行一个：名字 = 本机路径"}, {"key": "base_branch", "type": "text", "label": "主干分支", "help": "功能分支从这里分出，例如 develop"}, {"key": "guard_paths", "type": "list", "label": "要人把关的路径", "help": "一行一个通配（例 HIKARI/*/Public/**）。收工时这次的提交碰到这些路径，交接就必须写“要人把关的代码”，卡进总监的审阅"}]}, "plan": {"help": "queue：排队的任务卡 id，从上到下就是先后顺序"}}, "nav": [{"title": "", "views": ["home", "review", "projects", "board", "workflows", "ideas", "plans", "timeline", "sessions", "modules"]}, {"title": "要处理", "views": ["decisions", "questions", "issues"]}, {"title": "积累", "views": ["primers", "policies", "knowledge", "mistakes"]}, {"title": "", "views": ["settings"]}], "collections": [{"key": "ideas", "prefix": "i", "label": "想法箱", "date": "at", "group": "state", "summary": "想到什么先记在这里，不用整理。定下来的再拆成任务卡；搁置或不做的写上原因，以后翻回来知道当时为什么停。", "states": [{"name": "新想法", "open": true}, {"name": "讨论中", "open": true}, {"name": "已定", "open": true, "ask": "outcome"}, {"name": "搁置", "open": false, "ask": "reason"}, {"name": "不做", "open": false, "ask": "reason"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "why", "type": "longtext", "label": "为什么想到", "help": "看到了什么现象、数字或缺口"}, {"key": "where", "type": "text", "label": "在哪里", "help": "文件、模块或场景"}, {"key": "gain", "type": "text", "label": "做了有什么好处"}, {"key": "cost", "type": "text", "label": "代价", "help": "小（半天内）/ 中（一两天）/ 大，加一句理由"}, {"key": "source", "type": "ref", "to": "sessions", "label": "来源", "help": "想到它时的那次工作；hq 命令自动填"}, {"key": "body", "type": "longtext", "label": "细节"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "project", "type": "ref", "to": "projects", "label": "属于哪个项目"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "advice", "type": "choice", "label": "评估建议", "choices": ["做", "搁置", "不做", "已做"]}, {"key": "assessment", "type": "longtext", "label": "评估", "help": "现状、有没有重复、为什么这样建议"}, {"key": "outcome", "type": "longtext", "label": "定下来的结论"}, {"key": "reason", "type": "longtext", "label": "搁置或不做的原因"}], "create": ["title", "why", "where", "gain", "cost", "areas", "project"]}, {"key": "projects", "prefix": "p", "label": "项目", "group": "state", "summary": "一个阶段或一个主题一个项目，任务卡挂在项目下面。标成主线的项目显示在“今天”页最上面。", "states": [{"name": "进行中", "open": true}, {"name": "以后", "open": true}, {"name": "暂停", "open": true, "ask": "note"}, {"name": "完成", "open": false}, {"name": "不做", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "项目名", "required": true}, {"key": "summary", "type": "longtext", "label": "为什么做、做成什么样"}, {"key": "kind", "type": "choice", "label": "种类", "choices": ["引擎", "模块", "工具与流程", "游戏项目"]}, {"key": "focus", "type": "bool", "label": "当前主线"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "module", "type": "ref", "to": "modules", "label": "对应的模块"}, {"key": "repo", "type": "text", "label": "仓库", "help": "设置里登记的仓库名"}, {"key": "branch", "type": "text", "label": "功能分支"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "kind", "focus", "areas", "module", "repo", "branch"]}, {"key": "cards", "prefix": "c", "label": "任务卡", "group": "state", "summary": "一张卡是一次能做完的一件事。排队的顺序在看板上调；智能体开工时领卡，收工时写工作记录。", "states": [{"name": "以后", "open": true}, {"name": "排队", "open": true}, {"name": "进行中", "open": true}, {"name": "等你", "open": true, "attention": true}, {"name": "完成", "open": false}, {"name": "不做", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "卡名", "required": true}, {"key": "summary", "type": "longtext", "label": "做什么"}, {"key": "kind", "type": "choice", "label": "种类", "choices": ["功能", "修复", "性能", "调查", "整理", "工具与流程"]}, {"key": "priority", "type": "choice", "label": "优先级", "choices": ["主线", "普通", "有空再说"]}, {"key": "verify", "type": "choice", "label": "验收方式", "choices": ["自验", "看画面", "试手感", "看代码", "不用验收"], "help": "自验和不用验收的卡，做完、没碰到要人把关的代码就直接完成，不进总监的审阅"}, {"key": "acceptance", "type": "list", "label": "怎样算完成"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "idea", "type": "ref", "to": "ideas", "label": "来自哪个想法"}, {"key": "module", "type": "ref", "to": "modules", "label": "模块"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录", "help": "一行一个，可用通配。简报按它挑相关的知识和错误"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "waiting", "type": "choice", "label": "等你做什么", "choices": ["看计划", "拍板", "合并", "验收", "看代码"]}, {"key": "repo", "type": "text", "label": "仓库"}, {"key": "branch", "type": "text", "label": "分支"}, {"key": "started_at", "type": "time", "label": "开工"}, {"key": "done_at", "type": "time", "label": "完成"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "kind", "priority", "verify", "acceptance", "project", "module", "areas", "paths"]}, {"key": "plans", "prefix": "pl", "label": "计划", "group": "state", "summary": "推理强的智能体先把一件事查清楚，写成一步一步的计划；总监看过批准后，交给别的智能体（可以是便宜的模型）照着做。执行的一方不改方案，走不通就停下并写明卡在哪。", "states": [{"name": "草稿", "open": true}, {"name": "等你看", "open": true, "attention": true}, {"name": "可执行", "open": true}, {"name": "执行中", "open": true}, {"name": "卡住", "open": true, "attention": true, "ask": "stuck"}, {"name": "完成", "open": false}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "计划名", "required": true}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "goal", "type": "longtext", "label": "目标与范围", "help": "做成什么样；明确写出不做什么"}, {"key": "findings", "type": "longtext", "label": "查到的情况", "help": "关键文件、现状、为什么选这个做法。执行的一方不用再查一遍"}, {"key": "steps", "type": "list", "label": "步骤", "help": "一行一步：改哪个文件、怎么改、做完怎么确认"}, {"key": "done", "type": "number", "label": "做完了前几步"}, {"key": "checks", "type": "list", "label": "全部做完后怎么验收"}, {"key": "stops", "type": "list", "label": "遇到什么就停手", "help": "执行的一方遇到这些情况不要自己改方案，改成“卡住”并写明"}, {"key": "executor", "type": "text", "label": "建议谁来做", "help": "例如：便宜的模型就够；第 3 步要推理强的"}, {"key": "model", "type": "text", "label": "写计划的模型"}, {"key": "stuck", "type": "longtext", "label": "卡在哪"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "card", "areas", "goal", "findings", "steps", "checks", "stops", "executor"]}, {"key": "workflows", "prefix": "wf", "label": "工作流", "group": "state", "summary": "试过、能反复用的做法。智能体按总监的要求写成工作流（可带参数）交到这里；总监试过、好用就改成“已验证”。以后按“运行”复制指令贴进新会话，智能体照着做并留下工作记录。", "states": [{"name": "草稿", "open": true}, {"name": "等你试", "open": true}, {"name": "已验证", "open": true}, {"name": "停用", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "名字", "required": true}, {"key": "summary", "type": "longtext", "label": "什么时候用、做成什么"}, {"key": "params", "type": "list", "label": "参数", "help": "一行一个：名字：说明。有默认值写成 名字=默认值：说明。步骤里用 {名字} 引用"}, {"key": "steps", "type": "list", "label": "步骤", "help": "一行一步：做什么、用什么命令、做完怎么确认"}, {"key": "checks", "type": "list", "label": "做完怎么验收"}, {"key": "stops", "type": "list", "label": "遇到什么就停手"}, {"key": "model", "type": "text", "label": "建议的模型与推理", "help": "例如：计划用 Fable xhigh，执行用 Sonnet xhigh"}, {"key": "where", "type": "text", "label": "在哪里跑", "help": "仓库或目录；哪里都行就留空"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "runs", "type": "number", "label": "用过几次"}, {"key": "last_run", "type": "time", "label": "上次运行"}, {"key": "fixes", "type": "log", "label": "执行时提的修改建议"}, {"key": "history", "type": "log", "label": "修改记录", "help": "谁在什么时候改了什么。hq flow save --id 带 --note，网站上编辑时自动记"}, {"key": "source", "type": "text", "label": "出处", "help": "从哪次工作记录整理来的"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "params", "steps", "checks", "stops", "model", "where", "areas"]}, {"key": "sessions", "prefix": "s", "label": "工作记录", "date": "started_at", "group": "date", "summary": "智能体每次开工到收工的一条记录：做到哪了、结论、改了什么、证据、没验证的、剩下的。", "states": [{"name": "进行中", "open": true}, {"name": "已收工", "open": true}, {"name": "中断", "open": true}], "required_when_done": ["conclusion", "changes", "evidence", "unverified", "remaining", "learned", "mistakes", "questions"], "fields": [{"key": "title", "type": "text", "label": "做的事"}, {"key": "kind", "type": "choice", "label": "种类", "choices": ["执行", "写计划", "工作流"]}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "plan", "type": "ref", "to": "plans", "label": "计划"}, {"key": "workflow", "type": "ref", "to": "workflows", "label": "工作流"}, {"key": "params", "type": "list", "label": "参数"}, {"key": "done", "type": "number", "label": "做完了前几步", "help": "照工作流做时记在这里"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "model", "type": "text", "label": "模型"}, {"key": "started_at", "type": "time", "label": "开工"}, {"key": "ended_at", "type": "time", "label": "收工"}, {"key": "progress", "type": "log", "label": "进度"}, {"key": "headline", "type": "text", "label": "一句话", "help": "给总监看：能看到什么变化，80 字以内"}, {"key": "ask", "type": "choice", "label": "要总监做什么", "choices": ["验收", "拍板", "合并", "看代码", "不用"]}, {"key": "howto", "type": "list", "label": "怎么看", "help": "打开哪里、看哪里、通过标准"}, {"key": "proof", "type": "list", "label": "前后对比", "help": "数字写成 指标：前 → 后"}, {"key": "review_points", "type": "list", "label": "要人把关的代码", "help": "一条一处：在哪 ｜ 改了什么 ｜ 为什么要人看"}, {"key": "images", "type": "images", "label": "截图"}, {"key": "conclusion", "type": "longtext", "label": "结论"}, {"key": "changes", "type": "list", "label": "改了什么"}, {"key": "evidence", "type": "list", "label": "证据"}, {"key": "unverified", "type": "list", "label": "没验证的"}, {"key": "remaining", "type": "list", "label": "剩下的"}, {"key": "learned", "type": "refs", "label": "学到的"}, {"key": "mistakes", "type": "refs", "label": "犯下的错误"}, {"key": "questions", "type": "refs", "label": "新疑问"}, {"key": "repo", "type": "text", "label": "仓库"}, {"key": "branch", "type": "text", "label": "分支"}, {"key": "commits", "type": "list", "label": "提交"}, {"key": "builds", "type": "number", "label": "构建次数"}, {"key": "tokens", "type": "text", "label": "额度"}, {"key": "brief_used", "type": "refs", "label": "简报里用上的"}, {"key": "brief_useless", "type": "refs", "label": "简报里没用的"}], "create": []}, {"key": "modules", "prefix": "mod", "label": "模块", "group": "state", "summary": "引擎仓库外的可装卸模块。每个模块写明仓库、依赖的 SDK 接口和验证项目；SDK 接口一改，就按这里找受影响的模块。", "states": [{"name": "构想", "open": true}, {"name": "开发中", "open": true}, {"name": "可用", "open": true}, {"name": "停用", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "模块名", "required": true}, {"key": "summary", "type": "longtext", "label": "做什么用"}, {"key": "repo", "type": "text", "label": "仓库", "help": "本机路径或 GitHub 的 owner/name"}, {"key": "sdk", "type": "text", "label": "依赖的 SDK 接口版本"}, {"key": "interfaces", "type": "list", "label": "用到的引擎接口", "help": "一行一个公开头文件或接口名"}, {"key": "depends", "type": "list", "label": "依赖的其他模块"}, {"key": "verify", "type": "text", "label": "验证项目"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "summary", "repo", "sdk", "interfaces", "depends", "verify", "areas"]}, {"key": "decisions", "prefix": "d", "label": "决定", "group": "state", "summary": "要总监定的事，和已经定下来的事。方向、取舍、新依赖、对外兼容才放这里。", "states": [{"name": "等你定", "open": true, "attention": true}, {"name": "已定", "open": true}, {"name": "撤回", "open": false}], "fields": [{"key": "title", "type": "text", "label": "要定什么", "required": true}, {"key": "context", "type": "longtext", "label": "背景"}, {"key": "options", "type": "options", "label": "选项"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "project", "type": "ref", "to": "projects", "label": "项目"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "choice", "type": "text", "label": "定了哪个"}, {"key": "note", "type": "longtext", "label": "总监的话"}], "create": ["title", "context", "options", "areas", "card", "project"]}, {"key": "questions", "prefix": "q", "label": "疑问", "group": "state", "summary": "查不到答案的事贴在这里。默认问其他智能体；看到能回答的就回答，确认后把结论留成知识。", "states": [{"name": "待回答", "open": true, "attention": true}, {"name": "已回答", "open": true}, {"name": "已解决", "open": false}], "fields": [{"key": "title", "type": "text", "label": "问题", "required": true}, {"key": "context", "type": "longtext", "label": "背景与已经查过的"}, {"key": "to", "type": "choice", "label": "问给谁", "choices": ["智能体", "总监"]}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "answers", "type": "answers", "label": "回答"}, {"key": "conclusion", "type": "longtext", "label": "结论"}], "create": ["title", "context", "to", "areas", "paths"]}, {"key": "issues", "prefix": "b", "label": "问题", "group": "state", "summary": "发现的缺陷和毛病。当场修不了的记在这里，要修的时候转成任务卡。", "states": [{"name": "待处理", "open": true}, {"name": "处理中", "open": true}, {"name": "已修", "open": false}, {"name": "不处理", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "现象", "required": true}, {"key": "detail", "type": "longtext", "label": "细节与重现办法"}, {"key": "severity", "type": "choice", "label": "严重程度", "choices": ["挡路", "影响使用", "小毛病"]}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "evidence", "type": "list", "label": "证据"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "card", "type": "ref", "to": "cards", "label": "任务卡"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "detail", "severity", "areas", "paths", "evidence"]}, {"key": "primers", "prefix": "pr", "label": "领域速查", "group": "area", "sort": "order", "summary": "每个领域一页“必须知道的事”，保持很短。智能体开工时先读自己这张卡的领域的速查。", "fields": [{"key": "title", "type": "text", "label": "标题", "required": true}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "body", "type": "longtext", "label": "内容"}, {"key": "order", "type": "number", "label": "顺序"}], "create": ["title", "areas", "body", "order"]}, {"key": "policies", "prefix": "pol", "label": "方针", "group": "area", "sort": "order", "summary": "总监定的规矩。标成“每次必带”的进每一份开工简报，其余按领域带。能用脚本或提交钩子检查的，写在“怎么检查”里。", "states": [{"name": "有效", "open": true}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "body", "type": "longtext", "label": "内容与原因"}, {"key": "core", "type": "bool", "label": "每次必带"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "check", "type": "text", "label": "怎么检查", "help": "脚本、提交钩子或测试的名字；没有就留空"}, {"key": "order", "type": "number", "label": "顺序"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "body", "core", "areas", "check", "order"]}, {"key": "knowledge", "prefix": "k", "label": "知识", "group": "area", "summary": "做过才知道的事：做法、数字、在哪里。收工时写的先是待复核，核实过改成有效，过时的作废。", "states": [{"name": "待复核", "open": true}, {"name": "有效", "open": true}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "body", "type": "longtext", "label": "细节"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "source", "type": "text", "label": "出处", "help": "工作记录的 id、提交或链接"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "hits", "type": "number", "label": "简报里用上的次数"}, {"key": "misses", "type": "number", "label": "简报里没用的次数"}, {"key": "note", "type": "longtext", "label": "备注"}], "create": ["title", "body", "areas", "paths", "source"]}, {"key": "mistakes", "prefix": "m", "label": "错误簿", "group": "area", "summary": "犯过的错和怎么防。同一类错再犯就升成方针；能机械检查的再升成脚本或钩子。", "states": [{"name": "已记录", "open": true}, {"name": "已升成方针", "open": true}, {"name": "已防住", "open": false}, {"name": "作废", "open": false, "ask": "note"}], "fields": [{"key": "title", "type": "text", "label": "一句话", "required": true}, {"key": "what", "type": "longtext", "label": "发生了什么"}, {"key": "root_cause", "type": "longtext", "label": "根因"}, {"key": "caught_by", "type": "text", "label": "怎么发现的"}, {"key": "fix", "type": "longtext", "label": "怎么改的"}, {"key": "prevention", "type": "longtext", "label": "以后怎么防"}, {"key": "areas", "type": "areas", "label": "领域"}, {"key": "paths", "type": "list", "label": "相关的文件或目录"}, {"key": "again", "type": "number", "label": "又犯了几次"}, {"key": "policy", "type": "ref", "to": "policies", "label": "升成的方针"}, {"key": "note", "type": "longtext", "label": "备注", "help": "作废的原因，或合并进了哪一条"}, {"key": "state", "type": "state", "label": "状态"}, {"key": "hits", "type": "number", "label": "简报里用上的次数"}, {"key": "misses", "type": "number", "label": "简报里没用的次数"}], "create": ["title", "what", "root_cause", "caught_by", "fix", "prevention", "areas", "paths"]}, {"key": "files", "prefix": "img", "label": "截图", "mirror": false, "summary": "工作记录附带的截图：压缩成 JPEG（长边 1600 以内）存在数据库里。智能体用 hq shot 上传，网站按需读取。", "fields": [{"key": "name", "type": "text", "label": "文件名"}, {"key": "caption", "type": "text", "label": "说明"}, {"key": "owner", "type": "text", "label": "属于哪条记录"}, {"key": "mime", "type": "text", "label": "类型"}, {"key": "width", "type": "number", "label": "宽"}, {"key": "height", "type": "number", "label": "高"}, {"key": "data", "type": "text", "label": "内容（base64）"}], "create": []}, {"key": "members", "prefix": "", "label": "成员", "writer": "self", "summary": "登录过的人的称呼。", "fields": [{"key": "handle", "type": "text", "label": "称呼", "required": true, "help": "2〜20 位半角英数字或 - _"}, {"key": "role", "type": "text", "label": "做什么的"}, {"key": "note", "type": "text", "label": "备注"}], "create": ["handle", "role", "note"]}]}</script>
 <script type="application/json" id="hub-config">{"firebase": {"apiKey": "AIzaSyBGn_Q2Of4_05OpgpqrBK3yvSBA8dsta98", "authDomain": "hikarihub.firebaseapp.com", "projectId": "hikarihub", "appId": "1:214480059752:web:0087b6c2262bf8de87eadd"}, "pid": "engine"}</script>
 <!--backend-->
 <script type="module">
@@ -443,11 +517,23 @@ const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) ||
 
 // signed: null = 还不知道。denied: 没被邀请。f: 每种记录的筛选与分组（记在浏览器里）。
 // sites：上方切换栏里制作ハブ的作品（本人的作品目录 directory/<邮箱>/projects 里、读得到设置的）。id → 名字。
-const S = { data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", f: {}, days: 14, boardProject: "", tlKind: "", sites: new Map() };
+const S = { ri: 0, skip: new Set(), data: { settings: new Map() }, me: { uid: null, email: "", name: "", handle: "", owner: false }, db: null, signed: null, denied: false, invites: new Map(), live: null, late: false, q: "", f: {}, days: 14, boardProject: "", tlKind: "", sites: new Map() };
 for (const c of SCHEMA.collections) S.data[c.key] = new Map();
 try { S.f = JSON.parse(localStorage.getItem("hq-filters") || "{}") || {}; } catch { /* 存不了也照常用 */ }
+try { S.skip = new Set(JSON.parse(sessionStorage.getItem("hq-skip") || "[]")); } catch { /* 同上 */ }
+const saveSkip = () => { try { sessionStorage.setItem("hq-skip", JSON.stringify([...S.skip])); } catch { /* 同上 */ } };
 
-const EXTRA_VIEWS = { home: "今天", board: "看板", timeline: "时间线", settings: "设置" };
+const EXTRA_VIEWS = { home: "今天", review: "审阅", board: "看板", timeline: "时间线", settings: "设置" };
+const ic = (name) => (name ? `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>` : "");
+const NAV_ICON = { home: "home", review: "inbox", projects: "folder", board: "columns", workflows: "route", ideas: "bulb", plans: "list", timeline: "clock", sessions: "notebook", modules: "puzzle",
+  decisions: "scale", questions: "help", issues: "bug", primers: "book", policies: "shield", knowledge: "school", mistakes: "alert", settings: "adjust" };
+// 按钮的图标：按操作取；改状态的按要改成什么取。
+const ACT_ICON = { "copy-start": "play", "copy-plan": "list", edit: "pencil", "flow-edit": "pencil", "flow-run": "play", "flow-fix": "wand", "flow-ask": "wand", "flow-from": "route",
+  "card-return": "undo", "plan-approve": "check", decide: "check", answer: "message", resolve: "check", "idea-card": "card", "issue-card": "card", "to-policy": "shield", again: "plus",
+  new: "plus", login: "login", logout: "logout", tr: "language", "copy-key": "copy", "invite-add": "plus", "rv-pass": "check", "rv-pass-all": "check", "rv-later": "clock", "rv-merged": "merge",
+  "copy-merge": "copy", "review-next": "arrow-right", "review-prev": "arrow-left", "review-unskip": "undo", project: "pencil", profile: "pencil" };
+const STATE_ICON = { 完成: "check", 已验证: "check", 有效: "check", 排队: "arrow-right", 不做: "x", 搁置: "clock", 作废: "x", 停用: "x" };
+const VERIFY_ICON = { 看画面: "eye", 试手感: "hand", 看代码: "code", 自验: "check", 不用验收: "check" };
 const viewLabel = (key) => EXTRA_VIEWS[key] || COLL[key].label;
 const GROUPS = { date: "日期", area: "领域", state: "状态", project: "项目" };
 
@@ -544,7 +630,7 @@ function stClass(coll, d) {
   return isOpen(coll, d) ? "open" : "closed";
 }
 const stPill = (coll, d) => (COLL[coll].states && d.state ? `<span class="st ${stClass(coll, d)}">${esc(d.state)}${d.state === "等你" && d.waiting ? "・" + esc(d.waiting) : ""}</span>` : "");
-const tags = (d) => [d.kind, d.severity, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
+const tags = (d) => (d.priority === "主线" ? `<span class="tag hot">${ic("star")}主线</span> ` : "") + [d.kind, d.severity, d.advice && "建议" + d.advice, ...(d.areas || [])].filter(Boolean).map((x) => `<span class="tag">${esc(x)}</span>`).join(" ");
 // 已收工的工作记录里没写的必填项（空数组算写了“没有”）。
 function gaps(coll, d) {
   const req = COLL[coll].required_when_done;
@@ -558,7 +644,8 @@ function row(coll, d, sub, acts = []) {
 }
 const list = (rows, empty = "没有") => (rows.length ? rows.join("") : `<p class="empty">${empty}</p>`);
 // tip：鼠标停在按钮上时的说明（按了会发生什么）。
-const btn = (act, label, data = {}, cls = "", tip = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
+const btn = (act, label, data = {}, cls = "", tip = "", icon = act === "state" ? STATE_ICON[data.to] : ACT_ICON[act]) =>
+  `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${ic(icon)}<span>${esc(label)}</span>${data.key ? `<kbd>${esc(String(data.key).toUpperCase())}</kbd>` : ""}</button>`;
 const pick = (label, on, data) => `<button type="button" class="pick ${on ? "on" : ""}" data-act="filt" ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
 function toast(text, bad) {
   const el = $("#toast");
@@ -735,9 +822,10 @@ const groupHtml = (g, body) => `<details class="grp" ${g.fold ? "" : "open"}><su
 // ---------- 页面 ----------
 function renderNav(view) {
   const count = (coll) => docs(coll).filter((d) => needsYou(coll, d)).length;
+  const inReview = S.signed ? reviewItems().length : 0;
   $("#nav").innerHTML = SCHEMA.nav.map((sec) => (sec.title ? `<div class="navt">${esc(sec.title)}</div>` : "") + sec.views.map((key) => {
-    const n = COLL[key] ? count(key) : key === "board" ? count("cards") : 0;
-    return `<a href="#${key}" class="${key === view ? "on" : ""}">${esc(viewLabel(key))}${n ? `<span class="badge">${n}</span>` : ""}</a>`;
+    const n = key === "review" ? inReview : COLL[key] && !["cards", "plans", "decisions", "questions"].includes(key) ? count(key) : 0;
+    return `<a href="#${key}" class="${key === view ? "on" : ""}">${ic(NAV_ICON[key])}<span>${esc(viewLabel(key))}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`;
   }).join("")).join("");
 }
 // 给总监点的“下一步”：按记录的种类和状态给出最常用的一两个按钮。今天页的行里和详情页顶上共用。
@@ -746,7 +834,7 @@ function nextActs(coll, d, mini = false) {
   const out = [], a = (act, label, data, cls = "", tip = "") => out.push(btn(act, label, data, (mini ? "mini " : "") + cls, tip));
   const to = (state, label, cls, tip) => a("state", label, { coll, id: d.id, to: state }, cls, tip);
   if (coll === "cards" && d.state === "等你") {
-    if (d.waiting === "验收") { to("完成", "验收通过", "star", "看过证据，达标：卡改成完成"); a("card-return", "退回", { id: d.id }, "ghost", "没达标：写明哪里不行，卡回到队首重做"); }
+    if (d.waiting === "验收" || d.waiting === "看代码") { a("rv-pass", "通过", { id: d.id }, "star", "看过了、达标：卡改成完成"); a("card-return", "退回", { id: d.id }, "ghost", "没达标：写明哪里不行，卡回到队首重做"); }
     if (d.waiting === "合并") to("完成", "已合并", "star", "分支已经合进去了：卡改成完成");
     if (d.waiting === "拍板") { to("排队", "可以做", "star", "同意这么做：排进队列"); to("不做", "不做", "ghost", "不做：要写原因"); }
   }
@@ -759,10 +847,10 @@ function nextActs(coll, d, mini = false) {
   if (coll === "workflows" && d.state === "等你试") to("已验证", "好用", "", "试过、好用：改成已验证");
   if (coll === "questions" && needsYou(coll, d)) a("answer", "回答", { id: d.id }, "star");
   if (coll === "knowledge" && d.state === "待复核") to("有效", "核实过", "star", "内容是对的：改成有效");
-  if (coll === "ideas" && d.state === "新想法") { a("idea-card", "拆成卡", { id: d.id }, "star", "做成一张任务卡（以后）"); to("搁置", "搁置", "ghost", "先不做：要写原因"); }
+  if (coll === "ideas" && ["新想法", "讨论中"].includes(d.state)) { a("idea-card", "拆成卡", { id: d.id }, d.advice === "做" ? "star" : "", "做成一张任务卡（以后）"); to("搁置", "搁置", "ghost", "先不做：要写原因"); to("不做", "不做", "ghost", "不做：要写原因"); }
   return out;
 }
-const ageDays = (iso) => Math.max(0, Math.floor((Date.now() - new Date(iso)) / 86400000));
+const ageDays = (iso) => (iso ? Math.max(0, Math.floor((Date.now() - new Date(iso)) / 86400000)) : 0);
 // 任务卡在列表里的小字：排队的写第几位，等你的写等什么。
 function cardSub(c, withProject = false) {
   const head = withProject && c.project ? `<span class="muted">${esc(refTitle(c.project))}</span> ` : "";
@@ -772,18 +860,35 @@ function cardSub(c, withProject = false) {
 }
 // 看板上的一张卡。extra 是卡上的按钮。
 const kcard = (c, extra = "", withProject = true) => `<a class="kc ${c.state === "进行中" ? "now" : ""}" href="#${esc(c.id)}"><b>${esc(c.title)}</b>${withProject && c.project ? `<span class="muted">${esc(refTitle(c.project))}</span> ` : ""}${c.state === "等你" && c.waiting ? `<span class="tag">${esc(c.waiting)}</span> ` : ""}${tags(c)}${extra ? `<span class="acts">${extra}</span>` : ""}</a>`;
-// 等总监处理的事，按要做的动作分组：要定的、要看的计划、要拍板、要验收、要合并、要试的工作流、要回答的疑问。
-function waitGroups() {
-  const cards = docs("cards"), planWait = docs("plans").filter((d) => needsYou("plans", d));
-  const byWait = (w) => cards.filter((c) => c.state === "等你" && (c.waiting || "其他") === w && !(w === "看计划" && planWait.some((p) => p.card === c.id)));
-  return [
-    ["要你定", docs("decisions").filter((d) => d.state === "等你定").map((d) => row("decisions", d, `决定 · ${byText(d)}`, nextActs("decisions", d, true)))],
-    ["看计划", [...planWait.map((d) => row("plans", d, `${d.state === "卡住" ? "执行时卡住了" : "计划等你看"} · ${byText(d)}`, nextActs("plans", d, true))), ...byWait("看计划").map((c) => row("cards", c, cardSub(c, true)))]],
-    ...["拍板", "验收", "合并", "其他"].map((w) => [w === "其他" ? "等你（没写等什么）" : "要" + w, byWait(w).map((c) => row("cards", c, cardSub(c, true), nextActs("cards", c, true)))]),
-    ["工作流等你试", docs("workflows").filter((d) => d.state === "等你试").map((d) => flowRow(d))],
-    ["疑问", docs("questions").filter((d) => needsYou("questions", d)).map((d) => row("questions", d, `疑问 · ${byText(d)}`, nextActs("questions", d, true)))],
-  ].filter(([, rows]) => rows.length);
+// 审阅的队列：要总监做的事，一件一条。合并按分支算一件。
+// 先排挡着智能体的（卡住的计划、决定、拍板、看计划），再看代码、验收、合并、疑问；同类里主线在前、等得久的在前。
+const REVIEW_RANK = { 计划卡住: 0, 决定: 1, 拍板: 2, 看计划: 3, 自验清单: 4, 看代码: 5, 验收: 6, 合并: 7, 疑问: 8 };
+const REVIEW_MIN = { 计划卡住: 3, 决定: 2, 拍板: 3, 看计划: 5, 自验清单: 2, 看代码: 6, 验收: 2, 合并: 1, 疑问: 2 };
+const VERIFY_MIN = { 看画面: 2, 试手感: 5, 看代码: 6, 自验: 1, 不用验收: 1 };
+function reviewItems() {
+  const plans = docs("plans").filter((d) => needsYou("plans", d)), focus = new Set(docs("projects").filter((x) => x.focus).map((x) => x.id));
+  const items = [], merges = new Map(), selfChecked = [];
+  const add = (kind, coll, d, extra = {}) => items.push({ key: d.id, kind, coll, d, mins: REVIEW_MIN[kind], main: d.priority === "主线" || focus.has(d.project), age: ageDays(d.updated_at || d.at), ...extra });
+  for (const d of docs("decisions").filter((x) => x.state === "等你定")) add("决定", "decisions", d);
+  for (const d of plans) add(d.state === "卡住" ? "计划卡住" : "看计划", "plans", d);
+  for (const c of docs("cards").filter((x) => x.state === "等你")) {
+    if (c.waiting === "看计划" && plans.some((x) => x.card === c.id)) continue;
+    if (c.waiting === "合并") { const b = c.branch || "（没写分支）"; merges.set(b, [...(merges.get(b) || []), c]); continue; }
+    if ((c.waiting || "验收") === "验收" && c.verify === "自验") { selfChecked.push(c); continue; }
+    const kind = REVIEW_RANK[c.waiting] !== undefined ? c.waiting : "验收";
+    add(kind, "cards", c, kind === "验收" ? { mins: VERIFY_MIN[c.verify] || 2 } : {});
+  }
+  for (const [branch, cards] of merges) add("合并", "cards", cards[0], { key: "merge:" + branch, branch, cards, title: `把分支 ${branch} 合进主干`, main: cards.some((c) => focus.has(c.project)), age: Math.max(...cards.map((c) => ageDays(c.updated_at))) });
+  // 智能体用数字或测试自己验过的卡：收成一张清单，扫一眼一次通过。
+  if (selfChecked.length) add("自验清单", "cards", selfChecked[0], { key: "self", cards: selfChecked, title: `智能体自己验过的 ${selfChecked.length} 张卡`, mins: Math.ceil(selfChecked.length / 2),
+    main: selfChecked.some((c) => focus.has(c.project)), age: Math.max(...selfChecked.map((c) => ageDays(c.updated_at))) });
+  for (const d of docs("questions").filter((x) => needsYou("questions", x))) add("疑问", "questions", d);
+  return items.sort((a, b) => REVIEW_RANK[a.kind] - REVIEW_RANK[b.kind] || b.main - a.main || b.age - a.age);
 }
+const reviewQueue = () => reviewItems().filter((x) => !S.skip.has(x.key));
+const pill = (icon, text, cls = "") => `<span class="pill ${cls}">${ic(icon)}${esc(text)}</span>`;
+// 审阅队列里的一行：点了就在审阅里打开这一件。
+const reviewRow = (x) => `<a class="row" href="#review" data-act="review-goto" data-k="${esc(x.key)}"><span><b>${esc(x.title || titleOf(x.d))}</b><small>${pill(x.kind === "验收" ? VERIFY_ICON[x.d.verify] || "eye" : "flag", x.kind === "验收" && x.d.verify ? x.d.verify : x.kind, "k")} ${x.main ? pill("star", "主线", "hot") : ""} ${x.coll === "cards" && x.d.project ? esc(refTitle(x.d.project)) : byText(x.d)}${x.age ? ` · 等了 ${x.age} 天` : ""}</small></span><span class="side"><span class="when">约 ${x.mins} 分钟</span></span></a>`;
 const captureBox = () => (canWrite() ? `<form class="capture" data-form="idea"><input id="idea-in" type="text" autocomplete="off" placeholder="想到什么先记下来，回车保存" aria-label="记一个想法"><button class="btn star" type="submit">记下</button></form>` : "");
 const queueCards = () => { const q = plan().queue; return docs("cards").filter((c) => c.state === "排队").sort((a, b) => ((q.indexOf(a.id) + 1) || 999) - ((q.indexOf(b.id) + 1) || 999)); };
 
@@ -795,7 +900,9 @@ function viewHome() {
     return `<div class="row"><span><a href="#${esc(p.id)}"><b>${esc(p.title)}</b></a><small>${done} / ${live} 张卡完成</small><div class="meter"><i style="width:${live ? Math.round((done / live) * 100) : 0}%"></i></div></span><span class="side">${tags({ areas: p.areas })}</span></div>${cur.join("")}${next.join("")}`;
   });
   const working = sessions.filter((s) => s.state === "进行中").map((s) => { const last = (s.progress || []).slice(-1)[0]; return row("sessions", s, `${byText(s)}${last ? " — " + esc(last.note) : ""}`); });
-  const waits = waitGroups(), waitCount = waits.reduce((n, [, rows]) => n + rows.length, 0);
+  const rv = reviewItems(), rvMins = rv.reduce((n, x) => n + x.mins, 0);
+  const doneRecent = sorted("cards", cards.filter((c) => c.state === "完成" && c.done_at)).sort((a, b) => String(b.done_at).localeCompare(String(a.done_at))).slice(0, 6)
+    .map((c) => row("cards", c, `${c.verify ? esc(c.verify) + " · " : ""}${c.project ? esc(refTitle(c.project)) : ""}`, canWrite() ? [btn("card-return", "重开", { id: c.id }, "mini ghost", "不对：写明哪里不行，卡回到队首")] : []));
   const flows = sorted("workflows", docs("workflows").filter((w) => w.state === "已验证")).sort((a, b) => (b.runs || 0) - (a.runs || 0)).slice(0, 6).map(flowRow);
   const ideas = sorted("ideas", docs("ideas").filter((d) => d.state === "新想法")).slice(0, 6).map((d) => row("ideas", d, tags(d)));
   const queue = queueCards().slice(0, 6).map((c) => row("cards", c, cardSub(c, true)));
@@ -804,13 +911,15 @@ function viewHome() {
   const issues = docs("issues").filter((b) => isOpen("issues", b)).sort((a, b) => (sev[a.severity] ?? 3) - (sev[b.severity] ?? 3)).slice(0, 6).map((b) => row("issues", b));
   const stat = (n, label, href, hot) => `<a class="stat ${hot && n ? "hot" : ""}" href="${href}"><b>${n}</b><span>${esc(label)}</span></a>`;
   return `<div class="head"><h1>${esc(project().name || SCHEMA.name)}</h1></div>
-    <div class="stats">${stat(waitCount, "等你处理", "#home", true)}${stat(working.length, "正在做", "#sessions")}${stat(queueCards().length, "排队", "#board")}${stat(docs("ideas").filter((d) => d.state === "新想法").length, "新想法", "#ideas")}${stat(docs("issues").filter((b) => isOpen("issues", b)).length, "没处理的问题", "#issues")}</div>
+    <div class="stats">${stat(rv.length, "要你处理", "#review", true)}${stat(working.length, "正在做", "#sessions")}${stat(queueCards().length, "排队", "#board")}${stat(docs("ideas").filter((d) => d.state === "新想法").length, "新想法", "#ideas")}${stat(docs("issues").filter((b) => isOpen("issues", b)).length, "没处理的问题", "#issues")}</div>
     ${captureBox()}
-    <section class="card ${waitCount ? "wait" : ""}"><h2>等你处理 <span class="chip">${waitCount}</span>${waitCount ? `<span class="muted hint">每行右边可以直接处理；要细看就点标题</span>` : ""}</h2><div class="cols">${waits.map(([label, rows]) => `<div><h3 class="sub">${esc(label)} <span class="chip">${rows.length}</span></h3>${rows.join("")}</div>`).join("") || `<p class="empty">没有，都处理完了</p>`}</div></section>
+    <section class="card ${rv.length ? "wait" : ""} rv-cta"><div class="head"><h2>${ic("inbox")}要你处理 <span class="chip">${rv.length}</span>${rv.length ? `<span class="muted hint">约 ${rvMins} 分钟，按顺序一件一件看</span>` : ""}</h2>${rv.length ? `<a class="btn star big" href="#review">${ic("play")}<span>开始审阅</span></a>` : ""}</div>
+      ${rv.slice(0, 5).map(reviewRow).join("") || `<p class="empty">都处理完了</p>`}${rv.length > 5 ? `<p class="muted more-hint">还有 ${rv.length - 5} 件，在审阅里接着看</p>` : ""}</section>
     <div class="grid">
       <section class="card now"><h2>主线</h2>${list(focus, "还没有标成主线的项目。在项目里勾上“当前主线”。")}</section>
       <section class="card"><h2>正在做 <span class="chip">${working.length}</span></h2>${list(working)}</section>
-      <section class="card"><h2>常用工作流 <a class="muted" href="#workflows">全部</a></h2>${list(flows, "还没有验证过的工作流。")}</section>
+      <section class="card"><h2>${ic("check")}最近完成 <span class="muted hint">自验的卡直接完成，不对就重开</span></h2>${list(doneRecent)}</section>
+      <section class="card"><h2>${ic("route")}常用工作流 <a class="muted" href="#workflows">全部</a></h2>${list(flows, "还没有验证过的工作流。")}</section>
       <section class="card"><h2>排队</h2>${list(queue)}</section>
       <section class="card"><h2>新想法 <a class="muted" href="#ideas">全部</a></h2>${list(ideas)}</section>
       <section class="card"><h2>最近收工 <a class="muted" href="#timeline">时间线</a></h2>${list(recent)}</section>
@@ -831,7 +940,7 @@ function viewBoard() {
     ["完成（最近 20 张）", recentDone.map((c) => kcard(c))],
   ];
   const projects = docs("projects").filter((p) => isOpen("projects", p) || p.id === S.boardProject);
-  return `<div class="head"><h1>看板</h1><div class="acts">${o ? btn("new", "任务卡 +", { coll: "cards" }) : ""}</div></div>
+  return `<div class="head"><h1>看板</h1><div class="acts">${o ? btn("new", "任务卡", { coll: "cards" }) : ""}</div></div>
     <div class="bar"><div class="seg"><span class="bl">项目</span><select data-change="board-project"><option value="">全部项目</option>${projects.map((p) => `<option value="${esc(p.id)}" ${S.boardProject === p.id ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select></div>
       <div class="seg"><span class="bl">领域</span><select data-change="area" data-coll="cards"><option value="">全部领域</option>${areas().map((a) => `<option ${f.area === a ? "selected" : ""}>${esc(a)}</option>`).join("")}</select></div></div>
     <div class="board b5">${cols.map(([name, items]) => `<div class="col"><h2>${esc(name)} <span class="chip">${items.length}</span></h2>${items.join("") || `<p class="empty">—</p>`}</div>`).join("")}</div>`;
@@ -857,7 +966,7 @@ function viewProjects() {
   const open = all.filter((p) => isOpen("projects", p)).sort((a, b) => rank(a) - rank(b) || String(b.updated_at).localeCompare(String(a.updated_at)));
   const closed = all.filter((p) => !isOpen("projects", p));
   const orphan = sorted("cards", cards.filter((c) => !c.project && isOpen("cards", c) && matchQ(c)));
-  return `<div class="head"><h1>项目</h1><div class="acts">${canWrite() ? btn("new", "新建项目 +", { coll: "projects" }) : ""}</div></div>
+  return `<div class="head"><h1>项目</h1><div class="acts">${canWrite() ? btn("new", "新建项目", { coll: "projects" }) : ""}</div></div>
     <p class="muted">${esc(COLL.projects.summary)}</p>
     <div class="grid">${open.map((p) => projectBlock(p, cards.filter((c) => c.project === p.id))).join("") || `<p class="empty">没有</p>`}</div>
     ${orphan.length ? groupHtml({ label: "没挂项目的任务卡", items: orphan, fold: true }, `<section class="card">${orphan.map((c) => row("cards", c, cardSub(c))).join("")}</section>`) : ""}
@@ -867,7 +976,7 @@ function viewProjects() {
 function projectBoard(pid) {
   const cards = docs("cards").filter((c) => c.project === pid), of = (s) => cards.filter((c) => c.state === s);
   const cols = [["进行中", of("进行中")], ["等你", of("等你")], ["排队", queueCards().filter((c) => c.project === pid)], ["以后", of("以后")], ["完成", sorted("cards", of("完成"))]];
-  return `<section class="card"><div class="head"><h2>任务卡 <span class="chip">${cards.length}</span></h2>${canWrite() ? btn("new", "任务卡 +", { coll: "cards", project: pid }, "mini") : ""}</div>
+  return `<section class="card"><div class="head"><h2>任务卡 <span class="chip">${cards.length}</span></h2>${canWrite() ? btn("new", "任务卡", { coll: "cards", project: pid }, "mini") : ""}</div>
     <div class="board b5">${cols.map(([name, items]) => `<div class="col"><h2>${esc(name)} <span class="chip">${items.length}</span></h2>${items.map((c) => kcard(c, "", false)).join("") || `<p class="empty">—</p>`}</div>`).join("")}</div></section>`;
 }
 
@@ -879,6 +988,63 @@ function flowRow(w) {
   const sub = `${w.runs ? `用过 ${w.runs} 次` : "还没用过"}${w.last_run ? ` · 上次 ${esc(fmt(w.last_run))}` : ""}${names.length ? ` · 参数：${names.join("、")}` : ""} ${tags(w)}`;
   return `<a class="row" href="#${esc(w.id)}"><span><b>${esc(w.title)}</b><small>${sub}</small></span><span class="side">${stPill("workflows", w)}<span class="acts">${nextActs("workflows", w, true).join("")}</span></span></a>`;
 }
+// 一次工作的结果：上面是给总监看的（一句话、怎么看、前后对比、把关点、截图），下面折起来的是给智能体的细节。
+function runPanel(s, open = false) {
+  if (!s) return `<p class="empty">还没有工作记录。</p>`;
+  const items = (arr, n = 99) => `<ul>${arr.slice(0, n).map((x) => `<li>${inline(x)}</li>`).join("")}</ul>`;
+  const kv = (label, v) => (blank(v) ? "" : `<dt>${label}</dt><dd>${v}</dd>`);
+  const last = (s.progress || []).slice(-1)[0];
+  const top = `${s.headline ? `<p class="headline">${esc(s.headline)}</p>` : s.conclusion ? `<div class="md">${md(s.conclusion)}</div>` : last ? `<p>做到：${esc(last.note)}</p>` : ""}
+    <dl class="kv">${kv(`${ic("eye")}怎么看`, blank(s.howto) ? "" : items(s.howto))}${kv(`${ic("arrow-right")}前后对比`, blank(s.proof) ? "" : items(s.proof))}${kv(`${ic("code")}要人把关`, blank(s.review_points) ? "" : items(s.review_points))}${kv(`${ic("alert")}没验证的`, blank(s.unverified) ? "" : items(s.unverified, 3))}</dl>
+    ${blank(s.images) ? "" : `<div class="shots">${s.images.map((id) => `<img data-img="${esc(id)}" data-act="zoom" alt="截图">`).join("")}</div>`}`;
+  const more = `<dl class="kv">${s.headline && s.conclusion ? kv("结论", `<div class="md">${md(s.conclusion)}</div>`) : ""}${kv("改了什么", blank(s.changes) ? "" : items(s.changes))}${kv("证据", blank(s.evidence) ? "" : items(s.evidence))}${kv("剩下的", blank(s.remaining) ? "" : items(s.remaining))}${kv("提交", blank(s.commits) ? "" : items(s.commits))}</dl>`;
+  return `${top}<details class="more" ${open ? "open" : ""}><summary>给智能体看的细节 · ${byText(s)} · ${esc(fmt(s.ended_at || s.started_at))} · <a href="#${esc(s.id)}">整条工作记录</a></summary>${more}</details>`;
+}
+const latestRun = (cardId) => sorted("sessions", docs("sessions").filter((x) => x.card === cardId))[0];
+const ASK_TEXT = { 计划卡住: "执行时卡住了：看卡在哪，决定怎么改", 决定: "选一个方案", 拍板: "定一下：这件事做不做、怎么做", 看计划: "看计划写得对不对，没问题就批准", 看代码: "看要人把关的那几处改动，设计没问题就通过",
+  验收: "看结果，达标就通过", 自验清单: "智能体用数字或测试自己验过：扫一眼清单，没问题就全部通过，哪张不对就单独退回", 合并: "这几张卡的代码在同一个分支上：合进主干后都算完成", 疑问: "回答这个问题" };
+function reviewBody(x) {
+  const d = x.d;
+  if (x.kind === "自验清单") return `<div class="self-list">${x.cards.map((c) => { const s = latestRun(c.id) || {}; return `<div class="self-item"><div class="head"><b><a href="#${esc(c.id)}">${esc(c.title)}</a></b>${canWrite() ? btn("card-return", "退回", { id: c.id }, "mini ghost", "这张不对：写一句哪里不行") : ""}</div>${s.headline ? `<p class="headline">${esc(s.headline)}</p>` : ""}${blank(s.proof) ? "" : `<ul class="proof">${s.proof.map((y) => `<li>${inline(y)}</li>`).join("")}</ul>`}${blank(s.unverified) ? "" : `<p class="muted">${ic("alert")}没验证：${esc(s.unverified[0])}</p>`}</div>`; }).join("")}</div>`;
+  if (x.kind === "合并") return `<div class="merge-list">${x.cards.map((c) => { const s = latestRun(c.id); return `<div class="row"><span><b>${esc(c.title)}</b><small>${esc((s && (s.headline || s.conclusion)) || "")}</small></span><span class="side"><a class="muted" href="#${esc(c.id)}">看卡</a></span></div>`; }).join("")}</div>`;
+  if (x.coll === "cards") return `${blank(d.acceptance) ? "" : `<div class="accept"><b>${ic("check")}怎样算完成</b>${`<ul>${d.acceptance.map((a) => `<li>${inline(a)}</li>`).join("")}</ul>`}</div>`}${runPanel(latestRun(d.id))}`;
+  if (x.coll === "decisions") return `${d.context ? `<div class="md">${md(d.context)}</div>` : ""}<div class="opts">${(d.options || []).map((o, i) => `<div class="opt ${o.recommended ? "rec" : ""}"><span>${o.recommended ? "<b>推荐</b> " : ""}${inline(o.text)}</span>${canWrite() ? btn("decide", "选这个", { id: d.id, i, key: String(i + 1) }, o.recommended ? "star" : "") : ""}</div>`).join("")}</div>`;
+  if (x.coll === "plans") return `${d.state === "卡住" && d.stuck ? `<div class="note">${ic("alert")}卡在：${esc(d.stuck)}</div>` : ""}${d.goal ? `<div class="md">${md(d.goal)}</div>` : ""}<ol class="steps">${(d.steps || []).map((s) => `<li><div>${inline(s)}</div></li>`).join("")}</ol>${blank(d.stops) ? "" : `<p class="muted">遇到这些就停手：${d.stops.map(esc).join("；")}</p>`}`;
+  return `${d.context ? `<div class="md">${md(d.context)}</div>` : ""}${blank(d.answers) ? "" : fieldView({ type: "answers" }, d.answers, d)}`;
+}
+function reviewActs(x) {
+  if (!canWrite()) return "";
+  const d = x.d, later = btn("rv-later", "稍后", { k: x.key, key: "s" }, "ghost big", "这次先跳过，放到最后");
+  if (x.kind === "自验清单") return btn("rv-pass-all", `全部通过（${x.cards.length} 张）`, { k: x.key, key: "a" }, "star big", "清单里还在的卡都改成完成") + later;
+  if (x.kind === "合并") return btn("rv-merged", "已合并", { k: x.key, key: "a" }, "star big", "分支已经合进主干：这几张卡都改成完成") + btn("copy-merge", "复制合并指令", { k: x.key }, "big", "复制一句话，贴给智能体去合并") + later;
+  if (x.kind === "验收" || x.kind === "看代码") return btn("rv-pass", "通过", { id: d.id, key: "a" }, "star big", "达标：卡改成完成") + btn("card-return", "退回", { id: d.id, key: "r" }, "big", "写一句哪里不行，卡回到队首重做") + later + btn("state", "不做", { coll: "cards", id: d.id, to: "不做" }, "ghost big", "不做了：要写原因");
+  if (x.kind === "拍板") return btn("state", "可以做", { coll: "cards", id: d.id, to: "排队", key: "a" }, "star big", "同意：排进队列") + btn("state", "不做", { coll: "cards", id: d.id, to: "不做", key: "r" }, "big", "不做：要写原因") + later;
+  if (x.coll === "plans") return btn("plan-approve", "批准", { id: d.id, key: "a" }, "star big", "批准后可以照着执行") + btn("state", "作废", { coll: "plans", id: d.id, to: "作废", key: "r" }, "big", "这份计划不要了：要写原因") + later;
+  if (x.coll === "questions") return btn("answer", "回答", { id: d.id, key: "a" }, "star big") + later;
+  return later;
+}
+function viewReview() {
+  const all = reviewItems(), items = all.filter((x) => !S.skip.has(x.key));
+  const head = (extra = "") => `<div class="head"><h1>审阅</h1><div class="acts">${extra}</div></div>`;
+  if (!all.length) return `${head()}<section class="card rv-empty">${ic("check")}<b>都处理完了。</b><span class="muted">新的要你看的事会出现在这里。</span></section>`;
+  if (!items.length) return `${head()}<section class="card rv-empty">${ic("clock")}<b>跳过的 ${all.length} 件留到最后。</b>${btn("review-unskip", "现在看跳过的", {}, "star")}</section>`;
+  S.ri = Math.max(0, Math.min(S.ri, items.length - 1));
+  const x = items[S.ri], d = x.d, mins = items.slice(S.ri).reduce((n, y) => n + y.mins, 0);
+  const chips = [pill(x.kind === "验收" ? VERIFY_ICON[d.verify] || "eye" : "flag", x.kind === "验收" && d.verify ? "验收 · " + d.verify : x.kind, "k"), x.main ? pill("star", "主线", "hot") : "",
+    x.coll === "cards" && d.project ? pill("folder", refTitle(d.project)) : "", x.coll === "cards" && d.kind ? pill("", d.kind) : "", x.age ? pill("clock", `等了 ${x.age} 天`) : ""].join("");
+  return `${head(btn("review-prev", "上一件", { key: "←" }, "ghost mini") + btn("review-next", "下一件", { key: "→" }, "ghost mini"))}
+    <div class="rv-progress"><span>第 ${S.ri + 1} / ${items.length} 件 · 还剩约 ${mins} 分钟${S.skip.size ? ` · 跳过了 ${S.skip.size} 件` : ""}</span><div class="meter"><i style="width:${Math.round(((S.ri + 1) / items.length) * 100)}%"></i></div></div>
+    <section class="card rv"><span class="stamp">${esc(x.kind)}</span>
+      <div class="pills">${chips}</div>
+      <h2 class="rv-title"><a href="#${esc(d.id)}">${esc(x.title || titleOf(d))}</a></h2>
+      <p class="rv-ask">${ic("flag")}${esc(ASK_TEXT[x.kind] || "")}</p>
+      ${reviewBody(x)}
+      <div class="rv-acts">${reviewActs(x)}</div>
+    </section>
+    <p class="muted keys">键盘：A 通过 · R 退回 · S 稍后 · ← → 上一件、下一件 · 决定可按数字键选</p>
+    ${items.length > S.ri + 1 ? `<section class="card"><h2>${ic("list")}接下来</h2>${items.slice(S.ri + 1, S.ri + 6).map(reviewRow).join("")}</section>` : ""}`;
+}
+
 // 步骤里的 {参数} 标出来（${…} 这种不是参数）。
 const flowText = (s) => inline(s).replace(/(?<!\$)\{([^{}\s"':=,]+)\}/g, '<code class="param">{$1}</code>');
 const logList = (arr) => `<ul class="log">${[...arr].reverse().map((x) => `<li><span class="when">${esc(fmt(x.at))}</span> ${inline(x.note)}</li>`).join("")}</ul>`;
@@ -911,7 +1077,7 @@ function viewFlow(id) {
 function viewWorkflows() {
   const all = docs("workflows").filter(matchQ), of = (s) => all.filter((w) => w.state === s).sort((a, b) => (b.runs || 0) - (a.runs || 0));
   const part = (label, items, fold) => (items.length ? groupHtml({ label, items, fold }, `<section class="card">${items.map(flowRow).join("")}</section>`) : "");
-  return `<div class="head"><h1>工作流</h1><div class="acts">${canWrite() ? btn("flow-ask", "让智能体定制 +", {}, "star") + btn("new", "自己写", { coll: "workflows" }, "ghost") : ""}</div></div>
+  return `<div class="head"><h1>工作流</h1><div class="acts">${canWrite() ? btn("flow-ask", "让智能体定制", {}, "star") + btn("new", "自己写", { coll: "workflows" }, "ghost") : ""}</div></div>
     <p class="muted">${esc(COLL.workflows.summary)}</p>
     ${part("已验证", of("已验证"))}${part("等你试", of("等你试"))}${part("草稿", of("草稿"))}${part("停用", of("停用"), true)}
     ${all.length ? "" : `<p class="empty">还没有工作流。按“让智能体定制”写下想要什么，把复制的话贴给智能体；它写好后会出现在“等你试”。</p>`}`;
@@ -923,7 +1089,7 @@ function viewList(coll) {
     ? g.items.map((d) => `<section class="card" style="margin-bottom:10px"><div class="head"><h3><a href="#${esc(d.id)}">${esc(d.title)}</a> ${d.core ? `<span class="st open">每次必带</span>` : ""} ${stPill(coll, d)}</h3></div><div class="md">${md(d.body)}</div></section>`).join("")
     : `<section class="card">${g.items.map((d) => row(coll, d)).join("")}</section>`);
   const groups = grouped(coll, rows, f.group);
-  return `<div class="head"><h1>${esc(c.label)}</h1><div class="acts">${canWrite() && c.create.length ? btn("new", "新建 +", { coll }) : ""}</div></div>
+  return `<div class="head"><h1>${esc(c.label)}</h1><div class="acts">${canWrite() && c.create.length ? btn("new", "新建", { coll }) : ""}</div></div>
     <p class="muted">${esc(c.summary)}</p>${coll === "ideas" ? captureBox() : ""}${filterBar(coll)}
     ${groups.map((g) => groupHtml(g, body(g))).join("") || `<p class="empty">没有</p>`}`;
 }
@@ -972,6 +1138,7 @@ function fieldView(f, v, d) {
       const can = d.state === "等你定" && canWrite();
       return v.map((o, i) => `<div class="opt ${d.state === "已定" && d.choice === o.text ? "chosen" : o.recommended && d.state === "等你定" ? "rec" : ""}"><span>${o.recommended ? "<b>推荐</b> " : ""}${inline(o.text)}</span>${can ? btn("decide", "选这个", { id: d.id, i }, "mini star") : ""}</div>`).join("");
     }
+    case "images": return `<div class="shots">${v.map((x) => `<img data-img="${esc(x)}" data-act="zoom" alt="截图">`).join("")}</div>`;
     case "answers": return Object.values(v).sort((a, b) => String(a.at).localeCompare(String(b.at))).map((a) => `<div class="ans"><small class="muted">${byText(a)} · ${esc(fmt(a.at))}</small><div class="md">${md(a.text)}</div></div>`).join("");
     default: return esc(v);
   }
@@ -992,15 +1159,7 @@ function related(id, skip = []) {
 const livePlan = (cardId) => docs("plans").find((p) => p.card === cardId && ["可执行", "执行中", "卡住"].includes(p.state));
 const startText = (d, id) => (livePlan(id) ? `用 hikari-hq skill 按批准的计划执行：${d.title}（${id}）。照计划一步一步做，不改方案；走不通就停下并写明卡在哪。` : `用 hikari-hq skill 开工：${d.title}（${id}）`);
 const planText = (d, id) => `用 hikari-hq skill 给这张卡写计划（只查、只写计划，不改代码）：${d.title}（${id}）`;
-// 任务卡最近一次工作的结论和证据：验收时不用再点进工作记录。
-function lastRun(cardId) {
-  const s = sorted("sessions", docs("sessions").filter((x) => x.card === cardId))[0];
-  if (!s) return "";
-  const items = (label, arr) => (blank(arr) ? "" : `<dt>${label}</dt><dd><ul>${arr.map((x) => `<li>${inline(x)}</li>`).join("")}</ul></dd>`);
-  const last = (s.progress || []).slice(-1)[0];
-  return `<section class="card run"><div class="head"><h2>最近一次工作 · ${esc(s.state || "")} · ${byText(s)} · ${esc(fmt(s.ended_at || s.started_at))}</h2><a class="muted" href="#${esc(s.id)}">看全部</a></div>
-    <dl class="kv">${s.conclusion ? `<dt>结论</dt><dd><div class="md">${md(s.conclusion)}</div></dd>` : last ? `<dt>做到哪了</dt><dd>${esc(last.note)}</dd>` : ""}${items("证据", s.evidence)}${items("没验证的", s.unverified)}${items("剩下的", s.remaining)}${items("提交", s.commits)}</dl></section>`;
-}
+
 function viewDetail(coll, id) {
   const raw = S.data[coll].get(id), c = COLL[coll], back = coll === "cards" ? "board" : coll;
   if (!raw) return `<p class="empty">没有这条记录</p><p><a href="#${back}">返回列表</a></p>`;
@@ -1019,7 +1178,7 @@ function viewDetail(coll, id) {
     <div class="head"><h1>${esc(titleOf(d))}</h1><div class="acts">${[...nextActs(coll, d), ...special].join("")}</div></div>
     <div class="acts">${stPill(coll, d)} <span class="muted">${byText(d)} · ${esc(fmt(d.at))}${d.updated_by ? ` · 更新 ${esc(d.updated_by)} ${esc(fmt(d.updated_at))}` : ""}</span> ${stateSelect(coll, d)} <span class="mono muted">${esc(id)}</span></div>
     ${gaps(coll, d).length ? `<div class="note">收工时没写的项：${gaps(coll, d).map((k) => esc(c.fields.find((f) => f.key === k).label)).join("、")}</div>` : ""}
-    ${coll === "cards" ? lastRun(id) : ""}
+    ${coll === "cards" && latestRun(id) ? `<section class="card run"><h2>${ic("notebook")}最近一次工作 · ${esc(latestRun(id).state || "")}</h2>${runPanel(latestRun(id))}</section>` : ""}
     <section class="card"><dl class="kv">${rows.join("") || `<dd class="empty">—</dd>`}</dl></section>
     ${coll === "projects" ? projectBoard(id) : ""}
     ${related(id, coll === "projects" ? ["cards"] : [])}`;
@@ -1082,6 +1241,7 @@ function render() {
   else if (r.view === "home") html = viewHome();
   else if (r.view === "board") html = viewBoard();
   else if (r.view === "timeline") html = viewTimeline();
+  else if (r.view === "review") html = viewReview();
   else if (r.view === "projects") html = viewProjects();
   else if (r.view === "workflows") html = viewWorkflows();
   else if (r.view === "settings") html = viewSettings();
@@ -1090,7 +1250,19 @@ function render() {
   const typing = $("#idea-in") && document.activeElement === $("#idea-in") ? $("#idea-in").value : null;
   $("#main").innerHTML = html;
   if (typing != null && $("#idea-in")) { $("#idea-in").value = typing; $("#idea-in").focus(); }
+  if (inside) loadImages();
   TR.apply();
+}
+// 截图按需读：页面上出现了才去数据库拿，拿过的记在这里。
+const IMG = new Map();
+function loadImages() {
+  for (const el of document.querySelectorAll("img[data-img]")) {
+    const id = el.dataset.img, got = IMG.get(id);
+    if (got) { el.src = got.src; el.title = got.caption; continue; }
+    if (IMG.has(id)) continue;
+    IMG.set(id, null);
+    S.db.doc("files/" + id).get().then((s) => { const f = s.data(); if (f) { IMG.set(id, { src: `data:${f.mime};base64,${f.data}`, caption: f.caption || "" }); schedule(); } }, () => {});
+  }
 }
 // 浏览器内置的翻译用不了时（不是新版 Chrome，或没有翻译模型），请他用浏览器自己的“翻译”。
 const TR_FALLBACK = "这个浏览器的内置翻译用不了，请用浏览器菜单里的“翻译”。／このブラウザでは内蔵の翻訳が使えません。ブラウザの「翻訳」を使ってください（Chrome：右クリック →「日本語に翻訳」）。";
@@ -1118,8 +1290,32 @@ function flowRunText(w, id, values) {
 }
 // 邀请名单和本人的作品目录一起改：切换栏和 hub 命令都靠作品目录找到“这个人能进哪些作品”。
 const dirDoc = (mail) => BACKEND.db.doc(`directory/${mail}/projects/${PID}`);
+// 审阅里成组的那一件（同一分支的合并、自验清单）里的卡。
+const groupCards = (k) => (reviewItems().find((x) => x.key === k) || { cards: [] }).cards;
 const ACT = {
   close() { $("#dlg").close(); },
+  async "rv-pass"({ id }) {
+    const live = docs("plans").find((x) => x.card === id && ["可执行", "执行中"].includes(x.state));
+    if (live) await write("plans", live.id, { state: "完成" }, false);
+    await write("cards", id, { state: "完成", waiting: "", done_at: now() }, false);
+  },
+  "rv-later"({ k }) { S.skip.add(k); saveSkip(); schedule(); },
+  "review-unskip"() { S.skip.clear(); saveSkip(); S.ri = 0; schedule(); },
+  "review-next"() { S.ri += 1; schedule(); },
+  "review-prev"() { S.ri = Math.max(0, S.ri - 1); schedule(); },
+  "review-goto"({ k }) { S.skip.delete(k); saveSkip(); S.ri = Math.max(0, reviewQueue().findIndex((x) => x.key === k)); location.hash = "review"; schedule(); },
+  async "rv-pass-all"({ k }) { for (const c of groupCards(k)) await ACT["rv-pass"]({ id: c.id }); },
+  async "rv-merged"({ k }) { for (const c of groupCards(k)) await write("cards", c.id, { state: "完成", waiting: "", done_at: now(), note: `${c.note ? c.note + "\n\n" : ""}已合并（${localDay(now())}）` }, false); },
+  "copy-merge"({ k }) {
+    const cards = groupCards(k), branch = k.replace(/^merge:/, "");
+    return copyText(`用 hikari-hq skill 把分支 ${branch} 合进主干（卡：${cards.map((c) => `${c.title}（${c.id}）`).join("、")}）。先看 git log 主干..${branch} 和能不能干净合并；能就合并并编过 editor-release，有冲突或编不过就停下来告诉我。合完在中枢把这几张卡改成完成。`, "已复制，贴给智能体");
+  },
+  zoom(_, el) {
+    if (!el.src) return;
+    $("#dlg-form").innerHTML = `<img src="${esc(el.src)}" alt="" style="width:100%;border-radius:10px"><p class="muted">${esc(el.title || "")}</p><div class="dlg-foot">${btn("close", "关闭", {}, "ghost")}</div>`;
+    $("#dlg-form").onsubmit = null;
+    $("#dlg").showModal();
+  },
   tr() { TR.toggle("ja"); },
   "flow-run"({ id }) {
     const w = S.data.workflows.get(id), ps = flowParams(w);
@@ -1254,6 +1450,13 @@ document.addEventListener("click", (ev) => {
   const fn = ACT[el.dataset.act];
   if (fn) Promise.resolve(fn({ ...el.dataset }, el)).catch(() => toast("没做成", true));
 });
+// 审阅页的键盘：A 通过、R 退回、S 稍后、← → 换一件、数字键选决定的选项（按钮上的 data-key）。
+document.addEventListener("keydown", (ev) => {
+  if (route().view !== "review" || $("#dlg").open || ev.ctrlKey || ev.metaKey || ev.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)) return;
+  const key = { ArrowLeft: "←", ArrowRight: "→" }[ev.key] || ev.key.toLowerCase();
+  const el = document.querySelector(`#main [data-key="${CSS.escape(key)}"]`);
+  if (el) { ev.preventDefault(); el.click(); }
+});
 document.addEventListener("change", (ev) => {
   const el = ev.target.closest("[data-change]");
   if (!el) return;
@@ -1309,7 +1512,7 @@ function listen() {
   }, failed));
   sub("settings", S.db.collection("settings"));
   // 工作记录只读最近 400 条，其余在本机镜像里（hq search）。
-  for (const c of SCHEMA.collections) sub(c.key, c.key === "sessions" ? S.db.collection(c.key).orderBy("started_at", "desc").limit(400) : S.db.collection(c.key).limit(3000));
+  for (const c of SCHEMA.collections) if (c.mirror !== false) sub(c.key, c.key === "sessions" ? S.db.collection(c.key).orderBy("started_at", "desc").limit(400) : S.db.collection(c.key).limit(3000));
 }
 function connect() {
   BACKEND = window.hubBackend;

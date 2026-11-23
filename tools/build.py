@@ -162,8 +162,11 @@ def page(config: dict, backend: str | None = None) -> str:
     if backend is not None:
         head, _, rest = html.partition("<!--backend-->")
         html = head + f"<script>{backend}</script>" + rest.partition("<!--/backend-->")[2]
+    # 翻訳・アイコン・共用スタイルはエンジン中枢のページも使う（page/ に 1 つだけ置く）。共用スタイルは自分のスタイルの後ろで上書きする。
     translate = (ROOT / "page" / "translate.js").read_text(encoding="utf-8").replace("</", "<\\/")
-    return HEAD + html.replace("__SCHEMA__", embed(SCHEMA)).replace("__CONFIG__", embed(config)).replace("__LOGO__", logo).replace("__TRANSLATE__", translate)
+    return HEAD + (html.replace("__SCHEMA__", embed(SCHEMA)).replace("__CONFIG__", embed(config)).replace("__LOGO__", logo).replace("__TRANSLATE__", translate)
+                   .replace("__SHARED_CSS__", (ROOT / "page" / "shared.css").read_text(encoding="utf-8"))
+                   .replace("__ICONS__", (ROOT / "page" / "icons.svg").read_text(encoding="utf-8")))
 
 
 def data_model() -> str:

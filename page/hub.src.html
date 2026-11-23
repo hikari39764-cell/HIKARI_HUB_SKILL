@@ -202,8 +202,9 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
   .mapwrap { grid-template-columns: minmax(0, 1fr); }
   .mapwrap > aside { position: static; max-height: none; }
 }
+__SHARED_CSS__
 </style>
-
+__ICONS__
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#home"><img src="__LOGO__" alt=""><span id="brand-name">HIKARI 制作ハブ</span></a>
@@ -340,6 +341,13 @@ const VIEWS = [
   { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
 ];
 const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
+// 共用の線アイコン（page/icons.svg）。目次とよく使うボタンに付ける。
+const ic = (name) => (name ? `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>` : "");
+const NAV_ICON = { home: "home", board: "columns", map: "map", timeline: "clock", reports: "notebook", guides: "adjust", bugs: "bug", questions: "help", decisions: "scale",
+  knowledge: "school", engine: "book", mistakes: "alert", rules: "shield", requests: "message", members: "users" };
+const ACT_ICON = { new: "plus", edit: "pencil", login: "login", logout: "logout", "copy-key": "copy", "copy-ask": "copy", "invite-add": "plus", decide: "check", answer: "message",
+  resolve: "check", "bug-card": "card", adopt: "check", reject: "x", "project-new": "plus", profile: "pencil", project: "pencil", "card-back": "undo", tr: "language" };
+const STATE_ICON = { 完了: "check", 有効: "check", 作業中: "play", 解除: "x", やらない: "x" };
 
 // ---------- データの読み出し ----------
 const docs = (coll) => [...S.data[coll]].map(([id, d]) => ({ id, ...d }));
@@ -470,7 +478,8 @@ function row(coll, d, sub, acts = []) {
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
 // tip：ボタンにマウスを置いたときの説明（押すと何が起きるか）。
-const btn = (act, label, data = {}, cls = "", tip = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
+const btn = (act, label, data = {}, cls = "", tip = "", icon = act === "state" ? STATE_ICON[data.to] : ACT_ICON[act]) =>
+  `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${ic(icon)}<span>${esc(label)}</span></button>`;
 function toast(text, bad) {
   const el = $("#toast");
   el.textContent = text;
@@ -626,7 +635,7 @@ function renderNav(view) {
     rules: S.me.owner ? docs("proposals").filter((d) => d.state === "提案").length : 0,
     requests: S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").length : 0,
   };
-  $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${esc(viewLabel(v))}${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
+  $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${ic(NAV_ICON[v.key])}<span>${esc(viewLabel(v))}</span>${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
 }
 const mine = (who) => (who && who === S.me.handle) || (S.me.owner && (!who || who === "オーナー"));
 
@@ -668,7 +677,7 @@ function viewHome() {
   if (S.live && !project().name) hints.push(`<div class="note">${t("setup")} ${S.me.owner ? btn("project", t("editProject")) : ""}</div>`);
   if (S.live && S.me.write !== false && !S.me.handle) hints.push(`<div class="note">${t("registerWhy")} ${btn("profile", t("register"))}</div>`);
   return `${hints.join("")}
-    <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
+    <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label), { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label), { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
       <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${waits.length ? `<p class="muted" style="font-size:12px;margin:0 0 4px">${t("hintWait")}</p>` : ""}${list(waits)}</section>
@@ -694,7 +703,7 @@ function viewBoard() {
     [t("review"), cards.filter((c) => c.state === "確認待ち").map((c) => kc(c, `<span class="tag">${esc(c.waiting || "レビュー")}</span>`))],
     [t("done"), cards.filter((c) => c.state === "完了").sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))).slice(0, 20).map((c) => kc(c))],
   ];
-  return `<div class="head"><h1>${t("board")}</h1><div class="acts">${o ? btn("milestones", t("milestones"), {}, "ghost") : ""}${canWrite("cards") ? btn("new", L(COLL.cards.label) + " +", { coll: "cards" }) : ""}</div></div>
+  return `<div class="head"><h1>${t("board")}</h1><div class="acts">${o ? btn("milestones", t("milestones"), {}, "ghost") : ""}${canWrite("cards") ? btn("new", L(COLL.cards.label), { coll: "cards" }) : ""}</div></div>
     <div class="board">${cols.map(([name, items]) => `<div class="col"><h2>${esc(name)} <span class="chip">${items.length}</span></h2>${items.join("") || `<p class="empty">—</p>`}</div>`).join("")}</div>`;
 }
 
@@ -703,7 +712,7 @@ function viewList(coll) {
   const kindField = c.fields.find((x) => x.key === "kind" && x.choices);
   const rows = docs(coll).filter((d) => (showAll || isOpen(coll, d)) && passes(d, f)).sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at)));
   const groups = groupRows(rows, how).map(([head, items]) => `<div class="day">${head ? (how === "day" && head !== "—" ? dayHead(head, items.length) : `<h2><b>${esc(head)}</b><span>${t("items", items.length)}</span></h2>`) : ""}<section class="card">${list(items.map((d) => row(coll, d)))}</section></div>`);
-  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}</div></div>
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add"), { coll }) : ""}</div></div>
     <p class="muted">${esc(L(c.summary))}</p>${filterBar(coll, { kinds: kindField ? kindField.choices : null, group: "day" })}
     ${rows.length ? groups.join("") : `<section class="card"><p class="empty">${t("none")}</p></section>`}`;
 }
@@ -926,7 +935,7 @@ function viewGrouped(coll, groups, groupKey, flag) {
     const items = all.filter((d) => d[groupKey] === g);
     return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
   });
-  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add"), { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
     <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t("none")}</p>`}`;
 }
 function viewRules() {
@@ -979,7 +988,7 @@ function viewLogin() {
 function viewPick() {
   const rows = [...S.sites].map(([id, p]) => `<a class="row" href="?p=${esc(id)}"><span><b>${esc(p.name)}</b><small class="mono">${esc(p.repo || "")}</small></span></a>`);
   if (S.engine) rows.push(`<a class="row" href="engine/"><span><b>${t("engineHq")}</b><small>${t("engineHqWhy")}</small></span></a>`);
-  return `<div class="head"><h1>${t("hubName")}</h1><div class="acts">${S.me.owner ? btn("project-new", t("npNew") + " +") : ""}</div></div>${whoami()}
+  return `<div class="head"><h1>${t("hubName")}</h1><div class="acts">${S.me.owner ? btn("project-new", t("npNew")) : ""}</div></div>${whoami()}
     <section class="card"><h2>${t("pick")}</h2>${rows.length ? rows.join("") : `<p class="empty">${t("noProjects")}</p><p><b>${esc(S.me.email)}</b></p>`}</section>`;
 }
 function viewDenied() {

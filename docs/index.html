@@ -202,7 +202,49 @@ dialog::backdrop { background: rgba(18, 17, 9, .55); }
   .mapwrap { grid-template-columns: minmax(0, 1fr); }
   .mapwrap > aside { position: static; max-height: none; }
 }
+/* HIKARI 两个网站共用的样式（中枢 D:/PJ/HIKARI-HQ/cloud 和制作ハブ都嵌在自己的样式后面，用来覆盖）。
+   图标、按钮分主次（主：星黄硬影 > 普通：纸色细影 > 次要：透明）、小字放大一号、导航图标、圆角标签。 */
+body { font-size: 15.5px; }
+.ic { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.2em; }
+/* 按钮：主（星黄、硬影）> 普通（纸色、细影）> 次要（透明）。一屏里主按钮尽量只有一个。 */
+.btn { background: var(--card); color: var(--ink); border-color: var(--rule); box-shadow: 2px 2px 0 var(--shade); min-height: 34px; padding: 5px 13px; font-size: 13.5px; text-decoration: none; transition: transform .08s ease, box-shadow .08s ease; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shade); }
+.btn:active { transform: translate(1px, 1px); box-shadow: 0 0 0 var(--shade); }
+.btn.star { background: var(--star); color: #17160F; border-color: #17160F; box-shadow: 3px 3px 0 #17160F; }
+.btn.star:hover { box-shadow: 4px 4px 0 #17160F; }
+.btn.ghost { background: transparent; border-color: var(--soft); box-shadow: none; }
+.btn.ghost:hover { background: var(--card); border-color: var(--rule); transform: none; box-shadow: none; }
+.btn.danger { background: var(--bad); color: #fff; border-color: #17160F; }
+.btn.mini { min-height: 28px; font-size: 12.5px; padding: 2px 9px; border-radius: 8px; box-shadow: 1.5px 1.5px 0 var(--shade); }
+.btn.mini.ghost { box-shadow: none; }
+.btn.big { min-height: 44px; font-size: 15px; padding: 8px 18px; border-radius: 12px; gap: 8px; }
+.btn kbd { font-family: var(--mono); font-size: 11px; line-height: 1.3; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 4px; opacity: .65; }
+/* 字：小字放大一号，标题用墨色 */
+.row small { font-size: 13px; line-height: 1.6; }
+.tag { font-size: 12px; padding: 0 6px; }
+.tag.hot { background: var(--star); color: #17160F; border-color: #17160F; display: inline-flex; align-items: center; gap: 2px; }
+.when { font-size: 12px; }
+.navt { font-size: 12px; }
+h2 { font-size: 14px; color: var(--ink); letter-spacing: .04em; }
+h2 > .ic { color: var(--muted); margin-right: -2px; }
+.kv dt { font-size: 13.5px; display: flex; gap: 5px; align-items: baseline; }
+.kv dt .ic { color: var(--muted); }
+#nav a { justify-content: flex-start; gap: 9px; }
+#nav a > span:first-of-type { flex: 1 1 auto; }
+#nav a .ic { width: 18px; height: 18px; color: var(--muted); }
+#nav a.on .ic { color: #17160F; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; line-height: 1.7; border: 2px solid var(--soft); border-radius: 999px; padding: 0 10px; background: var(--card); color: var(--ink); white-space: nowrap; }
+.pill.k { background: var(--apricot); border-color: #17160F; color: #17160F; }
+.pill.hot { background: var(--star); border-color: #17160F; color: #17160F; }
+.row small .pill { font-size: 11.5px; padding: 0 7px; line-height: 1.6; }
+/* 小标题：图标和字挨着，计数紧跟其后；“全部”链接和按钮靠右 */
+h2 { justify-content: flex-start; }
+h2 > a.muted, h2 > .btn, h2 > .hint { margin-left: auto; }
+
 </style>
+<!-- HIKARI 两个网站共用的线条图标（路径取自 Tabler Icons，MIT 许可）。页面里用 ic(名字) 引用。 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 13h3l3 3h4l3-3h3"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/></symbol><symbol id="i-columns" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="10" rx="1"/></symbol><symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M3 12h1m8-9v1m8 8h1M5.6 5.6l.7.7m12.1-.7-.7.7"/><path d="M9 16a5 5 0 1 1 6 0 3.5 3.5 0 0 0-1 3 2 2 0 0 1-4 0 3.5 3.5 0 0 0-1-3"/><path d="M9.7 17h4.6"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="m3.5 5.5 1.5 1.5 2.5-2.5M3.5 11.5 5 13l2.5-2.5M3.5 17.5 5 19l2.5-2.5M11 6h9M11 12h9M11 18h9"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol><symbol id="i-notebook" viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1m3 0v16M13 8h2M13 12h2"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M4 7h3a1 1 0 0 0 1-1V5a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1a2 2 0 0 0-4 0v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a2 2 0 0 0 0-4H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path d="M7 20h10M6 6l6-1 6 1M12 3v17M9 12 6 6l-3 6a3 3 0 0 0 6 0M21 12l-3-6-3 6a3 3 0 0 0 6 0"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 17v.01M12 13.5a1.5 1.5 0 0 1 1-1.5 2.6 2.6 0 1 0-3-4"/></symbol><symbol id="i-bug" viewBox="0 0 24 24"><path d="M9 9V8a3 3 0 0 1 6 0v1M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1-10 0v-3a6 6 0 0 1 1-3M3 13h4M17 13h4M12 20v-6M4 19l3.4-2M20 19l-3.4-2M4 7l3.8 2.4M20 7l-3.8 2.4"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0M3 6v13M12 6v13M21 6v13"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3a12 12 0 0 0 8.5 3A12 12 0 0 1 12 21 12 12 0 0 1 3.5 6 12 12 0 0 0 12 3"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M22 9 12 5 2 9l10 4 10-4v6"/><path d="M6 10.6V16a6 3 0 0 0 12 0v-5.4"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4M12 16h.01"/><path d="M10.4 3.6 2.3 17.1A1.9 1.9 0 0 0 3.9 20h16.2a1.9 1.9 0 0 0 1.6-2.9L13.6 3.6a1.9 1.9 0 0 0-3.2 0z"/></symbol><symbol id="i-adjust" viewBox="0 0 24 24"><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="17" cy="18" r="2"/><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h11M19 18h1"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="m9 14-4-4 4-4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 1 0-4-4L4 16v4M13.5 6.5l4 4"/></symbol><symbol id="i-wand" viewBox="0 0 24 24"><path d="m6 21 15-15-3-3L3 18l3 3M15 6l3 3M9 3a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2M19 13a2 2 0 0 0 2 2 2 2 0 0 0-2 2 2 2 0 0 0-2-2 2 2 0 0 0 2-2"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-merge" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="7" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><path d="M7 8v8M7 8a4 4 0 0 0 4 4h4"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M8 9h8M8 13h6M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></symbol><symbol id="i-language" viewBox="0 0 24 24"><path d="M4 5h7M9 3v2c0 4.4-2.2 8-5 8M5 9c0 2.1 3 3.9 6.7 4M12 20l4-9 4 9M19.1 18h-6.2"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M21 12c-2.4 4-5.4 6-9 6s-6.6-2-9-6c2.4-4 5.4-6 9-6s6.6 2 9 6"/></symbol><symbol id="i-code" viewBox="0 0 24 24"><path d="m7 8-4 4 4 4M17 8l4 4-4 4M14 4l-4 16"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 5.5v-2a1.5 1.5 0 1 1 3 0V12M14 5.5a1.5 1.5 0 0 1 3 0V12M17 7.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-2.7l-3.5-6a1.5 1.5 0 0 1 2.8-1.7L8 13"/></symbol><symbol id="i-photo" viewBox="0 0 24 24"><path d="M15 8h.01"/><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m3 16 5-5c.9-.9 2.1-.9 3 0l5 5M14 14l1-1c.9-.9 2.1-.9 3 0l3 3"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 5a5 5 0 0 1 7 0 5 5 0 0 0 7 0v9a5 5 0 0 1-7 0 5 5 0 0 0-7 0zM5 21v-7"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 18l6-6M13 6l6 6"/></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6M11 6l-6 6"/></symbol><symbol id="i-login" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M20 12H7l3-3M10 15l-3-3"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 17.8-6.2 3.2 1.2-6.9-5-4.8 6.9-1L12 2l3.1 6.3 6.9 1-5 4.8 1.2 6.9z"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h.01M11 15h2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="m3 7 6-3 6 3 6-3v13l-6 3-6-3-6 3z"/><path d="M9 4v13M15 7v13"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></symbol></defs></svg>
 
 <header class="top">
   <div class="wrap">
@@ -500,6 +542,13 @@ const VIEWS = [
   { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
 ];
 const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
+// 共用の線アイコン（page/icons.svg）。目次とよく使うボタンに付ける。
+const ic = (name) => (name ? `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>` : "");
+const NAV_ICON = { home: "home", board: "columns", map: "map", timeline: "clock", reports: "notebook", guides: "adjust", bugs: "bug", questions: "help", decisions: "scale",
+  knowledge: "school", engine: "book", mistakes: "alert", rules: "shield", requests: "message", members: "users" };
+const ACT_ICON = { new: "plus", edit: "pencil", login: "login", logout: "logout", "copy-key": "copy", "copy-ask": "copy", "invite-add": "plus", decide: "check", answer: "message",
+  resolve: "check", "bug-card": "card", adopt: "check", reject: "x", "project-new": "plus", profile: "pencil", project: "pencil", "card-back": "undo", tr: "language" };
+const STATE_ICON = { 完了: "check", 有効: "check", 作業中: "play", 解除: "x", やらない: "x" };
 
 // ---------- データの読み出し ----------
 const docs = (coll) => [...S.data[coll]].map(([id, d]) => ({ id, ...d }));
@@ -630,7 +679,8 @@ function row(coll, d, sub, acts = []) {
 }
 const list = (rows, emptyKey = "none") => (rows.length ? rows.join("") : `<p class="empty">${t(emptyKey)}</p>`);
 // tip：ボタンにマウスを置いたときの説明（押すと何が起きるか）。
-const btn = (act, label, data = {}, cls = "", tip = "") => `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${esc(label)}</button>`;
+const btn = (act, label, data = {}, cls = "", tip = "", icon = act === "state" ? STATE_ICON[data.to] : ACT_ICON[act]) =>
+  `<button type="button" class="btn ${cls}" data-act="${act}" ${tip ? `title="${esc(tip)}"` : ""} ${Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ")}>${ic(icon)}<span>${esc(label)}</span></button>`;
 function toast(text, bad) {
   const el = $("#toast");
   el.textContent = text;
@@ -786,7 +836,7 @@ function renderNav(view) {
     rules: S.me.owner ? docs("proposals").filter((d) => d.state === "提案").length : 0,
     requests: S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").length : 0,
   };
-  $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${esc(viewLabel(v))}${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
+  $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${ic(NAV_ICON[v.key])}<span>${esc(viewLabel(v))}</span>${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
 }
 const mine = (who) => (who && who === S.me.handle) || (S.me.owner && (!who || who === "オーナー"));
 
@@ -828,7 +878,7 @@ function viewHome() {
   if (S.live && !project().name) hints.push(`<div class="note">${t("setup")} ${S.me.owner ? btn("project", t("editProject")) : ""}</div>`);
   if (S.live && S.me.write !== false && !S.me.handle) hints.push(`<div class="note">${t("registerWhy")} ${btn("profile", t("register"))}</div>`);
   return `${hints.join("")}
-    <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label) + " +", { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label) + " +", { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
+    <div class="head"><h1>${esc(projectName())}</h1><div class="acts">${canWrite("cards") ? btn("new", L(COLL.bugs.label), { coll: "bugs" }, "ghost") + btn("new", L(COLL.questions.label), { coll: "questions" }, "ghost") + btn("new", t("lock"), { coll: "locks" }, "ghost") : ""}</div></div>
     <div class="grid">
       <section class="card now"><h2>${t("working")} <span class="chip">${working.length}</span></h2>${list(working)}</section>
       <section class="card ${waits.length ? "wait" : ""}"><h2>${t("waitYou")} <span class="chip">${waits.length}</span></h2>${waits.length ? `<p class="muted" style="font-size:12px;margin:0 0 4px">${t("hintWait")}</p>` : ""}${list(waits)}</section>
@@ -854,7 +904,7 @@ function viewBoard() {
     [t("review"), cards.filter((c) => c.state === "確認待ち").map((c) => kc(c, `<span class="tag">${esc(c.waiting || "レビュー")}</span>`))],
     [t("done"), cards.filter((c) => c.state === "完了").sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))).slice(0, 20).map((c) => kc(c))],
   ];
-  return `<div class="head"><h1>${t("board")}</h1><div class="acts">${o ? btn("milestones", t("milestones"), {}, "ghost") : ""}${canWrite("cards") ? btn("new", L(COLL.cards.label) + " +", { coll: "cards" }) : ""}</div></div>
+  return `<div class="head"><h1>${t("board")}</h1><div class="acts">${o ? btn("milestones", t("milestones"), {}, "ghost") : ""}${canWrite("cards") ? btn("new", L(COLL.cards.label), { coll: "cards" }) : ""}</div></div>
     <div class="board">${cols.map(([name, items]) => `<div class="col"><h2>${esc(name)} <span class="chip">${items.length}</span></h2>${items.join("") || `<p class="empty">—</p>`}</div>`).join("")}</div>`;
 }
 
@@ -863,7 +913,7 @@ function viewList(coll) {
   const kindField = c.fields.find((x) => x.key === "kind" && x.choices);
   const rows = docs(coll).filter((d) => (showAll || isOpen(coll, d)) && passes(d, f)).sort((a, b) => String(b.updated_at || b.at).localeCompare(String(a.updated_at || a.at)));
   const groups = groupRows(rows, how).map(([head, items]) => `<div class="day">${head ? (how === "day" && head !== "—" ? dayHead(head, items.length) : `<h2><b>${esc(head)}</b><span>${t("items", items.length)}</span></h2>`) : ""}<section class="card">${list(items.map((d) => row(coll, d)))}</section></div>`);
-  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}</div></div>
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${c.states ? btn("toggle-all", showAll ? t("openOnly") : t("all"), { coll }, "ghost") : ""}${coll === "reports" && canWrite(coll) ? btn("new", t("daily"), { coll }) : ""}${coll !== "reports" && canWrite(coll) ? btn("new", t("add"), { coll }) : ""}</div></div>
     <p class="muted">${esc(L(c.summary))}</p>${filterBar(coll, { kinds: kindField ? kindField.choices : null, group: "day" })}
     ${rows.length ? groups.join("") : `<section class="card"><p class="empty">${t("none")}</p></section>`}`;
 }
@@ -1086,7 +1136,7 @@ function viewGrouped(coll, groups, groupKey, flag) {
     const items = all.filter((d) => d[groupKey] === g);
     return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
   });
-  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add") + " +", { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add"), { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
     <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t("none")}</p>`}`;
 }
 function viewRules() {
@@ -1139,7 +1189,7 @@ function viewLogin() {
 function viewPick() {
   const rows = [...S.sites].map(([id, p]) => `<a class="row" href="?p=${esc(id)}"><span><b>${esc(p.name)}</b><small class="mono">${esc(p.repo || "")}</small></span></a>`);
   if (S.engine) rows.push(`<a class="row" href="engine/"><span><b>${t("engineHq")}</b><small>${t("engineHqWhy")}</small></span></a>`);
-  return `<div class="head"><h1>${t("hubName")}</h1><div class="acts">${S.me.owner ? btn("project-new", t("npNew") + " +") : ""}</div></div>${whoami()}
+  return `<div class="head"><h1>${t("hubName")}</h1><div class="acts">${S.me.owner ? btn("project-new", t("npNew")) : ""}</div></div>${whoami()}
     <section class="card"><h2>${t("pick")}</h2>${rows.length ? rows.join("") : `<p class="empty">${t("noProjects")}</p><p><b>${esc(S.me.email)}</b></p>`}</section>`;
 }
 function viewDenied() {
