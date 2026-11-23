@@ -331,21 +331,44 @@ const T = {
   mergeQueue: ["ブランチ（{n} への取り込み待ち）", "分支（等着并进 {n}）"],
   lastChange: ["最後の変更", "最后一次改动"], lastOnly: ["この変更だけ見る", "只看这次改动"], lastAll: ["全部を見る", "看全部"], newest: ["最新", "最新"],
   lastNone: ["まだ記録がありません（地図を新しくすると出ます）", "还没有记录（刷新地图后出现）"],
+  // 設定集
+  dsFix: ["確定にする", "改为已定"], dsFixTip: ["読んで直したら確定にする（エージェントは下書きも読むが、確定を優先する）", "看过改好就改成已定（智能体也读草稿，但已定的优先）"],
+  dsAsk: ["エージェントに下書きさせる", "让智能体起草"], dsAskTip: ["リポジトリの企画書・コード・報告から、章ごとの下書きを作ってもらう文をコピーする", "复制一段话：让智能体从仓库的企划、代码和汇报整理出各章的草稿"],
+  dsWhat: ["とくに書いてほしい章・元にするもの（空でもよい）", "特别想写的章节、依据的资料（可不填）"],
+  dsEmpty: ["まだ設定集がありません。「エージェントに下書きさせる」でたたき台を作ってもらい、読んで直してから「確定にする」。", "还没有设定集。按“让智能体起草”让它先写个草稿，看过改好再“改为已定”。"],
+  // ワークフロー
+  wfRun: ["実行する", "运行"], wfRunTip: ["パラメータを入れて、エージェントに渡す文をコピーする", "填参数，复制交给智能体的话"], wfRunNote: ["パラメータを入れて「コピー」を押し、エージェントに貼る。", "填好参数按“复制”，贴给智能体。"],
+  wfOk: ["検証済みにする", "改为已验证"], wfOkTip: ["自分で試して、この手順で大丈夫だった。これからエージェントはこのとおりに作業する", "自己试过，照这个步骤没问题。以后智能体照它做"],
+  wfAsk: ["エージェントに作らせる", "让智能体写"], wfAskTip: ["何度もやる作業を書いて、ワークフローにしてもらう文をコピーする", "写下反复做的工作，复制一段话让智能体整理成工作流"],
+  wfSelf: ["自分で書く", "自己写"], wfFix: ["エージェントに直させる", "让智能体改"], wfFixTip: ["直してほしいところを書いて、エージェントに渡す文をコピーする", "写下要改什么，复制交给智能体的话"],
+  wfWhat: ["何度もやる作業", "反复做的工作"], wfWhatHelp: ["例：敵を 1 体足す（プレハブ・パラメータ・動き・当たり判定・確かめ方まで）", "例：加一种敌人（预制体、参数、行为、碰撞、怎么确认）"],
+  wfFrom: ["参考にする作業（報告の id や、前にやったときの説明。空でもよい）", "参照哪次工作（汇报 id 或一句说明，可不填）"], wfFixWhat: ["何を直すか", "要改什么"], wfFixDefault: ["「使ったときの改善案」を取り込む。", "把“执行时提的修改建议”改进去。"],
+  wfWhy: ["何を変えたか（空でもよい。変更の記録に残る）", "改了什么（可不填，会记进修改记录）"], wfNoChange: ["変わったところがありません", "没有改动"],
+  wfRuns: ["{n} 回使った", "用过 {n} 次"], wfNever: ["まだ使っていない", "还没用过"], wfLast: ["最後 {n}", "上次 {n}"],
+  wfName: ["名前", "名字"], wfDefault: ["既定", "默认"], wfDesc: ["説明", "说明"], wfNeed: ["必ず入れる", "必填"], wfOpt: ["空でもよい", "可不填"],
+  wfHow: ["使い方", "怎么用"], wfRunsOf: ["使った記録", "使用记录"], wfRunsNone: ["まだ使っていません", "还没用过"],
+  wfEmpty: ["まだワークフローがありません。「エージェントに作らせる」で、何度もやる作業を書いてもらう。", "还没有工作流。按“让智能体写”，把反复做的工作交给它整理。"],
+  wfLead: ["何度もやる作業の、確かめた手順。カードに合うものがあれば、エージェントはこの手順どおりに作業する（検証済み・試してほしいもの）。", "反复做的工作的已验证做法。卡对得上时，智能体照它的步骤做（已验证和等你试的）。"],
+  repeat: ["ワークフローにする提案", "做成工作流的提议"], repeatMake: ["作らせる", "让智能体写"], repeatMakeTip: ["この提案でワークフローを作ってもらう文をコピーする", "复制一段话，按这个提议写工作流"],
+  repeatSkip: ["いらない", "不需要"], repeatSkipTip: ["ワークフローにしない：提案を片づける", "不做成工作流：把提议收起来"],
+  copyDone: ["コピーしました。エージェントに貼ってください", "已复制，贴给智能体"],
+  copyFail: ["コピーできませんでした（ブラウザがクリップボードを許していません）", "复制失败（浏览器不允许写剪贴板）"],
 };
 const t = (k, n) => (T[k] || [k, k])[S.lang === "zh" ? 1 : 0].replace("{n}", n);
 const L = (o) => (o ? (S.lang === "zh" ? o.zh || o.ja : o.ja) : "");
 const VIEWS = [
-  { key: "home" }, { key: "board" }, { key: "map" }, { key: "timeline" }, { key: "reports", coll: "reports" }, { key: "guides", coll: "guides" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
+  { key: "home" }, { key: "board" }, { key: "design", coll: "design" }, { key: "workflows", coll: "workflows" }, { key: "map" }, { key: "timeline" }, { key: "reports", coll: "reports" }, { key: "guides", coll: "guides" }, { key: "bugs", coll: "bugs" }, { key: "questions", coll: "questions" },
   { key: "decisions", coll: "decisions" }, { key: "knowledge", coll: "knowledge" }, { key: "engine" }, { key: "mistakes", coll: "mistakes" },
   { key: "rules" }, { key: "requests", coll: "engine_requests" }, { key: "members" },
 ];
 const viewLabel = (v) => (v.coll ? L(COLL[v.coll].label) : t(v.key));
 // 共用の線アイコン（page/icons.svg）。目次とよく使うボタンに付ける。
 const ic = (name) => (name ? `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>` : "");
-const NAV_ICON = { home: "home", board: "columns", map: "map", timeline: "clock", reports: "notebook", guides: "adjust", bugs: "bug", questions: "help", decisions: "scale",
+const NAV_ICON = { home: "home", board: "columns", design: "puzzle", workflows: "route", map: "map", timeline: "clock", reports: "notebook", guides: "adjust", bugs: "bug", questions: "help", decisions: "scale",
   knowledge: "school", engine: "book", mistakes: "alert", rules: "shield", requests: "message", members: "users" };
 const ACT_ICON = { new: "plus", edit: "pencil", login: "login", logout: "logout", "copy-key": "copy", "copy-ask": "copy", "invite-add": "plus", decide: "check", answer: "message",
-  resolve: "check", "bug-card": "card", adopt: "check", reject: "x", "project-new": "plus", profile: "pencil", project: "pencil", "card-back": "undo", tr: "language" };
+  resolve: "check", "bug-card": "card", adopt: "check", reject: "x", "project-new": "plus", profile: "pencil", project: "pencil", "card-back": "undo", tr: "language",
+  "wf-run": "play", "wf-ok": "check", "wf-ask": "wand", "wf-fix": "wand", "wf-edit": "pencil", "ds-ask": "wand", "repeat-make": "wand", "repeat-skip": "x" };
 const STATE_ICON = { 完了: "check", 有効: "check", 作業中: "play", 解除: "x", やらない: "x" };
 
 // ---------- データの読み出し ----------
@@ -455,6 +478,7 @@ function stClass(coll, d) {
   if (!COLL[coll].states) return "";
   if (coll === "cards" && d.state === "確認待ち") return "wait";
   if (coll === "decisions" && d.state === "未決定") return "wait";
+  if ((coll === "design" && d.state === "下書き") || (coll === "workflows" && d.state === "試してほしい")) return "wait";
   return isOpen(coll, d) ? "open" : "closed";
 }
 function stPill(coll, d) {
@@ -575,10 +599,10 @@ async function fieldValue(f) {
   }
 }
 // defs: 項目の配列。onSave(values) が true を返したら閉じる。
-function openForm({ title, defs, values = {}, onSave, note = "", del }) {
+function openForm({ title, defs, values = {}, onSave, note = "", del, submit = t("save") }) {
   const form = $("#dlg-form");
   form.innerHTML = `<h1>${esc(title)}</h1>${note ? `<p class="muted">${esc(note)}</p>` : ""}${defs.map((f) => fieldInput(f, values[f.key])).join("")}
-    <div class="dlg-foot">${del ? `<span class="left">${btn("del-ask", t("del"), {}, "ghost mini")}</span>` : ""}${btn("close", t("cancel"), {}, "ghost")}<button class="btn" type="submit">${t("save")}</button></div>`;
+    <div class="dlg-foot">${del ? `<span class="left">${btn("del-ask", t("del"), {}, "ghost mini")}</span>` : ""}${btn("close", t("cancel"), {}, "ghost")}<button class="btn" type="submit">${esc(submit)}</button></div>`;
   form.onsubmit = async (ev) => {
     ev.preventDefault();
     const submit = form.querySelector('[type="submit"]');
@@ -633,6 +657,7 @@ function renderNav(view) {
     questions: docs("questions").filter((d) => d.state === "未回答").length,
     rules: S.me.owner ? docs("proposals").filter((d) => d.state === "提案").length : 0,
     requests: S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").length : 0,
+    workflows: S.me.owner ? docs("workflows").filter((d) => d.state === "試してほしい").length : 0,
   };
   $("#nav").innerHTML = VIEWS.map((v) => `<a href="#${v.key}" class="${v.key === view ? "on" : ""}">${ic(NAV_ICON[v.key])}<span>${esc(viewLabel(v))}</span>${counts[v.key] ? `<span class="badge">${counts[v.key]}</span>` : ""}</a>`).join("");
 }
@@ -654,6 +679,8 @@ function viewHome() {
     ...docs("questions").filter((d) => d.state === "未回答" && mine(d.to)).map((d) => row("questions", d, `${L(COLL.questions.label)} · ${byText(d)}`, canWrite("questions") ? [btn("answer", t("answer"), { id: d.id }, "mini star")] : [])),
     ...(S.me.owner ? docs("proposals").filter((d) => d.state === "提案").map((d) => row("proposals", d, `${t("proposals")} · ${byText(d)}`, [btn("adopt", t("adopt"), { id: d.id }, "mini star"), btn("reject", t("reject"), { id: d.id }, "mini ghost")])) : []),
     ...(S.me.owner ? docs("engine_requests").filter((d) => d.state === "未送付").map((d) => row("engine_requests", d, `${t("requests")} · ${byText(d)}`)) : []),
+    ...(S.me.owner ? docs("workflows").filter((w) => w.state === "試してほしい").map((w) => row("workflows", w, [L(COLL.workflows.label), byText(w)].filter(Boolean).join(" · "), flowActs(w, true))) : []),
+    ...(S.me.owner ? reports.filter((r) => !blank(r.repeat) && !r.repeat_done).map((r) => row("reports", r, `${t("repeat")} · ${byText(r)} — ${esc(String(r.repeat).slice(0, 80))}`, repeatActs(r))) : []),
   ];
   const next = p.ready.map((id) => cards.find((c) => c.id === id)).filter((c) => c && c.state === "あとで").slice(0, 6)
     .map((c) => row("cards", c, `${t("assign")}：${esc(p.assign[c.id] || t("anyone"))} ${tags(c)}`));
@@ -915,6 +942,7 @@ function viewDetail(coll, id) {
   if (coll === "knowledge" && w && d.state === "要確認" && d.by !== S.me.handle) special.push(btn("state", t("verify"), { coll, id, to: "有効" }, "star"));
   if (coll === "bugs" && w && !d.card && isOpen(coll, d)) special.push(btn("bug-card", t("toCard"), { id }));
   if (coll === "proposals" && S.me.owner && d.state === "提案") special.push(btn("adopt", t("adopt"), { id }, "star"), btn("reject", t("reject"), { id }, "ghost"));
+  if (coll === "reports" && S.me.owner && !blank(d.repeat) && !d.repeat_done) special.push(...repeatActs(d, false));
   if (w) special.push(btn("edit", t("edit"), { coll, id }, "ghost"));
   const rows = c.fields.filter((f) => !["title", "state"].includes(f.key) && !blank(d[f.key])).map((f) => `<dt>${esc(L(f))}</dt><dd>${fieldView(coll, f, d[f.key], d)}</dd>`);
   const related = coll === "cards" ? docs("reports").filter((r) => r.card === id).sort((a, b) => String(b.at).localeCompare(String(a.at))).map((r) => row("reports", r, `${byText(r)}${r.conclusion ? " — " + esc(String(r.conclusion).slice(0, 80)) : ""}`)) : [];
@@ -927,15 +955,78 @@ function viewDetail(coll, id) {
     ${related.length ? `<section class="card"><h2>${t("reportsOf")}</h2>${related.join("")}</section>` : ""}`;
 }
 
-function viewGrouped(coll, groups, groupKey, flag) {
+// 状態があるもの（設定集）は、最初の状態（下書き）に印と、次の状態（確定）にするボタンを付ける。
+function viewGrouped(coll, groups, groupKey, flag, { acts = "", empty = "none" } = {}) {
   const c = COLL[coll], all = docs(coll).filter(matchQ).sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const draft = (d) => c.states && d.state === c.states[0].name;
   const extra = [...new Set(all.map((d) => d[groupKey]).filter((g) => g && !groups.includes(g)))];
   const sections = [...groups, ...extra].map((g) => {
     const items = all.filter((d) => d[groupKey] === g);
-    return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
+    return items.length ? `<h2 style="margin-top:6px">${esc(g)}</h2>${items.map((d) => `<section class="card" id="x-${esc(d.id)}"><div class="head"><h3>${esc(d.title)} ${d[flag] ? `<span class="st open">${t(flag)}</span>` : ""} ${draft(d) ? stPill(coll, d) : ""} ${tags({ areas: d.areas })}</h3><div class="acts">${canWrite(coll) && draft(d) ? btn("state", t("dsFix"), { coll, id: d.id, to: c.states[1].name }, "mini star", t("dsFixTip")) : ""}${canWrite(coll) ? btn("edit", t("edit"), { coll, id: d.id }, "ghost mini") : ""}</div></div><div class="md">${md(d.body)}</div>${d.updated_by ? `<p class="when" style="margin-top:6px">${esc(d.updated_by)} ${esc(fmt(d.updated_at))}</p>` : ""}</section>`).join("")}` : "";
   });
-  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${canWrite(coll) ? btn("new", t("add"), { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
-    <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t("none")}</p>`}`;
+  return `<div class="head"><h1>${esc(L(c.label))}</h1><div class="acts">${acts}${canWrite(coll) ? btn("new", t("add"), { coll }) : ""}${coll === "rules" && !S.me.owner && canWrite("proposals") ? btn("new", t("propose"), { coll: "proposals" }) : ""}</div></div>
+    <p class="muted">${esc(L(c.summary))}</p>${sections.join("") || `<p class="empty">${t(empty)}</p>`}`;
+}
+function viewDesign() {
+  const sections = COLL.design.fields.find((f) => f.key === "section").choices;
+  return viewGrouped("design", sections, "section", "must", { acts: S.me.owner ? btn("ds-ask", t("dsAsk"), {}, "ghost", t("dsAskTip")) : "", empty: "dsEmpty" });
+}
+
+// ---------- ワークフロー（エンジン中枢の工作流と同じ考え方。参数の書き方と {参数} の印は共用の shared.js） ----------
+const flowText = (s) => hikariFlow.mark(inline(s));
+const logList = (arr) => `<ul class="log">${[...arr].reverse().map((x) => `<li><span class="when">${esc(fmt(x.at))}</span> ${inline(x.note)}</li>`).join("")}</ul>`;
+const flowLabel = (key) => esc(L(COLL.workflows.fields.find((f) => f.key === key)));
+const stName = (coll, name) => (S.lang === "zh" ? (stateDef(coll, name) || {}).zh || name : name);
+function flowActs(w, mini) {
+  const m = mini ? "mini " : "", out = [];
+  if (w.state !== "使わない") out.push(btn("wf-run", t("wfRun"), { id: w.id }, m + (w.state === "検証済み" ? "star" : ""), t("wfRunTip")));
+  if (S.me.owner && w.state === "試してほしい") out.push(btn("wf-ok", t("wfOk"), { id: w.id }, m + "star", t("wfOkTip")));
+  return out;
+}
+function flowRow(w) {
+  const names = hikariFlow.params(w).map((x) => esc(x.name));
+  const sub = `${w.runs ? t("wfRuns", w.runs) : t("wfNever")}${w.last_run ? " · " + t("wfLast", esc(fmt(w.last_run))) : ""}${names.length ? ` · ${flowLabel("params")}：${names.join("、")}` : ""} ${w.scope ? `<span class="tag">${esc(w.scope)}</span>` : ""} ${tags({ areas: w.areas })}`;
+  return row("workflows", w, sub, flowActs(w, true));
+}
+function viewWorkflows() {
+  const all = docs("workflows").filter(matchQ), of = (s) => all.filter((w) => w.state === s).sort((a, b) => (b.runs || 0) - (a.runs || 0));
+  const part = (s) => { const items = of(s); return items.length ? `<h2 style="margin-top:6px">${esc(stName("workflows", s))} <span class="chip">${items.length}</span></h2><section class="card">${items.map(flowRow).join("")}</section>` : ""; };
+  const off = of("使わない").length;
+  return `<div class="head"><h1>${esc(L(COLL.workflows.label))}</h1><div class="acts">${canWrite("workflows") ? btn("wf-ask", t("wfAsk"), {}, "star", t("wfAskTip")) + btn("new", t("wfSelf"), { coll: "workflows" }, "ghost") : ""}${off ? btn("toggle-all", S.all.workflows ? t("openOnly") : t("all"), { coll: "workflows" }, "ghost") : ""}</div></div>
+    <p class="muted">${t("wfLead")}</p>
+    ${part("検証済み")}${part("試してほしい")}${part("下書き")}${S.all.workflows ? part("使わない") : ""}
+    ${all.length ? "" : `<section class="card"><p class="empty">${t("wfEmpty")}</p></section>`}`;
+}
+function viewFlow(id) {
+  const raw = S.data.workflows.get(id);
+  if (!raw) return `<p class="empty">${t("none")}</p><p><a href="#workflows">${t("back")}</a></p>`;
+  const d = { id, ...raw }, w = canWrite("workflows"), ps = hikariFlow.params(d);
+  const runs = docs("reports").filter((r) => r.workflow === id).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const bullets = (arr) => `<ul>${arr.map((x) => `<li>${flowText(x)}</li>`).join("")}</ul>`;
+  const part = (key, body, extra = "") => (blank(d[key]) ? "" : `<section class="card"><h2>${flowLabel(key)}${extra}</h2>${body}</section>`);
+  const params = ps.length ? `<section class="card"><h2>${flowLabel("params")} <span class="chip">${ps.length}</span></h2><div class="tw"><table><tr><th>${t("wfName")}</th><th>${t("wfDefault")}</th><th>${t("wfDesc")}</th></tr>${ps.map((x) => `<tr><td><code>${esc(x.name)}</code></td><td>${x.def === undefined ? `<span class="muted">${t("wfNeed")}</span>` : x.def === "" ? `<span class="muted">${t("wfOpt")}</span>` : esc(x.def)}</td><td>${esc(x.desc)}</td></tr>`).join("")}</table></div></section>` : "";
+  const src = d.source && collOf(d.source) ? fieldView("workflows", { type: "ref" }, d.source, d) : esc(d.source || "");
+  const how = `<section class="card"><h2>${t("wfHow")}</h2><dl class="kv">${d.model ? `<dt>${flowLabel("model")}</dt><dd>${esc(d.model)}</dd>` : ""}<dt>${flowLabel("scope")}</dt><dd>${esc(d.scope || "この作品")}</dd><dt>${flowLabel("areas")}</dt><dd>${tags({ areas: d.areas }) || "—"}</dd>${src ? `<dt>${flowLabel("source")}</dt><dd>${src}</dd>` : ""}</dl></section>`;
+  const states = S.me.owner ? COLL.workflows.states.filter((s) => s.name !== d.state).map((s) => btn("state", "→ " + stName("workflows", s.name), { coll: "workflows", id, to: s.name }, "ghost mini")) : [];
+  return `<p><a href="#workflows" class="muted">← ${esc(L(COLL.workflows.label))}</a></p>
+    <div class="head"><h1>${esc(d.title)}</h1><div class="acts">${flowActs(d, false).join("")}${w ? btn("wf-edit", t("edit"), { id }, "ghost", t("wfWhy")) + btn("wf-fix", t("wfFix"), { id }, "ghost", t("wfFixTip")) : ""}</div></div>
+    <div class="acts">${stPill("workflows", d)} <span class="muted">${d.runs ? t("wfRuns", d.runs) : t("wfNever")}${d.last_run ? " · " + t("wfLast", esc(fmt(d.last_run))) : ""} · ${byText(d)} ${esc(fmt(d.at))}</span> <span class="mono muted">${esc(id)}</span></div>
+    ${part("summary", `<div class="md">${md(d.summary)}</div>`)}
+    <div class="grid2">${params}${how}</div>
+    ${part("refactor", bullets(d.refactor || []))}
+    ${part("steps", `<ol class="steps">${(d.steps || []).map((s) => `<li><div>${flowText(s)}</div></li>`).join("")}</ol>`, ` <span class="chip">${(d.steps || []).length}</span>`)}
+    <div class="grid2">${part("checks", bullets(d.checks || []))}${part("stops", bullets(d.stops || []))}</div>
+    ${part("fixes", logList(d.fixes || []), ` <span class="chip">${(d.fixes || []).length}</span> ${w ? btn("wf-fix", t("wfFix"), { id }, "mini", t("wfFixTip")) : ""}`)}
+    <section class="card"><h2>${t("wfRunsOf")} <span class="chip">${runs.length}</span></h2>${list(runs.slice(0, 30).map((r) => row("reports", r, `${byText(r)}${blank(r.params) ? "" : " · " + esc(r.params.join("、"))}${r.conclusion ? " — " + esc(String(r.conclusion).slice(0, 100)) : ""}`)), "wfRunsNone")}</section>
+    ${part("history", logList(d.history || []), ` <span class="chip">${(d.history || []).length}</span>`)}
+    ${states.length ? `<div class="acts"><span class="muted">${t("state")}</span>${states.join("")}</div>` : ""}`;
+}
+// 報告の「ワークフローにする提案」：オーナーが作らせるか、いらないかを決める。
+const repeatActs = (r, mini = true) => [btn("repeat-make", t("repeatMake"), { id: r.id }, (mini ? "mini " : "") + "star", t("repeatMakeTip")), btn("repeat-skip", t("repeatSkip"), { id: r.id }, (mini ? "mini " : "") + "ghost", t("repeatSkipTip"))];
+// エージェントに渡す文。ゲームのリポジトリで開いた Claude Code に貼る（hub スキルのコマンドが受け取る）。
+function flowRunText(w, id, values) {
+  const ps = Object.entries(values);
+  return `/hub:start ワークフロー「${w.title}」（${id}）のとおりに作業する。${ps.length ? "パラメータ：" + ps.map(([k, v]) => `${k}=${v || "（空）"}`).join("、") + "。" : ""}`;
 }
 function viewRules() {
   const props = docs("proposals").filter((p) => S.all.proposals || p.state === "提案").map((p) => row("proposals", p));
@@ -962,7 +1053,7 @@ function viewMembers() {
     ? ["按“复制钥匙”（钥匙进到剪贴板，不会显示在画面上）", "对自己的智能体说“连上中枢”（它会执行 /hub:login，从剪贴板读取）", "之后智能体就能以你的名义读写中枢。换电脑时再做一次"]
     : ["「鍵をコピー」を押す（鍵はクリップボードに入る。画面には出ない）", "自分のエージェントに「ハブにつないで」と言う（/hub:login がクリップボードから読む）", "これでエージェントが、あなたの名前でハブを読み書きできる。別のパソコンではもう 1 回"];
   const invites = [...S.invites.keys()].sort().map((mail) => `<div class="row"><span><b>${esc(mail)}</b></span><span class="side">${btn("invite-del", t("remove"), { mail }, "ghost mini")}</span></div>`);
-  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"], ["/hub:map", S.lang === "zh" ? "刷新地图" : "地図を新しくする"]];
+  const cmds = [["/hub:today", S.lang === "zh" ? "今天的情况" : "今日の状況"], ["/hub:start", S.lang === "zh" ? "登记要做的事、开分支、开工" : "やることを登録し、ブランチを切って始める"], ["/hub:end", S.lang === "zh" ? "提交、写终了报告和调整指南" : "コミット・終了報告・調整ガイド"], ["/hub:ask", S.lang === "zh" ? "先搜再提问" : "探してから質問する"], ["/hub:bug", S.lang === "zh" ? "登记发现的问题" : "見つけた問題を登録する"], ["/hub:flow", S.lang === "zh" ? "写、改工作流" : "ワークフローを作る・直す"], ["/hub:map", S.lang === "zh" ? "刷新地图" : "地図を新しくする"]];
   return `<div class="head"><h1>${t("members")}</h1><div class="acts">${S.me.write !== false && S.me.uid ? btn("profile", S.me.handle ? t("profile") : t("register")) : ""}${btn("logout", t("logout"), {}, "ghost")}</div></div>
     <div class="grid">
       <section class="card"><h2>${t("members")} <span class="chip">${members.length}</span></h2>${list(members)}</section>
@@ -976,7 +1067,7 @@ function viewMembers() {
 }
 function viewSearch() {
   const rows = [];
-  for (const c of SCHEMA.collections) if (c.key !== "members" && c.key !== "map") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(c.key === "rules" || c.key === "engine" ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
+  for (const c of SCHEMA.collections) if (c.key !== "members" && c.key !== "map") for (const d of docs(c.key)) if (matchQ(d) && rows.length < 60) rows.push(["rules", "engine", "design"].includes(c.key) ? `<a class="row" href="#${c.key}"><span><b>${esc(d.title)}</b><small>${esc(L(c.label))}</small></span></a>` : row(c.key, d, `${esc(L(c.label))} · ${byText(d)}`));
   return `<div class="head"><h1>${t("results")}</h1></div><section class="card">${list(rows)}</section>`;
 }
 
@@ -998,6 +1089,7 @@ function route() {
   const h = decodeURIComponent(location.hash.slice(1)) || "home", v = VIEWS.find((x) => x.key === h);
   if (v) return { view: v.key, coll: v.coll };
   const coll = collOf(h);
+  if (coll === "design") return { view: "design" };
   if (coll && !isOwnerOnly(coll)) return { view: (VIEWS.find((x) => x.coll === coll) || { key: coll === "cards" ? "board" : coll === "proposals" ? "rules" : "home" }).key, coll, id: h };
   return { view: "home" };
 }
@@ -1027,12 +1119,15 @@ function render() {
   else if (!S.signed) html = viewLogin();
   else if (!PID) html = viewPick();
   else if (S.denied) html = viewDenied();
+  else if (r.id && r.coll === "workflows") html = viewFlow(r.id);
   else if (r.id) html = viewDetail(r.coll, r.id);
   else if (S.q && r.view === "home") html = viewSearch();
   else if (r.view === "home") html = viewHome();
   else if (r.view === "board") html = viewBoard();
   else if (r.view === "rules") html = viewRules();
   else if (r.view === "engine") html = viewGrouped("engine", COLL.engine.areas, "area", "must");
+  else if (r.view === "design") html = viewDesign();
+  else if (r.view === "workflows") html = viewWorkflows();
   else if (r.view === "members") html = viewMembers();
   else if (r.view === "map") html = viewMap();
   else if (r.view === "timeline") html = viewTimeline();
@@ -1067,7 +1162,7 @@ const ACT = {
   close() { $("#dlg").close(); },
   login() { return BACKEND.signIn().catch((e) => toast(`${t("failed")}（${(e && e.code) || "?"}）`, true)); },
   logout() { return BACKEND.signOut(); },
-  async "copy-key"() { try { await navigator.clipboard.writeText(BACKEND.key()); toast(t("copied")); } catch { toast(t("failed"), true); } },
+  async "copy-key"() { await copyText(BACKEND.key(), t("copied")); },
   zoom(_, el) { if (!el.src) return; $("#dlg-form").innerHTML = `<img src="${esc(el.src)}" alt="" style="max-width:100%"><div class="dlg-foot">${btn("close", t("back"), {}, "ghost")}</div>`; $("#dlg-form").onsubmit = null; $("#dlg").showModal(); },
   "invite-add"() {
     openForm({ title: t("inviteAdd"), note: t("inviteHelp"), defs: [{ key: "mail", type: "text", required: true, ja: "Google アカウントのメール", zh: "Google 账号的邮箱" }],
@@ -1096,11 +1191,54 @@ const ACT = {
         try { await S.db.doc("members/" + uid).update({ branch, updated_at: now() }); toast(t("saved")); return true; } catch (e) { toast(`${t("failed")}（${(e && e.code) || "?"}）`, true); return false; }
       } });
   },
-  async "copy-ask"() {
-    const el = $("#ask-text");
-    try { await navigator.clipboard.writeText(el.textContent); toast(t("copied")); } catch { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  async "copy-ask"() { await copyText($("#ask-text").textContent, t("copied")); },
+  new({ coll }) { createDoc(coll, coll === "workflows" ? { extra: { scope: "この作品" } } : {}); },
+  "wf-run"({ id }) {
+    const w = S.data.workflows.get(id), ps = hikariFlow.params(w);
+    if (!ps.length) return copyText(flowRunText(w, id, {}));
+    openForm({ title: `${t("wfRun")}：${w.title}`, note: t("wfRunNote"), submit: t("copy"),
+      defs: ps.map((x, i) => ({ key: "p" + i, type: "text", ja: x.name, zh: x.name, required: x.def === undefined, help: x.desc })),
+      values: Object.fromEntries(ps.map((x, i) => ["p" + i, x.def || ""])),
+      onSave: (v) => copyText(flowRunText(w, id, Object.fromEntries(ps.map((x, i) => [x.name, v["p" + i]])))) });
   },
-  new({ coll }) { createDoc(coll); },
+  async "wf-ok"({ id }) {
+    const w = S.data.workflows.get(id);
+    await write("workflows", id, { state: "検証済み", history: [...(w.history || []), { at: now(), note: `${S.me.handle}・サイト：試して検証済みにした` }] }, false);
+  },
+  "wf-ask"() {
+    openForm({ title: t("wfAsk"), note: t("wfAskTip"), submit: t("copy"),
+      defs: [{ key: "what", type: "longtext", required: true, ja: t("wfWhat"), zh: t("wfWhat"), help: t("wfWhatHelp") }, { key: "from", type: "text", ja: t("wfFrom"), zh: t("wfFrom") }],
+      onSave: ({ what, from }) => copyText(`/hub:flow 作る：${what}${from ? `（参考：${from}）` : ""}`) });
+  },
+  "wf-fix"({ id }) {
+    const w = S.data.workflows.get(id);
+    openForm({ title: `${t("wfFix")}：${w.title}`, submit: t("copy"), values: { what: blank(w.fixes) ? "" : t("wfFixDefault") },
+      defs: [{ key: "what", type: "longtext", required: true, ja: t("wfFixWhat"), zh: t("wfFixWhat") }],
+      onSave: ({ what }) => copyText(`/hub:flow 直す ${id}：${what}`) });
+  },
+  // サイトで直接直す：変えた項目を変更の記録に残す。オーナー以外が検証済みのものを直したら、試してほしいに戻す。
+  "wf-edit"({ id }) {
+    const d = S.data.workflows.get(id), defs = fieldsOf("workflows", [...COLL.workflows.create, "scope"]);
+    openForm({ title: `${t("edit")}：${d.title}`, values: d, defs: [...defs, { key: "why", type: "text", ja: t("wfWhy"), zh: t("wfWhy") }],
+      onSave: (v) => {
+        const why = v.why;
+        delete v.why;
+        const changed = defs.filter((f) => JSON.stringify(v[f.key] ?? "") !== JSON.stringify(d[f.key] ?? "")).map((f) => L(f));
+        if (!changed.length) { toast(t("wfNoChange")); return true; }
+        const patch = { ...v, history: [...(d.history || []), { at: now(), note: `${S.me.handle}・サイト：${why || changed.join("、") + "を変えた"}` }] };
+        if (!S.me.owner && d.state === "検証済み") patch.state = "試してほしい";
+        return write("workflows", id, patch, false);
+      } });
+  },
+  "ds-ask"() {
+    openForm({ title: t("dsAsk"), note: t("dsAskTip"), submit: t("copy"), defs: [{ key: "what", type: "longtext", ja: t("dsWhat"), zh: t("dsWhat") }],
+      onSave: ({ what }) => copyText(`hub:work スキルの「設定集」の手順で、この作品の設定集の下書きを作ってください。${what ? `とくに：${what}` : ""}`) });
+  },
+  async "repeat-make"({ id }) {
+    const r = S.data.reports.get(id);
+    if (await copyText(`/hub:flow 作る：報告「${r.title}」（${id}）の「ワークフローにする提案」をもとに作る。提案：${r.repeat}`)) await write("reports", id, { repeat_done: true }, false);
+  },
+  async "repeat-skip"({ id }) { await write("reports", id, { repeat_done: true }, false); },
   edit({ coll, id }) { editDoc(coll, id); },
   async state({ coll, id, to }) {
     const patch = { state: to };
@@ -1173,6 +1311,11 @@ const ACT = {
       } });
   },
 };
+async function copyText(text, msg = t("copyDone")) {
+  if (await hikariCopy(text)) { toast(msg); return true; }
+  toast(t("copyFail"), true);
+  return false;
+}
 // 作品目録の 1 件：この人（メール）はこの作品に入れる。招待の一覧と一緒に書き、一緒に消す。
 const dirDoc = (mail, pid) => BACKEND.db.doc(`directory/${mail.toLowerCase()}/projects/${pid}`);
 // オーナーが新しい作品を作る：設定（schema の既定値）、予定、初期のルールとエンジン知識、オーナー自身の作品目録。

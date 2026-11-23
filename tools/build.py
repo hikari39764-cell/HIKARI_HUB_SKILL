@@ -1,10 +1,10 @@
 """HIKARI 制作ハブのビルド。
 
-schema/schema.json（項目の宣言）、content/（既定のルール・エンジン知識）、plugin/hub.json（接続先とスキルのリポジトリ）、
+schema/schema.json（項目の宣言）、content/（既定のルール・エンジン知識・設定集のひな形・共通のワークフロー）、plugin/hub.json（接続先とスキルのリポジトリ）、
 page/（サイトの元と、エンジン中枢と共用の翻訳 translate.js）から、次のものを作る。
 作品の一覧はデータベースの作品目録（directory/<メール>/projects/<作品 id>）にあり、ビルドには入らない：
 
-  新しい作品はオーナーがサイトの「新しい作品を作る」で作る（初期のルール・エンジン知識はページに埋め込んだものを入れる）。
+  新しい作品はオーナーがサイトの「新しい作品を作る」で作る（初期のルール・エンジン知識・設定集のひな形・共通のワークフローは、ページに埋め込んだものを入れる）。
 
   docs/index.html                       ハブのサイト（GitHub Pages が配る。全作品で 1 ページ、?p=<作品 id>）
   firebase/firestore.rules              データベースのアクセス規則（オーナーが Firebase コンソールに貼る。コミットしない）
@@ -95,24 +95,26 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
-def sections(folder: str, group_key: str) -> list[dict]:
-    """content/<folder>/*.md を「<!-- id: ...; key: value -->」の区切りごとの記録にする。"""
+def sections(folder: str, group_key: str, defaults: dict | None = None) -> list[dict]:
+    """content/<folder>/*.md を「<!-- id: ...; key: value -->」の区切りごとの記録にする。
+    まとまり（group_key）は、ファイルの先頭の「<!-- category: … -->」か「<!-- area: … -->」、または区切りごとの「section: …」。"""
     out: list[dict] = []
     for path in sorted((ROOT / "content" / folder).glob("*.md")):
         text = path.read_text(encoding="utf-8")
         group = re.search(r"<!--\s*(?:category|area):\s*(.+?)\s*-->", text)
-        if not group:
-            raise SystemExit(f"{path.name}: 先頭に category か area がありません")
         parts = re.split(r"^<!--\s*id:\s*(.+?)\s*-->\s*$", text, flags=re.M)
         for meta, body in zip(parts[1::2], parts[2::2]):
             fields = [kv.split(":", 1) for kv in meta.split(";")]
             doc_id = fields[0][0].strip()
             flags = {k.strip(): v.strip() for k, v in fields[1:]}
+            value = flags.get(group_key) or (group and group.group(1))
+            if not value:
+                raise SystemExit(f"{path.name} {doc_id}: {group_key} がありません（ファイルの先頭の category・area か、区切りの section）")
             head, _, rest = body.strip().partition("\n")
             if not head.startswith("## "):
                 raise SystemExit(f"{path.name} {doc_id}: 見出し（## ）がありません")
-            doc: dict = {"title": head[3:].strip(), group_key: group.group(1), "body": rest.strip(),
-                         "order": int(flags.get("order", "100"))}
+            doc: dict = {"title": head[3:].strip(), group_key: value, "body": rest.strip(),
+                         "order": int(flags.get("order", "100"))} | (defaults or {})
             for key in ("core", "must"):
                 if key in flags:
                     doc[key] = flags[key] == "true"
@@ -120,6 +122,19 @@ def sections(folder: str, group_key: str) -> list[dict]:
     ids = [d["id"] for d in out]
     if len(ids) != len(set(ids)):
         raise SystemExit(f"content/{folder}: id が重複しています")
+    return out
+
+
+def workflows() -> list[dict]:
+    """content/workflows/<id>.json：新しい作品に入る共通のワークフロー（範囲は「共通」）。"""
+    fields = {f["key"] for f in COLLECTIONS["workflows"]["fields"]}
+    out = []
+    for path in sorted((ROOT / "content" / "workflows").glob("*.json")):
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        unknown = [k for k in doc if k not in fields]
+        if unknown or doc.get("scope") != "共通" or not path.stem.startswith(COLLECTIONS["workflows"]["prefix"] + "-"):
+            raise SystemExit(f"{path.name}: 知らない項目 {unknown}、範囲が「共通」でない、または id が wf- で始まらない")
+        out.append({"id": path.stem, "data": doc})
     return out
 
 
@@ -276,10 +291,10 @@ def engine_reference(docs: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
-    """プレビュー用の見本データ（公開ページには入らない）。"""
+def preview_seed(initial: dict, owner: bool) -> dict:
+    """プレビュー用の見本データ（公開ページには入らない）。initial は新しい作品に入る初期データ（{コレクション: {id: 記録}}）。"""
     me = "hikari" if owner else "kato"
-    seed = {f"rules/{d['id']}": d["data"] for d in rules} | {f"engine/{d['id']}": d["data"] for d in engine}
+    seed = {f"{folder}/{i}": d for folder, docs in initial.items() for i, d in docs.items()}
     seed["invites/kato@example.com"] = {"at": "2026-11-09T09:00:00+09:00"}
     stamp = lambda by, at, agent=None: {"by": by, "at": at, "updated_at": at, "updated_by": by} | ({"by_agent": agent} if agent else {})
     seed |= {
@@ -332,6 +347,25 @@ def preview_seed(rules: list[dict], engine: list[dict], owner: bool) -> dict:
         "locks/l-000001": {"target": "Assets/Scenes/Stage2.scene", "until": "18:00", "state": "編集中", **stamp("ko", "2026-11-10T09:05:00+09:00")},
         "proposals/p-000001": {"title": "PR にはプレイ動画を付ける", "category": "Git 規約", "body": "見た目や手触りが変わる PR には 10 秒ほどの動画を付ける。",
                                "reason": "スクリーンショットでは揺れの強さが伝わらなかった。", "state": "提案", **stamp("ko", "2026-11-10T09:40:00+09:00")},
+        "design/ds-concept": {"title": "このゲームのひとこと", "section": "コンセプト", "must": True, "order": 10, "state": "確定",
+                              "body": "押し寄せる敵の群れを、**ため攻撃 1 発で吹き飛ばす**爽快感のアクション。数で押されて、技で押し返す。", **stamp("hikari", "2026-11-09T09:20:00+09:00")},
+        "workflows/wf-000001": {"title": "敵を 1 体足す", "summary": "敵の定義アセットを 1 つ足し、出現表に入れて遊べるようにする。共通の敵コンポーネント（EnemyCore）にまとめ終わっているので、コードは書かない。",
+                                "params": ["名前：敵の名前（英語、例 SlimeRed）", "HP=30：体力", "速さ=2.5：歩く速さ（m/秒）", "見た目：使うモデルのアセット"],
+                                "steps": ["`Assets/Enemies/_Template.henemy` を `Assets/Enemies/{名前}.henemy` に複製する", "HP を {HP}、MoveSpeed を {速さ}、Model を {見た目} にする",
+                                          "`Assets/Stages/SpawnTable.hdata` に {名前} を 1 行足す", "ビルドして、テスト用シーンで出現・被弾・撃破を確かめる", "調整ガイド「敵の定義アセット」に {名前} の行を足す"],
+                                "checks": ["テスト用シーンで出て、当たって、倒せる", "ビルドが警告ゼロ"], "stops": ["共通の敵コンポーネントにない動きが要る"],
+                                "refactor": ["敵の共通部分を EnemyCore にまとめる（済み：r-000002）"], "model": "ふつうのモデルでよい", "areas": ["敵"], "scope": "この作品", "state": "検証済み",
+                                "runs": 3, "last_run": "2026-11-11T15:00:00+09:00", "fixes": [{"at": "2026-11-11T15:00:00+09:00", "note": "kato：出現表の列の順番が手順に書いていない"}],
+                                "history": [{"at": "2026-11-10T12:00:00+09:00", "note": "kato・claude-code：r-000002 の提案から作った"}, {"at": "2026-11-10T18:00:00+09:00", "note": "hikari・サイト：試して検証済みにした"}],
+                                "source": "r-000002", **stamp("kato", "2026-11-10T12:00:00+09:00", "claude-code")},
+        "reports/r-000005": {"kind": "作業", "title": "弾のはね返り", "state": "終了", "conclusion": "壁ではね返る弾を足した。",
+                             "repeat": "弾の種類を足すのは 3 回目。毎回、当たり判定と寿命のコードを写している。先に共通の弾コンポーネントにまとめてから、「弾を 1 種類足す」をワークフローにしたい。",
+                             "changes": ["Source/Runtime/Bullet/BounceBullet.cpp"], "evidence": ["テスト用シーンで壁に 5 回撃って確認"], "unverified": [], "remaining": [], "tuning": [],
+                             "learned": [], "mistakes": [], "questions": [], "cost_hours": 0.6, **stamp("kato", "2026-11-11T17:30:00+09:00", "claude-code")},
+        "reports/r-000006": {"kind": "作業", "title": "敵を 1 体足す：SlimeRed", "state": "終了", "workflow": "wf-000001", "params": ["名前=SlimeRed", "HP=30", "速さ=2.5", "見た目=Assets/Models/Slime.hmesh"],
+                             "conclusion": "ワークフローどおりに足した。出現表の列の順番で迷った（改善案に書いた）。", "changes": ["Assets/Enemies/SlimeRed.henemy", "Assets/Stages/SpawnTable.hdata"],
+                             "evidence": ["テスト用シーンで出現・被弾・撃破を確認"], "unverified": [], "remaining": [], "tuning": ["g-000001"], "learned": [], "mistakes": [], "questions": [], "cost_hours": 0.3,
+                             **stamp("kato", "2026-11-11T15:00:00+09:00", "claude-code")},
         "engine_requests/e-000001": {"title": "名前でオブジェクトを探したい", "kind": "機能不足", "detail": "出現地点を名前で探す API がない。", "workaround": "SceneObject フィールドで参照を持つ。", "state": "未送付", **stamp("kato", "2026-11-10T11:40:00+09:00", "claude-code")},
     } | sample_map()
     me_mail = "owner@example.com" if owner else "member@example.com"
@@ -349,7 +383,11 @@ def main() -> None:
 
     owner = ROOT / "plugin" / "owner"
     # 新しい作品に入れる初期データ（サイトの「新しい作品を作る」が使う）。設定の既定値は schema の settings.*.defaults。
-    seed = {folder: {d["id"]: d["data"] for d in docs} for folder, docs in (("rules", rules), ("engine", engine))}
+    design = sections("design", "section", {"state": COLLECTIONS["design"]["states"][0]["name"]})
+    bad += [d["id"] for d in design if d["data"]["section"] not in next(f for f in COLLECTIONS["design"]["fields"] if f["key"] == "section")["choices"]]
+    if bad:
+        raise SystemExit(f"設定集の章が schema にありません：{bad}")
+    seed = {folder: {d["id"]: d["data"] for d in docs} for folder, docs in (("rules", rules), ("engine", engine), ("design", design), ("workflows", workflows()))}
     config = {"firebase": HUB["firebase"], "skill": HUB["skill"], "seed": seed}
     site = page(config)
     write(ROOT / "docs" / "index.html", site)
@@ -357,9 +395,9 @@ def main() -> None:
     write(ROOT / "dist" / "index.html", site)
     write(ROOT / "firebase" / "firestore.rules", firestore_rules())
     shutil.rmtree(owner / "seed", ignore_errors=True)
-    for folder, docs in (("rules", rules), ("engine", engine)):
-        for d in docs:
-            write(owner / "seed" / folder / f"{d['id']}.json", json.dumps(d["data"], ensure_ascii=False, indent=2) + "\n")
+    for folder, docs in seed.items():
+        for doc_id, data in docs.items():
+            write(owner / "seed" / folder / f"{doc_id}.json", json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
     listing = {"all": ["settings"] + list(COLLECTIONS), "skip": SCHEMA["sync_skip"]}
     write(ROOT / "plugin" / "lib" / "collections.json", json.dumps(listing, ensure_ascii=False, indent=2) + "\n")
@@ -371,9 +409,9 @@ def main() -> None:
     mock = (ROOT / "tools" / "preview_mock.js").read_text(encoding="utf-8")
     sample = config | {"firebase": {}}
     for name, is_owner in (("owner", True), ("member", False)):
-        script = mock.replace("__SEED__", embed(preview_seed(rules, engine, is_owner))).replace("__OWNER__", "true" if is_owner else "false")
+        script = mock.replace("__SEED__", embed(preview_seed(seed, is_owner))).replace("__OWNER__", "true" if is_owner else "false")
         write(ROOT / "dist" / f"preview-{name}.html", page(sample, script))
-    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、サイト {len(site.encode('utf-8')) // 1024} KB")
+    print(f"ルール {len(rules)} 件、エンジン知識 {len(engine)} 件、設定集 {len(seed['design'])} 件、ワークフロー {len(seed['workflows'])} 件、サイト {len(site.encode('utf-8')) // 1024} KB")
 
 
 if __name__ == "__main__":

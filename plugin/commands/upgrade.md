@@ -7,4 +7,6 @@ description: （オーナー専用）スキルの新しい既定のエンジン�
 1. `hub sync` で、いまのハブの `engine` と `rules` を読む。
 2. エンジン知識：`${CLAUDE_PLUGIN_ROOT}/owner/seed/engine/*.json` と `.hikari-hub/cache/engine` を比べ、違い（新しい項目・本文が変わった項目）を一覧で人に見せる。**人が選んだものだけ** `.hikari-hub/out/engine/` に書いて `hub push` する（オーナーがページで直した内容を黙って上書きしない）。
 3. ルールは上書きしない。既定のルール（`owner/seed/rules`）に新しい項目があれば、名前だけ知らせる。入れると言われたものだけ書く。
-4. 何を取り込んだかを人に伝える。
+4. 共通のワークフロー：`owner/seed/workflows/*.json` と `.hikari-hub/cache/workflows` を比べる。無いものは名前を、変わったもの（手順・確かめ方など）は違いを人に見せ、**選んだものだけ**書く。もうあるものを更新するときは、`state`・`runs`・`last_run`・`fixes` はそのまま残し、`history` に「スキルの既定から更新」を足す。
+5. 設定集：`.hikari-hub/cache/design` が空なら、ひな形（`owner/seed/design`）を入れるか人に聞く。入れると言われたら、そのまま書く（`下書き`。中身はオーナーが書き換える）。
+6. 何を取り込んだかを人に伝える。

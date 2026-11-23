@@ -13,7 +13,7 @@
 echo "c-$(date +%s%N | git hash-object --stdin | cut -c1-6)"
 ```
 
-  接頭辞は `data-model.md` の各コレクションに書いてある（カード `c`、報告 `r`、調整ガイド `g`、不具合 `b`、質問 `q`、ナレッジ `k`、ミス `m`、決めること `d`、編集中 `l`、ルール提案 `p`、エンジン要望 `e`、回答 `a`）。まとめて要るときは 1 回のコマンドで必要な数だけ作る。
+  接頭辞は `data-model.md` の各コレクションに書いてある（カード `c`、報告 `r`、調整ガイド `g`、不具合 `b`、質問 `q`、ナレッジ `k`、ミス `m`、決めること `d`、編集中 `l`、ルール提案 `p`、エンジン要望 `e`、回答 `a`、ワークフロー `wf`、設定集 `ds`）。まとめて要るときは 1 回のコマンドで必要な数だけ作る。
 - 時刻：`date -Iseconds`（例 `2026-11-10T13:05:00+09:00`）。
 
 ## 送るファイルの約束（`hub push`）
@@ -25,7 +25,7 @@ echo "c-$(date +%s%N | git hash-object --stdin | cut -c1-6)"
 - `_` で始まる項目はハブに入らない。`cache` のファイルにある `_time` は「最後に書かれた時刻」。
 - **取り合いになる書き込み**（既にあるカードを始める、編集中を宣言する）は、直前に `hub get` で読み、その `_time` を `"_if_time"` に入れる。その間に誰かが書いていたら `changed` で失敗する（上書きしない）。
 - 結果は 1 件ずつ出る：`ok  cards/c-3fa9c1`。失敗は `NG  <記録>  <理由>` で、そのファイルは `out` に残る。
-  - `denied`：オーナー領域（`settings`・`rules`・`engine`）に書こうとしている。ファイルを消す。
+  - `denied`：オーナー領域（`settings`・`rules`・`engine`・`design`）に書こうとしている。ファイルを消す。
   - `changed`：`hub get` で読み直し、内容を見てから書き直す（相手が先に取っていたら、取らない）。
   - `offline`：ハブに届かない。下の「届かないとき」。
 
@@ -136,6 +136,33 @@ hub map
 ```
 
 カードも同じ `hub push` で更新する。`.hikari-hub/out/cards/c-3fa9c1.json`：自分のブランチに取り込んだら `{"state": "完了", "branch": "develop_kato", "updated_at": "…", "updated_by": "kato"}`（人に見てほしいなら `"state": "確認待ち", "waiting": "検収"`）。完了条件を満たしていなければ `{"state": "あとで", "assignee": "", …}`。
+
+## ワークフロー：使った記録・改善案・作る
+
+ワークフローで作業したら、報告に `workflow` と `params`（`名前=値` の配列）を書き、カードにも `workflow` を書く。終えるときに、ワークフローの使った回数と改善案を足す（`hub get workflows/wf-3a8c21` で読み、`fixes` はこれまでの分も全部入れる）。`.hikari-hub/out/workflows/wf-3a8c21.json`：
+
+```json
+{"runs": 4, "last_run": "2026-11-12T16:20:00+09:00",
+ "fixes": [{"at": "2026-11-11T15:00:00+09:00", "note": "kato：出現表の列の順番が手順に書いていない"},
+           {"at": "2026-11-12T16:20:00+09:00", "note": "kato：手順 3 の SpawnTable は Stage2 には無い。ステージごとの表を探す手順が要る"}],
+ "updated_at": "2026-11-12T16:20:00+09:00", "updated_by": "kato"}
+```
+
+作る（`/hub:flow`）。`.hikari-hub/out/workflows/wf-3a8c21.json`：
+
+```json
+{"title": "敵を 1 体足す", "summary": "敵の定義アセットを 1 つ足し、出現表に入れて遊べるようにする。共通の敵コンポーネント（EnemyCore）にまとめ終わっているので、コードは書かない。",
+ "params": ["名前：敵の名前（英語、例 SlimeRed）", "HP=30：体力", "速さ=2.5：歩く速さ（m/秒）", "見た目：使うモデルのアセット"],
+ "refactor": ["敵の共通部分を EnemyCore にまとめる（済み：r-91c2aa）"],
+ "steps": ["`Assets/Enemies/_Template.henemy` を `Assets/Enemies/{名前}.henemy` に複製する", "HP を {HP}、MoveSpeed を {速さ}、Model を {見た目} にする", "…"],
+ "checks": ["テスト用シーンで出て、当たって、倒せる", "ビルドが警告ゼロ"],
+ "stops": ["共通の敵コンポーネントに無い動きが要る"],
+ "model": "ふつうのモデルでよい", "areas": ["敵"], "scope": "この作品", "state": "試してほしい", "runs": 0, "source": "r-91c2aa",
+ "history": [{"at": "2026-11-10T12:00:00+09:00", "note": "kato・claude-code：作った（元：r-91c2aa）"}],
+ "by": "kato", "by_agent": "claude-code", "at": "…", "updated_at": "…", "updated_by": "kato"}
+```
+
+繰り返しの提案は、終了報告に `"repeat": "弾の種類を足すのは 3 回目。毎回、当たり判定と寿命のコードを写している。先に共通の弾コンポーネントにまとめてから「弾を 1 種類足す」をワークフローにしたい"` と書く。提案からワークフローを作ったら、その報告に `{"repeat_done": true}` を書く。
 
 ## まとめて作る（調整ガイド・学んだこと・ミス・質問・不具合など）
 

@@ -70,3 +70,12 @@ a.row:hover { background: color-mix(in srgb, var(--paper-2) 70%, transparent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* 工作流：步骤编号、参数、修改记录（两个网站共用） */
+.grid2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); align-items: start; }
+ol.steps { margin: 0; padding-left: 0; list-style: none; counter-reset: step; display: grid; gap: 8px; }
+ol.steps li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border: 2px solid var(--soft); border-radius: 10px; background: var(--paper); overflow-wrap: anywhere; }
+ol.steps li::before { content: counter(step); font-family: var(--display); font-size: 15px; width: 28px; height: 28px; border-radius: 999px; background: var(--star); color: #17160F; border: 2px solid #17160F; display: grid; place-items: center; }
+code.param { background: var(--star); color: #17160F; border-color: #17160F; font-weight: 700; }
+ul.log { margin: 0; padding-left: 18px; }
+ul.log li { margin: 3px 0; }

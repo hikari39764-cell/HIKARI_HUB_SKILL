@@ -12,6 +12,8 @@
     "locks",
     "proposals",
     "engine_requests",
+    "design",
+    "workflows",
     "rules",
     "engine",
     "members",
