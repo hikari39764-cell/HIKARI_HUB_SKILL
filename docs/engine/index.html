@@ -1385,7 +1385,9 @@ async function followDecision(d, f) {
   }
   if (f === "升成方针") {
     const pid = newId("pol");
-    await write("policies", pid, { title: d.choice || d.title, body: `${d.title}：${d.choice}${d.note ? "\n\n" + d.note : ""}\n\n来源：决定 ${d.id}`, areas: d.areas || [], state: "有效", order: 900 }, true);
+    // 提问时（或清点旧决定时）在“定了之后做什么”里写好了方针的正文，就用它。
+    const body = d.follow === "升成方针" && d.next_step ? d.next_step : `${d.title}：${d.choice}${d.note ? "\n\n" + d.note : ""}`;
+    await write("policies", pid, { title: d.choice || d.title, body: `${body}\n\n来源：决定 ${d.id}`, areas: d.areas || [], state: "有效", order: 900 }, true);
     return write("decisions", d.id, { follow: f, policy: pid, state: "已落实" }, false);
   }
   return write("decisions", d.id, { follow: "只记下", state: "已落实" }, false);
