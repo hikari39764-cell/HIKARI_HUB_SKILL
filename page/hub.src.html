@@ -382,6 +382,8 @@ const stage = (c) => (c.state === "あとで" && plan().ready.includes(c.id) ? "
 const titleOf = (d) => d.title || d.target || d.handle || d.id;
 const collOf = (id) => (PREFIX.find(([p]) => String(id).startsWith(p)) || [])[1];
 const isOwnerOnly = (coll) => COLL[coll].writer === "owner";
+// 章ごとのページとして 1 画面に並べるもの。作ったあとも一覧に残り、オーナーは編集画面から消せる（消せるのはどれもオーナーだけ）。
+const PAGE_COLLS = ["rules", "engine", "design"];
 const canWrite = (coll) => (isOwnerOnly(coll) ? S.me.owner : S.me.write !== false && !!S.me.handle);
 const pad = (n) => String(n).padStart(2, "0");
 function now() {
@@ -636,7 +638,7 @@ function createDoc(coll, preset = {}, after) {
       if (coll === "reports") Object.assign(base, { kind: "日報", title: now().slice(0, 10), state: "終了" });
       const ok = await write(coll, id, { ...base, ...preset.extra, ...v }, true);
       if (ok && after) await after(id);
-      if (ok && !isOwnerOnly(coll)) location.hash = id;
+      if (ok && !isOwnerOnly(coll) && !PAGE_COLLS.includes(coll)) location.hash = id;
       return ok;
     },
   });
@@ -646,7 +648,7 @@ function editDoc(coll, id) {
   if (!d) return;
   openForm({
     title: `${L(COLL[coll].label)}：${t("edit")}`, defs: editDefs(coll), values: d, onSave: (v) => write(coll, id, v, false),
-    del: isOwnerOnly(coll) ? async () => { try { await S.db.doc(coll + "/" + id).delete(); toast(t("saved")); location.hash = coll === "engine" ? "engine" : "rules"; return true; } catch { toast(t("failed"), true); return false; } } : null,
+    del: S.me.owner && PAGE_COLLS.includes(coll) ? async () => { try { await S.db.doc(coll + "/" + id).delete(); toast(t("saved")); location.hash = coll; return true; } catch { toast(t("failed"), true); return false; } } : null,
   });
 }
 
@@ -969,7 +971,7 @@ function viewGrouped(coll, groups, groupKey, flag, { acts = "", empty = "none" }
 }
 function viewDesign() {
   const sections = COLL.design.fields.find((f) => f.key === "section").choices;
-  return viewGrouped("design", sections, "section", "must", { acts: S.me.owner ? btn("ds-ask", t("dsAsk"), {}, "ghost", t("dsAskTip")) : "", empty: "dsEmpty" });
+  return viewGrouped("design", sections, "section", "must", { acts: canWrite("design") ? btn("ds-ask", t("dsAsk"), {}, "ghost", t("dsAskTip")) : "", empty: "dsEmpty" });
 }
 
 // ---------- ワークフロー（エンジン中枢の工作流と同じ考え方。参数の書き方と {参数} の印は共用の shared.js） ----------

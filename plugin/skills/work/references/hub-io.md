@@ -25,7 +25,7 @@ echo "c-$(date +%s%N | git hash-object --stdin | cut -c1-6)"
 - `_` で始まる項目はハブに入らない。`cache` のファイルにある `_time` は「最後に書かれた時刻」。
 - **取り合いになる書き込み**（既にあるカードを始める、編集中を宣言する）は、直前に `hub get` で読み、その `_time` を `"_if_time"` に入れる。その間に誰かが書いていたら `changed` で失敗する（上書きしない）。
 - 結果は 1 件ずつ出る：`ok  cards/c-3fa9c1`。失敗は `NG  <記録>  <理由>` で、そのファイルは `out` に残る。
-  - `denied`：オーナー領域（`settings`・`rules`・`engine`・`design`）に書こうとしている。ファイルを消す。
+  - `denied`：オーナー領域（`settings`・`rules`・`engine`）に書こうとしている。ファイルを消す。
   - `changed`：`hub get` で読み直し、内容を見てから書き直す（相手が先に取っていたら、取らない）。
   - `offline`：ハブに届かない。下の「届かないとき」。
 
