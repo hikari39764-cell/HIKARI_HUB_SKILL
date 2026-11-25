@@ -25,5 +25,20 @@
     "proposals",
     "engine_requests",
     "map"
-  ]
+  ],
+  "prefix": {
+    "cards": "c",
+    "reports": "r",
+    "bugs": "b",
+    "questions": "q",
+    "guides": "g",
+    "knowledge": "k",
+    "mistakes": "m",
+    "decisions": "d",
+    "locks": "l",
+    "proposals": "p",
+    "engine_requests": "e",
+    "design": "ds",
+    "workflows": "wf"
+  }
 }

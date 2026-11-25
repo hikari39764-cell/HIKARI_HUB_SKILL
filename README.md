@@ -88,9 +88,10 @@ HIKARI エンジンでゲームを作るチームのための作業台。チー�
 | ほかの人のブランチは触れない | ほかのメンバーの自分のブランチへのマージや push を止める |
 | `develop`・`main` はオーナーだけ | オーナーでなければ止める。オーナーでも毎回人に確認が出る |
 | 保護するパス | オーナーがページで決めたファイル（設定、ビルドなど）を変えるときは、人に確認が出る |
+| コミットとブランチの名前 | ルール「Git 規約」に合わないコミット（1 行目の形・種別・字数、日本語に混ざった中国語、`Card:`、AI の名前や共同作者行）を git の `commit-msg` フックが止める。形の違う作業ブランチは作る前に止める。`--no-verify` で飛ばすのも止める。`hub check` で、いまのブランチのコミットをまとめて確かめられる |
 | 報告の不足 | 終了報告に書かれていない項目（調整できるところ、ミスなど）があると、ページに「不足」と出る |
 
-「登録なしでは変更できない」はページのプロジェクト設定でオフにできる。保護するパスもそこで編集する。フックが止めるのはエージェントの編集ツールで、人の作業は止めない。
+「登録なしでは変更できない」はページのプロジェクト設定でオフにできる。保護するパスもそこで編集する。フックが止めるのはエージェントの編集ツールで、人の作業は止めない。ただしコミットの検査は git のフック（`hub` コマンドが `.git/hooks/commit-msg` と `.git/hooks/hikari-hub/` に置く。リポジトリには入らない）なので、人のコミットにも働く。種別の一覧と 1 行目の字数（半角は 0.5 字）は、その作品のルール「コミットメッセージ」から読むので、ページでルールを書き換えれば検査も変わる。
 
 ## オーナーがすること
 
@@ -126,6 +127,6 @@ python -I -X utf8 tools/build.py
 
 - `schema/schema.json`・`content/`・`page/hub.src.html`・`page/translate.js`・`plugin/hub.json` を変えたら必ずビルドして、生成物（`docs/`、`plugin/owner/seed/`、`plugin/lib/collections.json`、`plugin/skills/work/references/data-model.md`・`engine.md`）も一緒にコミットする。
 - `dist/preview-owner.html` と `dist/preview-member.html` は、見本データで動く手元の確認用（`python -m http.server --directory dist` で開き、`?p=sample` を付ける。`?out=1` でログイン前の画面）。
-- PowerShell のスクリプト（`plugin/hooks/hub-hook.ps1`、`plugin/tools/hub.ps1`、`plugin/lib/hub-common.ps1`）は ASCII だけで書く。フックの文言は `hub-messages.json` に置く。
+- PowerShell のスクリプト（`plugin/hooks/hub-hook.ps1`、`plugin/tools/hub.ps1`、`plugin/lib/*.ps1`）は ASCII だけで書く。フックの文言は `hub-messages.json`、コミットの検査の文言と既定値は `plugin/lib/git-check.json` に置く。
 - `page/translate.js` はエンジン中枢（`D:/PJ/HIKARI-HQ/cloud`）のページもビルドで埋め込む。変えたら両方ビルドする。
 - コミットメッセージは `<種別>(<範囲>): <日本語> / <中文>`。

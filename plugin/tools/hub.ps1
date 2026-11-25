@@ -12,9 +12,12 @@
 #   hub push                  send every <repo>/.hikari-hub/out/<collection>/<id>.json, then remove the sent files;
 #                             when a finished report was among them, refresh the map too (as "hub map")
 #   hub map [-NoPush]         map the base, release and every member's own branch from origin (lib/hub-map.ps1) and send it
+#   hub check [<range>]       check the branch name and the commit messages against the hub's Git rules (lib/hub-git-rules.ps1);
+#                             without a range: the commits not yet on origin/<own branch> (or on the base branch)
 #
 # whoami and sync also write <repo>/.hikari-hub/me.json (uid, handle, own branch, owner or not): the guard hook reads it
-# to know whose branch is whose without going online.
+# to know whose branch is whose without going online. Every command run in a project's repository also puts the
+# commit check in place as the repository's commit-msg hook (Install-GitCheck in lib/hub-common.ps1).
 #
 # A pushed file is merged into the record (nested maps are merged, lists are replaced); the record is
 # created when it does not exist. "_if_time": "<the _time read earlier>" makes the write fail when
@@ -38,6 +41,7 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-common.ps1")
 . (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-map.ps1")
+. (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-git-rules.ps1")
 Add-Type -AssemblyName System.Web.Extensions
 Add-Type -AssemblyName System.Security
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -280,6 +284,7 @@ function Get-Workspace {
             [void][IO.Directory]::CreateDirectory((Split-Path -Path $exclude -Parent))
             [IO.File]::AppendAllText($exclude, "`n.hikari-hub/`n", $utf8)
         }
+        [void](Install-GitCheck $root)
     }
     return @{ id = $id; base = ($documents + "/projects/" + $id); local = $local }
 }
@@ -349,6 +354,14 @@ function Send-Out($space, $session) {
         $record = $null
         try { $record = Read-Record $file.FullName } catch { }
         if (-not ($record -is [Collections.IDictionary])) { Say ("NG  " + $label + "  the file is not a JSON object"); $bad += 1; continue }
+        # A new record's id is <prefix>-<6 hex digits>; only a record already on the hub may keep another shape.
+        $prefix = ""
+        if ($collections.prefix -and $collections.prefix.$collection) { $prefix = [string]$collections.prefix.$collection }
+        if ($prefix -and $file.BaseName -cnotmatch ('^' + [regex]::Escape($prefix) + '-[0-9a-f]{6}$')) {
+            if ((Invoke-Http "GET" ($space.base + "/" + $label) "" $session.token "").status -eq 404) {
+                Say ("NG  " + $label + "  a new record's id is " + $prefix + "- and 6 hex digits, e.g. " + $prefix + "-3fa9c1 (hub-io.md)"); $bad += 1; continue
+            }
+        }
         $query = @(Get-FieldPaths $record "" | ForEach-Object { "updateMask.fieldPaths=" + [Uri]::EscapeDataString($_) })
         if (-not $query.Count) { Say ("NG  " + $label + "  the file has no fields"); $bad += 1; continue }
         if ($record.ContainsKey("_if_time") -and $record["_if_time"]) { $query += "currentDocument.updateTime=" + [Uri]::EscapeDataString([string]$record["_if_time"]) }
@@ -543,8 +556,55 @@ switch ($Command) {
             if (Send-Out $space $session) { exit 1 }
         }
     }
+    "check" {
+        $root = Find-RepoRoot (Get-Location).Path
+        if (-not $root) { Fail "no_repo: run this inside the game's repository." }
+        $rules = Get-GitCheckRules $root (Read-Json (Join-Path $pluginRoot "lib/git-check.json"))
+        $state = Install-GitCheck $root
+        if ($state.StartsWith("hooksPath:")) { Say (Format-GitCheck $rules "check_hook_off" @($state.Substring(10))) }
+        elseif ($state -eq "other") { Say (Format-GitCheck $rules "check_hook_other") }
+        $branch = Get-Branch (Get-GitDir $root)
+        $bad = 0
+        $why = Test-BranchName $branch $rules
+        if ($why) { Say (Format-GitCheck $rules "check_ng" @("branch " + $branch)); Say ("    - " + $why); $bad += 1 }
+        $range = $A
+        $onBranch = $branch
+        if ($range) {
+            # The branch the commits are on, for matching their Card line: the end of the range.
+            $onBranch = (($range -split '\.\.\.?')[-1] -replace '^origin/', '')
+            if (-not $onBranch -or $onBranch -eq "HEAD") { $onBranch = $branch }
+        } else {
+            $me = Read-Json (Join-Path (Find-HubFolder $root) "me.json")
+            $starts = @()
+            if ($me -and $me.branch) { $starts += "origin/" + [string]$me.branch }
+            $base = "develop"
+            $project = Read-Json (Join-Path (Find-HubFolder $root) "cache/settings/project.json")
+            if ($project -and $project.base_branch) { $base = [string]$project.base_branch }
+            $starts += @(("origin/" + $base), $base)
+            foreach ($start in $starts) {
+                if ((Invoke-Git $root @("rev-parse", "--verify", "--quiet", $start)).code -eq 0) { $range = $start + "..HEAD"; break }
+            }
+            if (-not $range) { $range = "HEAD" }
+        }
+        $log = Invoke-Git $root @("log", "--format=%H%x1f%P%x1f%an <%ae>%x1f%B%x1e", $range)
+        if ($log.code -ne 0) { Fail ("git log failed: " + $log.errors.Trim()) }
+        $commits = @($log.text -split [string][char]0x1e | Where-Object { $_.Trim() })
+        if (-not $commits.Count) { Say (Format-GitCheck $rules "check_none" @($range)) }
+        foreach ($entry in $commits) {
+            $field = $entry.TrimStart("`n").Split([char]0x1f)
+            $parents = @($field[1].Split(" ") | Where-Object { $_ })
+            $context = @{ branch = $onBranch; merge = ($parents.Count -gt 1); author = $field[2] }
+            $problems = @(Test-CommitMessage $field[3] $context $rules)
+            $title = $field[0].Substring(0, 7) + "  " + ($field[3].Trim() -split "`n")[0]
+            if (-not $problems.Count) { Say (Format-GitCheck $rules "check_ok" @($title)); continue }
+            $bad += 1
+            Say (Format-GitCheck $rules "check_ng" @($title))
+            foreach ($problem in $problems) { Say ("    - " + $problem) }
+        }
+        if ($bad) { exit 1 }
+    }
     default {
-        Say "usage: hub login | projects | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush]   (options: -Project <id>, -Dir <folder>)"
+        Say "usage: hub login | projects | whoami | sync [-All] | list <collection> | get <collection>/<id> | find <collection> <field> <value> | push | map [-NoPush] | check [<range>]   (options: -Project <id>, -Dir <folder>)"
         if ($Command) { exit 1 }
     }
 }

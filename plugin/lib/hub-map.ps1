@@ -16,39 +16,6 @@ $script:MaxChanged = 500
 $script:MaxLast = 200
 $script:MaxHeaders = 60
 
-# Quotes one argument for the Windows command line (CommandLineToArgvW rules).
-function ConvertTo-Argument([string]$text) {
-    if ($text -and $text -notmatch '[\s"]') { return $text }
-    $out = New-Object Text.StringBuilder
-    [void]$out.Append('"')
-    $slashes = 0
-    foreach ($ch in $text.ToCharArray()) {
-        if ($ch -eq '\') { $slashes += 1; continue }
-        if ($ch -eq '"') { [void]$out.Append('\' * ($slashes * 2 + 1)).Append('"') }
-        else { [void]$out.Append('\' * $slashes).Append($ch) }
-        $slashes = 0
-    }
-    [void]$out.Append('\' * ($slashes * 2)).Append('"')
-    return $out.ToString()
-}
-
-# Runs git in $root and returns its output decoded as UTF-8 (PowerShell's own pipe would use the console code page).
-function Invoke-Git([string]$root, [string[]]$arguments) {
-    $info = New-Object Diagnostics.ProcessStartInfo
-    $info.FileName = "git"
-    $info.Arguments = ((@("-C", $root, "-c", "core.quotepath=off") + $arguments) | ForEach-Object { ConvertTo-Argument $_ }) -join " "
-    $info.UseShellExecute = $false
-    $info.CreateNoWindow = $true
-    $info.RedirectStandardOutput = $true
-    $info.RedirectStandardError = $true
-    $info.StandardOutputEncoding = $utf8
-    $process = [Diagnostics.Process]::Start($info)
-    $errors = $process.StandardError.ReadToEndAsync()
-    $text = $process.StandardOutput.ReadToEnd()
-    $process.WaitForExit()
-    return @{ code = $process.ExitCode; text = $text; errors = $errors.Result }
-}
-
 # "a/b/../c" -> "a/c"; $null when it climbs out of the repository.
 function Resolve-RepoPath([string]$path) {
     $parts = New-Object Collections.ArrayList

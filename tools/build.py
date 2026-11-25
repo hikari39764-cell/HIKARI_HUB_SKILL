@@ -10,7 +10,7 @@ page/（サイトの元と、エンジン中枢と共用の翻訳 translate.js�
   firebase/firestore.rules              データベースのアクセス規則（オーナーが Firebase コンソールに貼る。コミットしない）
                                         オーナーのメールは firebase/owner-email.local から入れる（これもコミットしない）
   plugin/owner/seed/<collection>/*.json 新しいプロジェクトに入れる初期データ
-  plugin/lib/collections.json           hub コマンドが同期するコレクションの一覧（skip は必要なときだけ読むもの）
+  plugin/lib/collections.json           hub コマンドが同期するコレクションの一覧（skip は必要なときだけ読むもの、prefix は新しい記録の id の頭）
   plugin/skills/work/references/data-model.md  エージェント向けのデータの書き方
   plugin/skills/work/references/engine.md      エンジン知識（ハブに届かないときの控え）
   dist/preview-owner.html, preview-member.html 手元で見るためのプレビュー（見本のデータ。コミットしない）
@@ -399,7 +399,9 @@ def main() -> None:
         for doc_id, data in docs.items():
             write(owner / "seed" / folder / f"{doc_id}.json", json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
-    listing = {"all": ["settings"] + list(COLLECTIONS), "skip": SCHEMA["sync_skip"]}
+    # prefix：メンバーが作る記録の id の頭（hub push が、新しい記録の id が <頭>-16 進 6 文字かを確かめる）。
+    listing = {"all": ["settings"] + list(COLLECTIONS), "skip": SCHEMA["sync_skip"],
+               "prefix": {k: c["prefix"] for k, c in COLLECTIONS.items() if c.get("prefix") and c["writer"] != "owner"}}
     write(ROOT / "plugin" / "lib" / "collections.json", json.dumps(listing, ensure_ascii=False, indent=2) + "\n")
 
     refs = ROOT / "plugin" / "skills" / "work" / "references"

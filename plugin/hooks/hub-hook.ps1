@@ -15,7 +15,9 @@
 #               the person's own branch (members/<uid>.branch) - free;
 #               somebody else's own branch                   - refused;
 #               the base (default develop) or release branch (default main) - the owner only, and
-#               the human's OK every time (refused for the others).
+#               the human's OK every time (refused for the others);
+#             creating a branch whose name breaks the hub's rule, or skipping the commit check (--no-verify), is
+#             refused; before a commit or merge, the repository's commit-msg hook (lib/hub-git-check.ps1) is put in place.
 #
 # Whose branch is whose comes from the synced members (.hikari-hub/cache/members) and from
 # .hikari-hub/me.json, which "hub whoami" / "hub sync" write. Without me.json the base and release
@@ -25,10 +27,42 @@
 param([string]$Mode = "edit")
 
 . (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-common.ps1")
+. (Join-Path (Split-Path -Path $PSScriptRoot -Parent) "lib/hub-git-rules.ps1")
 
-function Get-Branch([string]$gitDir) {
-    if ((Read-Text (Join-Path $gitDir "HEAD")) -match 'ref:\s*refs/heads/(\S+)') { return $Matches[1] }
-    return ""
+# Commands split where the shell runs the next one (; && || | newline).
+function Get-Segments([string]$command) { return @($command -split '[;&|\r\n]+' | Where-Object { $_.Trim() }) }
+
+# The names of the branches a command creates or renames to (git switch -c, checkout -b, branch, worktree add -b).
+function Get-NewBranches([string]$command) {
+    $names = New-Object Collections.ArrayList
+    $git = '\bgit\s+(?:-[Cc]\s+\S+\s+)*'
+    foreach ($segment in (Get-Segments $command)) {
+        if ($segment -match ($git + '(?:switch|checkout)\s+(?:.*?\s)?-[cCbB]\s+["'']?([^\s"'']+)')) { [void]$names.Add($Matches[1]); continue }
+        if ($segment -match ($git + 'worktree\s+add\s+(?:.*?\s)?-[bB]\s+["'']?([^\s"'']+)')) { [void]$names.Add($Matches[1]); continue }
+        if ($segment -notmatch ($git + 'branch\s+(.+)$')) { continue }
+        $words = @($Matches[1].Trim() -split '\s+' | ForEach-Object { $_.Trim('"', "'") } | Where-Object { $_ })
+        if (-not $words.Count) { continue }
+        if ($words[0] -match '^-(m|M|c|C|-move|-copy)$') {
+            $rest = @($words | Select-Object -Skip 1 | Where-Object { $_ -notmatch '^-' })
+            if ($rest.Count) { [void]$names.Add($rest[-1]) }
+        } elseif ($words[0] -notmatch '^-') {
+            [void]$names.Add($words[0])
+        }
+    }
+    return @($names)
+}
+
+# True when a command would skip the commit check (--no-verify, commit -n, another hooks folder).
+function Test-Bypass([string]$command) {
+    if ($command -match 'core\.hooksPath') { return $true }
+    foreach ($segment in (Get-Segments $command)) {
+        if ($segment -notmatch '\bgit\b.*?\b(commit|merge|cherry-pick|revert)\b(.*)$') { continue }
+        $verb = $Matches[1]; $rest = $Matches[2]
+        if ($rest -match '--no-verify\b') { return $true }
+        # commit -n is --no-verify (for merge, -n is --no-stat). Options before the message only: the message may say anything.
+        if ($verb -eq "commit" -and (($rest -split '\s(?:-m|-F|--message|--file)\b', 2)[0] -match '(^|\s)-[a-zA-Z]*n[a-zA-Z]*(\s|$)')) { return $true }
+    }
+    return $false
 }
 
 # A pattern is a file, a folder ("Assets/Scenes/" or "Assets/Scenes"), or a wildcard ("*.psd").
@@ -136,6 +170,21 @@ try {
     $guarded = @($release, $base) + @($personal.Keys | Where-Object { $_ -ne $base -and $_ -ne $release })
 
     if ($Mode -eq "git") {
+        # Commit messages and branch names (lib/hub-git-rules.ps1): git's commit-msg hook checks every commit,
+        # this checks a branch name before the branch exists.
+        $gitData = Read-Json (Join-Path $pluginRoot "lib/git-check.json")
+        if ($gitData) {
+            if ($command -match '\bgit\b' -and (Test-Bypass $command)) { Send-Decision "deny" $gitData.messages.bypass }
+            if ($command -match '\bgit\b.*\b(commit|merge|cherry-pick|revert)\b') { [void](Install-GitCheck $root) }
+            $created = @(Get-NewBranches $command)
+            if ($created.Count) {
+                $rules = Get-GitCheckRules $root $gitData
+                foreach ($name in $created) {
+                    $why = Test-BranchName $name $rules
+                    if ($why) { Send-Decision "deny" $why }
+                }
+            }
+        }
         $target = ""
         if ($command -match '\bgh\s+pr\s+merge\b') { $target = "PR" }
         foreach ($m in [regex]::Matches($command, '\bgit\s[^;&|\r\n]*?\b(merge|push)(?![-\w])([^;&|\r\n]*)')) {
