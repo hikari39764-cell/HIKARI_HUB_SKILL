@@ -259,6 +259,15 @@ window.dispatchEvent(new Event("hub-backend"));
 const SCHEMA = JSON.parse(document.getElementById("schema").textContent);
 const COLL = Object.fromEntries(SCHEMA.collections.map((c) => [c.key, c]));
 const PREFIX = SCHEMA.collections.filter((c) => c.prefix).map((c) => [c.prefix + "-", c.key]).sort((a, b) => b[0].length - a[0].length);
+// 一覧の項目（list・areas・assets）は配列のはず。文字列で書かれた記録も、読み込むときに 1 行 1 つの配列へ直す（そのままだと詳細が開けない）。
+const ARRAY_FIELDS = Object.fromEntries(SCHEMA.collections.map((c) => [c.key, c.fields.filter((f) => ["list", "areas", "assets"].includes(f.type)).map((f) => f.key)]));
+function tidy(coll, d) {
+  for (const k of ARRAY_FIELDS[coll] || []) {
+    const v = d[k];
+    if (v != null && !Array.isArray(v)) d[k] = typeof v === "string" ? v.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) : [String(v)];
+  }
+  return d;
+}
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
@@ -279,6 +288,7 @@ const T = {
   home: ["ホーム", "今天"], board: ["ボード", "看板"], engine: ["エンジン知識", "引擎知识"], rules: ["ルール", "规则"], members: ["メンバー", "成员"],
   requests: ["エンジンへの要望", "引擎要望"], search: ["検索", "搜索"], live: ["つながっています", "已连接"], offline: ["データに届きません", "连不上数据"], connecting: ["接続中…", "连接中…"],
   readonly: ["閲覧のみ", "只读"], owner: ["オーナー", "所有者"], add: ["新規", "新建"], edit: ["編集", "编辑"], save: ["保存", "保存"], cancel: ["やめる", "取消"], del: ["削除", "删除"], delSure: ["本当に削除", "确认删除"],
+  renderFail: ["この画面を表示できませんでした（記録の形が崩れているかもしれません）。エージェントに直してもらうか、不具合として報告してください。", "这个画面显示失败（记录的格式可能有问题）。请让智能体修正，或作为问题上报。"],
   saved: ["保存しました", "已保存"], failed: ["保存できませんでした", "保存失败"], denied: ["書き込む権限がありません", "没有写入权限"], need: ["入力してください", "请填写"],
   none: ["ありません", "没有"], all: ["すべて表示", "显示全部"], openOnly: ["進行中だけ", "只看进行中"], back: ["一覧へ", "返回列表"],
   working: ["作業中", "进行中"], waitYou: ["あなたの確認待ち", "等你处理"], next: ["オーナーのおすすめ（予定）", "所有者建议先做的（预定）"], deadlines: ["締切", "截止"], editing: ["編集中", "编辑中"],
@@ -1117,23 +1127,29 @@ function render() {
   $("#sites").hidden = !S.signed || sites.length + (PID && !S.sites.has(PID) ? 1 : 0) < 2;
   $("#sites").innerHTML = sites.map(([id, s]) => `<a href="${id === "engine" ? "engine/" : "?p=" + esc(id)}" class="${id === PID ? "on" : ""}">${esc(s.name)}</a>`).join("");
   let html;
-  if (S.signed == null) html = `<p class="empty">${t(S.late ? "offline" : "connecting")}</p>`;
-  else if (!S.signed) html = viewLogin();
-  else if (!PID) html = viewPick();
-  else if (S.denied) html = viewDenied();
-  else if (r.id && r.coll === "workflows") html = viewFlow(r.id);
-  else if (r.id) html = viewDetail(r.coll, r.id);
-  else if (S.q && r.view === "home") html = viewSearch();
-  else if (r.view === "home") html = viewHome();
-  else if (r.view === "board") html = viewBoard();
-  else if (r.view === "rules") html = viewRules();
-  else if (r.view === "engine") html = viewGrouped("engine", COLL.engine.areas, "area", "must");
-  else if (r.view === "design") html = viewDesign();
-  else if (r.view === "workflows") html = viewWorkflows();
-  else if (r.view === "members") html = viewMembers();
-  else if (r.view === "map") html = viewMap();
-  else if (r.view === "timeline") html = viewTimeline();
-  else html = viewList(r.coll);
+  try {
+    if (S.signed == null) html = `<p class="empty">${t(S.late ? "offline" : "connecting")}</p>`;
+    else if (!S.signed) html = viewLogin();
+    else if (!PID) html = viewPick();
+    else if (S.denied) html = viewDenied();
+    else if (r.id && r.coll === "workflows") html = viewFlow(r.id);
+    else if (r.id) html = viewDetail(r.coll, r.id);
+    else if (S.q && r.view === "home") html = viewSearch();
+    else if (r.view === "home") html = viewHome();
+    else if (r.view === "board") html = viewBoard();
+    else if (r.view === "rules") html = viewRules();
+    else if (r.view === "engine") html = viewGrouped("engine", COLL.engine.areas, "area", "must");
+    else if (r.view === "design") html = viewDesign();
+    else if (r.view === "workflows") html = viewWorkflows();
+    else if (r.view === "members") html = viewMembers();
+    else if (r.view === "map") html = viewMap();
+    else if (r.view === "timeline") html = viewTimeline();
+    else html = viewList(r.coll);
+  } catch (e) {
+    // 描けない記録があっても「押しても何も起きない」にしない：前の画面のまま止まらず、何が起きたかと戻り先を出す。
+    console.error(e);
+    html = `<div class="note">${t("renderFail")}<br><span class="mono">${esc(r.id || "")} ${esc((e && e.message) || e)}</span></div><p><a href="#${esc(r.view)}">${t("back")}</a></p>`;
+  }
   $("#main").innerHTML = html;
   if (inProject) loadImages();
   drawLinks();
@@ -1398,7 +1414,7 @@ function listen() {
   }, () => {});
   if (!S.db) return;
   const sub = (key, query) => unsubs.push(query.onSnapshot((snap) => {
-    S.data[key] = new Map(snap.docs.map((d) => [d.id, d.data()]));
+    S.data[key] = new Map(snap.docs.map((d) => [d.id, tidy(key, d.data())]));
     if (key === "members") S.me.handle = (S.data.members.get(S.me.uid) || {}).handle || "";
     if (!snap.metadata.fromCache) { S.live = true; S.me.write = true; }
     schedule();

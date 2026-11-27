@@ -400,8 +400,11 @@ def main() -> None:
             write(owner / "seed" / folder / f"{doc_id}.json", json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
     # prefix：メンバーが作る記録の id の頭（hub push が、新しい記録の id が <頭>-16 進 6 文字かを確かめる）。
+    # lists：一覧の項目（hub push が、文字列で書かれていないかを確かめる。文字列だとサイトでその記録が開けない）。
     listing = {"all": ["settings"] + list(COLLECTIONS), "skip": SCHEMA["sync_skip"],
-               "prefix": {k: c["prefix"] for k, c in COLLECTIONS.items() if c.get("prefix") and c["writer"] != "owner"}}
+               "prefix": {k: c["prefix"] for k, c in COLLECTIONS.items() if c.get("prefix") and c["writer"] != "owner"},
+               "lists": {k: keys for k, c in COLLECTIONS.items()
+                         if (keys := [f["key"] for f in c["fields"] if f["type"] in ("list", "areas", "assets")])}}
     write(ROOT / "plugin" / "lib" / "collections.json", json.dumps(listing, ensure_ascii=False, indent=2) + "\n")
 
     refs = ROOT / "plugin" / "skills" / "work" / "references"

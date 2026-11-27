@@ -362,6 +362,16 @@ function Send-Out($space, $session) {
                 Say ("NG  " + $label + "  a new record's id is " + $prefix + "- and 6 hex digits, e.g. " + $prefix + "-3fa9c1 (hub-io.md)"); $bad += 1; continue
             }
         }
+        # List fields must be JSON arrays: a string there keeps the record from opening on the site.
+        $notList = @()
+        if ($collections.lists -and $collections.lists.$collection) {
+            foreach ($key in @($collections.lists.$collection)) {
+                if ($record.ContainsKey($key) -and $null -ne $record[$key] -and -not ($record[$key] -is [Collections.IList])) { $notList += $key }
+            }
+        }
+        if ($notList.Count) {
+            Say ("NG  " + $label + "  " + ($notList -join ", ") + ": a list field is a JSON array, one item per entry, e.g. [""..."", ""...""] (data-model.md)"); $bad += 1; continue
+        }
         $query = @(Get-FieldPaths $record "" | ForEach-Object { "updateMask.fieldPaths=" + [Uri]::EscapeDataString($_) })
         if (-not $query.Count) { Say ("NG  " + $label + "  the file has no fields"); $bad += 1; continue }
         if ($record.ContainsKey("_if_time") -and $record["_if_time"]) { $query += "currentDocument.updateTime=" + [Uri]::EscapeDataString([string]$record["_if_time"]) }

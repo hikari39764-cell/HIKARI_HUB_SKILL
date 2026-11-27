@@ -40,5 +40,61 @@
     "engine_requests": "e",
     "design": "ds",
     "workflows": "wf"
+  },
+  "lists": {
+    "cards": [
+      "acceptance",
+      "paths",
+      "areas"
+    ],
+    "reports": [
+      "changes",
+      "evidence",
+      "unverified",
+      "remaining",
+      "tuning",
+      "learned",
+      "mistakes",
+      "questions",
+      "params"
+    ],
+    "bugs": [
+      "steps",
+      "evidence",
+      "images",
+      "areas"
+    ],
+    "questions": [
+      "areas",
+      "paths"
+    ],
+    "guides": [
+      "params",
+      "code",
+      "areas",
+      "paths"
+    ],
+    "knowledge": [
+      "areas",
+      "paths"
+    ],
+    "mistakes": [
+      "areas",
+      "paths"
+    ],
+    "design": [
+      "areas"
+    ],
+    "workflows": [
+      "params",
+      "steps",
+      "checks",
+      "stops",
+      "refactor",
+      "areas"
+    ],
+    "rules": [
+      "areas"
+    ]
   }
 }
